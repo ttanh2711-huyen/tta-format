@@ -27,4 +27,17 @@ export const STYLE_PLAN: StylePlan = {
     { elementId: "phuLucChiDan", alignment: "Centered" },
   ],
   table: { fontSizePt: 14, spaceBeforePt: 3, spaceAfterPt: 3 },
+  blockSizes: [
+    { elementId: "quocHieu", group: "header", defaultPt: 13 },
+    { elementId: "tieuNgu", group: "header", defaultPt: 14 },
+    { elementId: "tenCoQuanChuQuan", group: "header", defaultPt: 13 },
+    { elementId: "tenCoQuanBanHanh", group: "header", defaultPt: 13 },
+    { elementId: "so", group: "header", defaultPt: 13 },
+    { elementId: "diaDanhNgayThang", group: "header", defaultPt: 13 },
+    { elementId: "trichYeuCongVan", group: "header", defaultPt: 13 },
+    { elementId: "quyenHanChucVu", group: "footer", defaultPt: 14 },
+    { elementId: "hoTenNguoiKy", group: "footer", defaultPt: 14 },
+    { elementId: "noiNhanTieuDe", group: "footer", defaultPt: 12 },
+    { elementId: "noiNhanDanhSach", group: "footer", defaultPt: 11 },
+  ],
 };

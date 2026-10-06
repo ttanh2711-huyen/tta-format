@@ -31,6 +31,66 @@
         border-top: 1px solid #ccc;
         padding-top: 8px;
       }
+      #quick-options {
+        margin-top: 16px;
+        border-top: 1px solid #ccc;
+        padding-top: 8px;
+      }
+      #quick-options h2 {
+        font-size: 14px;
+        margin: 0 0 6px;
+      }
+      #quick-options details {
+        border: 1px solid #ccc;
+        margin: 4px 0;
+        padding: 4px 8px;
+      }
+      #quick-options summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+      #quick-options .qo-row {
+        margin: 8px 0;
+        padding-bottom: 6px;
+        border-bottom: 1px dotted #ddd;
+      }
+      #quick-options .qo-choices button,
+      #quick-options .qo-toolbar button {
+        margin: 2px 4px 2px 0;
+        padding: 3px 8px;
+      }
+      #quick-options button[aria-pressed="true"] {
+        background: #cfe3ff;
+        border: 1px solid #2b6cb0;
+      }
+      #quick-options .qo-small {
+        padding: 2px 6px;
+        font-size: 12px;
+      }
+      #quick-options .qo-custom input[type="text"] {
+        width: 70px;
+      }
+      #quick-options .qo-exception {
+        color: #8a5a00;
+      }
+      #quick-options .qo-confirm {
+        background: #fff4d6;
+        border: 1px solid #d9a400;
+        padding: 4px 8px;
+        margin-top: 4px;
+      }
+      #quick-options .note {
+        color: #777;
+      }
+      #qo-message.ok {
+        color: #1a6b1a;
+      }
+      #qo-message.warning {
+        color: #8a5a00;
+      }
+      #qo-message.error {
+        color: #a00000;
+      }
       #format-panel {
         margin-top: 16px;
         border-top: 1px solid #ccc;
@@ -99,6 +159,7 @@
     <button id="btn-sample" type="button">Chèn văn bản thử nghiệm</button>
     <p><a href="spike.html">Kiểm tra khả thi Office.js (T3)</a></p>
     <p id="status" role="status" aria-live="polite">Đang khởi động…</p>
+    <section id="quick-options"></section>
     <section id="page-setup-panel"></section>
     <section id="format-panel"></section>
   </body>

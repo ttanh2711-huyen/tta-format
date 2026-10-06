@@ -26,6 +26,7 @@ export const ND30: StandardProfile = {
     footerDistanceMm: 5.3,
     source: "File mẫu công văn của người dùng (lề 20/20/30/20 mm, header 12,5 mm, footer khoảng 5,3 mm); lề nằm trong khoảng của NĐ 30",
   },
+  defaultPresetName: "Theo mẫu công văn của tôi",
   styles: STYLE_PLAN,
   font: FONT,
   pageNumber: PAGE_NUMBER,

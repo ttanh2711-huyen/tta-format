@@ -1,4 +1,5 @@
-import { formatBody, isFormatBodySupported, type FormatScope, type LocalFormatting } from "../office/formatBody";
+import { formatBody, isFormatBodySupported, type FormatBodyOptions } from "../office/formatBody";
+import type { StyleSpec } from "../ooxml/styleSpecs";
 import type { StandardProfile } from "../standards/types";
 
 function create<K extends keyof HTMLElementTagNameMap>(
@@ -12,29 +13,15 @@ function create<K extends keyof HTMLElementTagNameMap>(
   return element;
 }
 
-function radioGroup<T extends string>(
-  legend: string,
-  name: string,
-  choices: ReadonlyArray<{ value: T; label: string }>,
-): { group: HTMLFieldSetElement; value: () => T } {
-  const radios = choices.map((choice, index) =>
-    create("input", { type: "radio", name, id: `${name}-${choice.value}`, value: choice.value, checked: index === 0 }),
-  );
-  const group = create("fieldset", { id: `${name}-group` }, create("legend", { textContent: legend }));
-  choices.forEach((choice, index) => group.append(create("label", {}, radios[index], ` ${choice.label}`)));
-  return { group, value: () => (radios.find((radio) => radio.checked)?.value ?? choices[0].value) as T };
+/** Bảng "Định dạng nội dung" (T6): áp style nội dung của chuẩn đang chọn lên văn bản có sẵn. */
+export interface FormatPanelDeps {
+  currentStandard: () => StandardProfile;
+  /** Phạm vi và cách xử lý định dạng cục bộ, lấy từ nhóm "Hành vi" của tuỳ chọn nhanh. */
+  behavior: () => Pick<FormatBodyOptions, "scope" | "localFormatting">;
+  styleSpecs: () => StyleSpec[];
 }
 
-/** Bảng "Định dạng nội dung" (T6): áp style nội dung của chuẩn đang chọn lên văn bản có sẵn. */
-export function mountFormatPanel(container: HTMLElement, currentStandard: () => StandardProfile): void {
-  const scope = radioGroup<FormatScope>("Phạm vi", "fb-scope", [
-    { value: "selection", label: "Phần đang chọn" },
-    { value: "document", label: "Cả tài liệu" },
-  ]);
-  const local = radioGroup<LocalFormatting>("Định dạng cục bộ có sẵn (đậm, nghiêng, căn lề…)", "fb-local", [
-    { value: "keep", label: "Giữ lại" },
-    { value: "clear", label: "Xoá để theo đúng style" },
-  ]);
+export function mountFormatPanel(container: HTMLElement, deps: FormatPanelDeps): void {
   const apply = create("button", { id: "fb-apply", type: "button", textContent: "Định dạng nội dung" });
   const message = create("p", { id: "fb-message" });
   message.setAttribute("role", "status");
@@ -44,10 +31,8 @@ export function mountFormatPanel(container: HTMLElement, currentStandard: () => 
     create("p", {
       className: "note",
       textContent:
-        "Áp style nội dung của chuẩn đang chọn lên các đoạn thường. Bỏ qua đoạn trống, đoạn trong bảng, tiêu đề có sẵn, danh sách tự động và đoạn đã dùng style của bộ chuẩn. Cần cài bộ style trước.",
+        "Áp style nội dung của chuẩn đang chọn lên các đoạn thường. Bỏ qua đoạn trống, đoạn trong bảng, tiêu đề có sẵn, danh sách tự động và đoạn đã dùng style của bộ chuẩn. Cần cài bộ style trước. Phạm vi và việc giữ hay xoá định dạng cục bộ chọn ở Tuỳ chọn nhanh, nhóm Hành vi.",
     }),
-    scope.group,
-    local.group,
     apply,
     message,
   );
@@ -67,7 +52,7 @@ export function mountFormatPanel(container: HTMLElement, currentStandard: () => 
     apply.disabled = true;
     show("ok", "Đang định dạng…");
     try {
-      const result = await formatBody(currentStandard(), { scope: scope.value(), localFormatting: local.value() });
+      const result = await formatBody(deps.currentStandard(), { ...deps.behavior(), specs: deps.styleSpecs() });
       show(result.summary.kind, result.summary.text);
     } catch (error) {
       show("error", `Không định dạng được: ${error instanceof Error ? error.message : String(error)}`);

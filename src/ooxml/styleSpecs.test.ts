@@ -159,3 +159,25 @@ describe("buildStyleSpecs: cỡ chữ luôn hợp lệ với chuẩn", () => {
     expect(byName(specs, "ND30_BangDuLieu").paragraph).toMatchObject({ spaceBeforePt: 3, spaceAfterPt: 3 });
   });
 });
+
+describe("buildStyleSpecs: tuỳ chọn căn lề và bảng (T6A)", () => {
+  it("căn trái thay cho dàn đều ở các style nội dung, không đổi style vốn căn giữa", () => {
+    const specs = buildStyleSpecs(ND30, { ...defaultStyleOptions(ND30), alignment: "Left" });
+    expect(byName(specs, "ND30_NoiDung").paragraph.alignment).toBe("Left");
+    expect(byName(specs, "ND30_Dieu").paragraph.alignment).toBe("Left");
+    expect(byName(specs, "ND30_KinhGui").paragraph.alignment).toBe("Centered");
+  });
+
+  it("thay giá trị style bảng, không đụng style nội dung", () => {
+    const specs = buildStyleSpecs(ND30, { ...defaultStyleOptions(ND30), table: { fontSizePt: 13, spaceBeforePt: 0, spaceAfterPt: 0 } });
+    const table = byName(specs, "ND30_BangDuLieu");
+    expect(table.font.sizePt).toBe(13);
+    expect(table.paragraph).toMatchObject({ spaceBeforePt: 0, spaceAfterPt: 0 });
+    expect(byName(specs, "ND30_NoiDung").font.sizePt).toBe(14);
+  });
+
+  it("không truyền tuỳ chọn mới thì giữ nguyên như trước", () => {
+    expect(byName(buildStyleSpecs(HD05), "HD05_BangDuLieu").font.sizePt).toBe(14);
+    expect(byName(buildStyleSpecs(HD05), "HD05_NoiDung").paragraph.alignment).toBe("Justified");
+  });
+});

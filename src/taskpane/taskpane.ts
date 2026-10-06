@@ -1,5 +1,6 @@
 import { insertSampleParagraph } from "../office/insertSample";
 import { mountFormatPanel } from "../ui/FormatPanel";
+import { mountQuickOptions } from "../ui/QuickOptions";
 import { mountPageSetupPanel } from "../ui/PageSetupPanel";
 
 function setStatus(message: string): void {
@@ -33,9 +34,15 @@ Office.onReady((info) => {
   const panel = document.getElementById("page-setup-panel");
   const formatPanel = document.getElementById("format-panel");
   if (panel) {
-    const { currentStandard } = mountPageSetupPanel(panel);
-    if (formatPanel) {
-      mountFormatPanel(formatPanel, currentStandard);
+    const pageSetup = mountPageSetupPanel(panel);
+    const quickPanel = document.getElementById("quick-options");
+    if (quickPanel) {
+      const quick = mountQuickOptions(quickPanel, { currentStandard: pageSetup.currentStandard });
+      pageSetup.onStandardChange(() => quick.refresh());
+      pageSetup.setStyleSpecsProvider(quick.styleSpecs);
+      if (formatPanel) {
+        mountFormatPanel(formatPanel, { currentStandard: pageSetup.currentStandard, behavior: quick.behavior, styleSpecs: quick.styleSpecs });
+      }
     }
   }
   setStatus("Sẵn sàng.");

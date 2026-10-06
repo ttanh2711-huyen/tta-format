@@ -1,7 +1,7 @@
 import { installStyles, isStyleInstallSupported } from "../office/installStyles";
 import { applyPageSetup, isPageSetupSupported } from "../office/pageSetup";
 import { summarizeInstall } from "../office/styleVerify";
-import { buildStyleSpecs } from "../ooxml/styleSpecs";
+import { buildStyleSpecs, type StyleSpec } from "../ooxml/styleSpecs";
 import { parseMm, planPageSetup, summarizeApply } from "../office/pageSetupPlan";
 import { STANDARDS } from "../standards";
 import type { MarginSide, StandardProfile } from "../standards/types";
@@ -25,7 +25,17 @@ function create<K extends keyof HTMLElementTagNameMap>(
 }
 
 /** Bảng "Thiết lập trang chuẩn" trong task pane (T4). Chọn chuẩn tạm thời ở đây; T6B sẽ chuyển lên đầu task pane. */
-export function mountPageSetupPanel(container: HTMLElement): { currentStandard: () => StandardProfile } {
+export interface PageSetupHandle {
+  currentStandard: () => StandardProfile;
+  /** Gọi lại khi người dùng đổi chuẩn. */
+  onStandardChange: (callback: () => void) => void;
+  /** Bộ style cài khi bấm "Cài bộ style" (theo tuỳ chọn nhanh); chưa đặt thì dùng mặc định của chuẩn. */
+  setStyleSpecsProvider: (provider: () => StyleSpec[]) => void;
+}
+
+export function mountPageSetupPanel(container: HTMLElement): PageSetupHandle {
+  let specsProvider: (() => StyleSpec[]) | undefined;
+  const changeCallbacks: Array<() => void> = [];
   // Dùng nút chọn (radio) thay cho ô thả xuống: ô thả xuống trong khung task pane của Word hay không mở được.
   const standardRadios = STANDARDS.map((standard, index) =>
     create("input", { type: "radio", name: "ps-standard", id: `ps-standard-${standard.id}`, value: standard.id, checked: index === 0 }),
@@ -71,6 +81,16 @@ export function mountPageSetupPanel(container: HTMLElement): { currentStandard: 
     return STANDARDS.find((s) => s.id === checked?.value) ?? STANDARDS[0];
   };
 
+  const handle: PageSetupHandle = {
+    currentStandard,
+    onStandardChange: (callback) => {
+      changeCallbacks.push(callback);
+    },
+    setStyleSpecsProvider: (provider) => {
+      specsProvider = provider;
+    },
+  };
+
   function show(kind: "ok" | "warning" | "error" | "", text: string): void {
     message.className = kind;
     message.textContent = text;
@@ -92,7 +112,10 @@ export function mountPageSetupPanel(container: HTMLElement): { currentStandard: 
   }
 
   for (const radio of standardRadios) {
-    radio.addEventListener("change", fillDefaults);
+    radio.addEventListener("change", () => {
+      fillDefaults();
+      for (const callback of changeCallbacks) callback();
+    });
   }
   fillDefaults();
 
@@ -104,7 +127,7 @@ export function mountPageSetupPanel(container: HTMLElement): { currentStandard: 
   async function onInstallStyles(): Promise<void> {
     styleButton.disabled = true;
     try {
-      const result = await installStyles(buildStyleSpecs(currentStandard()));
+      const result = await installStyles(specsProvider ? specsProvider() : buildStyleSpecs(currentStandard()));
       const summary = summarizeInstall(result.items);
       showStyle(summary.kind, [summary.text, ...result.notes].join(" "));
     } catch (error) {
@@ -126,7 +149,7 @@ export function mountPageSetupPanel(container: HTMLElement): { currentStandard: 
   if (!isPageSetupSupported()) {
     apply.disabled = true;
     show("error", "Tính năng này cần Microsoft 365 bản 2507 trở lên (WordApiDesktop 1.3). Hãy cập nhật Word rồi mở lại.");
-    return { currentStandard };
+    return handle;
   }
 
   async function onApply(): Promise<void> {
@@ -156,5 +179,5 @@ export function mountPageSetupPanel(container: HTMLElement): { currentStandard: 
     void onApply();
   });
 
-  return { currentStandard };
+  return handle;
 }

@@ -1,6 +1,6 @@
 import { prepareParagraphOoxml } from "../ooxml/exactSpacing";
 import { verifyExactPass } from "../ooxml/exactVerify";
-import { buildStyleSpecs } from "../ooxml/styleSpecs";
+import { buildStyleSpecs, type StyleSpec } from "../ooxml/styleSpecs";
 import type { StandardProfile } from "../standards/types";
 import { planFormatBody, summarizeFormat, type ParagraphInfo, type SkippedCounts } from "./paragraphClassifier";
 
@@ -11,6 +11,8 @@ export type LocalFormatting = "keep" | "clear";
 export interface FormatBodyOptions {
   scope: FormatScope;
   localFormatting: LocalFormatting;
+  /** Bộ style đang dùng (theo tuỳ chọn nhanh); bỏ trống thì theo mặc định của chuẩn. */
+  specs?: readonly StyleSpec[];
 }
 
 export interface FormatBodyResult {
@@ -95,7 +97,7 @@ export async function formatBody(profile: StandardProfile, options: FormatBodyOp
   if (!isFormatBodySupported()) {
     throw new Error("Định dạng nội dung cần Microsoft 365 bản 2308 trở lên (WordApi 1.6). Hãy cập nhật Word rồi mở lại.");
   }
-  const specs = buildStyleSpecs(profile);
+  const specs = options.specs ?? buildStyleSpecs(profile);
   const styleName = `${profile.styles.prefix}NoiDung`;
   const spec = specs.find((item) => item.name === styleName);
   if (!spec) {

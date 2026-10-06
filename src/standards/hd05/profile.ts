@@ -29,6 +29,7 @@ export const HD05: StandardProfile = {
     source:
       "HD 05 Phần II Mục IV.4.1 (lề) và IV.5.1 (số trang cách mép trên 10 mm); khoảng cách footer HD 05 không quy định, lấy mặc định của Word 12,5 mm",
   },
+  defaultPresetName: "Theo HD 05 (mặc định đề xuất)",
   styles: STYLE_PLAN,
   font: FONT,
   pageNumber: PAGE_NUMBER,

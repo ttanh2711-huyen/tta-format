@@ -107,13 +107,30 @@ export type LineSpacingSetting =
   | { kind: "multiple"; lines: number } // bội số dòng đơn (1 = dòng đơn)
   | { kind: "exactly"; pt: number }; // Exactly, pt
 
-/** Giá trị người dùng chỉnh được (T6A sẽ nối vào giao diện chọn nhanh). */
+export interface TableStyleOptions {
+  fontSizePt: number;
+  spaceBeforePt: number;
+  spaceAfterPt: number;
+}
+
+/** Giá trị người dùng chỉnh được qua bảng tuỳ chọn nhanh (T6A). */
 export interface StyleOptions {
   fontSizePt: number;
   spaceBeforePt: number;
   spaceAfterPt: number;
   firstLineIndentMm: number;
   lineSpacing: LineSpacingSetting;
+  /** Căn lề các style nội dung vốn dàn đều hai bên; bỏ trống thì theo kế hoạch của chuẩn. */
+  alignment?: "Justified" | "Left";
+  /** Thay giá trị của style chữ trong bảng; bỏ trống thì theo kế hoạch của chuẩn. */
+  table?: TableStyleOptions;
+}
+
+/** Cỡ chữ mặc định của một thành phần ở khối đầu hoặc cuối văn bản, dùng khi chèn khối (T7 trở đi). */
+export interface BlockSizePlan {
+  elementId: string;
+  group: "header" | "footer";
+  defaultPt: number;
 }
 
 /** Cách trình bày một thành phần thể thức khi làm thành style đoạn. */
@@ -133,7 +150,9 @@ export interface StylePlan {
   defaults: StyleOptions;
   elements: readonly StyleElementPlan[];
   /** Style cho chữ trong bảng biểu của nội dung (không phải thành phần thể thức). */
-  table: { fontSizePt: number; spaceBeforePt: number; spaceAfterPt: number };
+  table: TableStyleOptions;
+  /** Cỡ chữ mặc định các thành phần khối đầu, cuối văn bản; mỗi giá trị phải nằm trong khoảng của chuẩn. */
+  blockSizes: readonly BlockSizePlan[];
 }
 
 /** Giá trị trang mặc định khi bấm "Thiết lập trang"; mọi giá trị phải hợp lệ với chính chuẩn. */
@@ -157,6 +176,8 @@ export interface StandardProfile {
   identifyingTitle: string;
   page: PageRules;
   pageDefaults: PageDefaults;
+  /** Tên preset có sẵn của chuẩn, gồm các giá trị mặc định (T6A). */
+  defaultPresetName: string;
   styles: StylePlan;
   font: FontRules;
   pageNumber: PageNumberRules;

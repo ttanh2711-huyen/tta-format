@@ -23,7 +23,7 @@ export const TABLE_ELEMENT_ID = "bangDuLieu";
 
 export function defaultStyleOptions(profile: StandardProfile): StyleOptions {
   const { defaults } = profile.styles;
-  return { ...defaults, lineSpacing: { ...defaults.lineSpacing } };
+  return { ...defaults, lineSpacing: { ...defaults.lineSpacing }, table: { ...profile.styles.table } };
 }
 
 function round2(n: number): number {
@@ -44,7 +44,8 @@ function clamp(value: number, min: number, max: number): number {
  * của chuẩn không đặt giá trị riêng.
  */
 export function buildStyleSpecs(profile: StandardProfile, options: StyleOptions = defaultStyleOptions(profile)): StyleSpec[] {
-  const { prefix, elements, table } = profile.styles;
+  const { prefix, elements } = profile.styles;
+  const table = options.table ?? profile.styles.table;
   const specs: StyleSpec[] = elements.map((plan) => {
     const rule = profile.elements[plan.elementId];
     if (!rule) {
@@ -63,7 +64,7 @@ export function buildStyleSpecs(profile: StandardProfile, options: StyleOptions 
         color: profile.font.color,
       },
       paragraph: {
-        alignment: plan.alignment,
+        alignment: plan.alignment === "Justified" && options.alignment ? options.alignment : plan.alignment,
         firstLineIndentPt: plan.indent ? round2(mmToPt(options.firstLineIndentMm)) : 0,
         spaceBeforePt: plan.spacingPt?.before ?? options.spaceBeforePt,
         spaceAfterPt: plan.spacingPt?.after ?? options.spaceAfterPt,

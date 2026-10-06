@@ -112,3 +112,22 @@ describe("mã dùng chung không rẽ nhánh theo mã chuẩn", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+describe("cỡ chữ mặc định các khối đầu, cuối văn bản", () => {
+  it.each([ND30, HD05])("$id: mỗi thành phần có trong chuẩn và cỡ mặc định nằm trong khoảng cho phép", (profile) => {
+    expect(profile.styles.blockSizes.length).toBeGreaterThan(0);
+    for (const block of profile.styles.blockSizes) {
+      const element = profile.elements[block.elementId];
+      expect(element).toBeDefined();
+      expect(block.defaultPt).toBeGreaterThanOrEqual(element.sizePt.min);
+      expect(block.defaultPt).toBeLessThanOrEqual(element.sizePt.max);
+    }
+  });
+
+  it("không trùng thành phần trong cùng một chuẩn", () => {
+    for (const profile of [ND30, HD05]) {
+      const ids = profile.styles.blockSizes.map((b) => b.elementId);
+      expect(new Set(ids).size).toBe(ids.length);
+    }
+  });
+});
