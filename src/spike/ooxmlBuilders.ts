@@ -188,3 +188,29 @@ export function exactParagraphBody(text: string, exactPt: number): string {
     `<w:r><w:rPr>${FONT}${sizeXml(14)}</w:rPr><w:t xml:space="preserve">${text}</w:t></w:r></w:p>`
   );
 }
+
+/**
+ * Đặt pgNumType start cho phần (sectPr) thứ `sectionIndex` (từ 0) trong một đoạn OOXML, giữ
+ * nguyên các phần khác. Đặt đúng thứ tự phần tử theo lược đồ: sau pgMar, trước cols.
+ */
+export function withPgNumTypeStart(xml: string, sectionIndex: number, start: number): string {
+  const sections = [...xml.matchAll(/<w:sectPr\b[^>]*>[\s\S]*?<\/w:sectPr>/g)];
+  const target = sections[sectionIndex];
+  if (!target) {
+    throw new RangeError(`Không có phần (sectPr) thứ ${sectionIndex}.`);
+  }
+  const tag = `<w:pgNumType w:start="${start}"/>`;
+  const original = target[0];
+  let updated: string;
+  if (/<w:pgNumType\b[^>]*\/>/.test(original)) {
+    updated = original.replace(/<w:pgNumType\b[^>]*\/>/, tag);
+  } else if (/<w:pgMar\b[^>]*\/>/.test(original)) {
+    updated = original.replace(/(<w:pgMar\b[^>]*\/>)/, `$1${tag}`);
+  } else if (original.includes("<w:cols")) {
+    updated = original.replace("<w:cols", `${tag}<w:cols`);
+  } else {
+    updated = original.replace("</w:sectPr>", `${tag}</w:sectPr>`);
+  }
+  const index = target.index ?? 0;
+  return xml.slice(0, index) + updated + xml.slice(index + original.length);
+}

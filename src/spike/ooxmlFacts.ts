@@ -86,3 +86,33 @@ export function readJustification(xml: string): string | undefined {
   const tag = firstTag(xml, "jc");
   return tag ? attr(tag, "val") : undefined;
 }
+
+/** Phần thân tài liệu (w:body) của gói OOXML phẳng, không kèm phần styles; rỗng nếu không có. */
+export function bodyPart(xml: string): string {
+  const match = /<w:body>([\s\S]*?)<\/w:body>/.exec(xml);
+  return match ? match[1] : "";
+}
+
+/** Định nghĩa (w:style) của một style theo mã; rỗng nếu không có. */
+export function styleDefinition(xml: string, styleId: string): string {
+  const pattern = new RegExp(String.raw`<w:style\b[^>]*w:styleId="${styleId}"[^>]*>[\s\S]*?</w:style>`);
+  const match = pattern.exec(xml);
+  return match ? match[0] : "";
+}
+
+/** Quy tắc giãn dòng (auto, exact, atLeast) của thẻ w:spacing đầu tiên có ghi. */
+export function readLineRule(xml: string): string | undefined {
+  const tags = xml.match(/<w:spacing\b[^>]*>/g) ?? [];
+  for (const tag of tags) {
+    const rule = attr(tag, "lineRule");
+    if (rule !== undefined) {
+      return rule;
+    }
+  }
+  return undefined;
+}
+
+/** Mã style của các đoạn (w:pStyle), theo thứ tự xuất hiện. */
+export function paragraphStyleIds(xml: string): string[] {
+  return [...xml.matchAll(/<w:pStyle\b[^>]*w:val="([^"]*)"/g)].map((m) => m[1]);
+}

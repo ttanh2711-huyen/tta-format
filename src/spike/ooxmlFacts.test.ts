@@ -1,11 +1,15 @@
 import {
+  bodyPart,
   hasBottomBorder,
   hasExactLineRule,
   hasPageField,
+  paragraphStyleIds,
   readJustification,
+  readLineRule,
   readParagraphIndentTwips,
   readPgNumTypeStart,
   readTableIndentTwips,
+  styleDefinition,
   tableBordersAllNone,
 } from "./ooxmlFacts";
 
@@ -116,5 +120,59 @@ describe("readJustification", () => {
   it("đọc kiểu căn lề đầu tiên", () => {
     expect(readJustification(`<w:pPr><w:jc w:val="center"/></w:pPr>`)).toBe("center");
     expect(readJustification(`<w:pPr></w:pPr>`)).toBeUndefined();
+  });
+});
+
+describe("bodyPart", () => {
+  const pkg =
+    `<pkg:package><pkg:part pkg:name="/word/document.xml"><pkg:xmlData><w:document><w:body>` +
+    `<w:p><w:r><w:t>nội dung</w:t></w:r></w:p></w:body></w:document></pkg:xmlData></pkg:part>` +
+    `<pkg:part pkg:name="/word/styles.xml"><pkg:xmlData><w:styles>` +
+    `<w:style w:styleId="Cu"><w:pPr><w:spacing w:line="400" w:lineRule="exact"/></w:pPr></w:style>` +
+    `</w:styles></pkg:xmlData></pkg:part></pkg:package>`;
+
+  it("chỉ lấy phần thân tài liệu, không lấy phần styles", () => {
+    expect(bodyPart(pkg)).toContain("nội dung");
+    expect(bodyPart(pkg)).not.toContain("w:styleId");
+  });
+
+  it("nhờ đó không nhầm giãn dòng Exactly của style khác với giãn dòng của đoạn", () => {
+    expect(hasExactLineRule(pkg, 400)).toBe(true);
+    expect(hasExactLineRule(bodyPart(pkg), 400)).toBe(false);
+  });
+
+  it("không có thân tài liệu thì trả về chuỗi rỗng", () => {
+    expect(bodyPart("<pkg:package/>")).toBe("");
+  });
+});
+
+describe("styleDefinition", () => {
+  const styles =
+    `<w:style w:type="paragraph" w:styleId="A1"><w:name w:val="A"/><w:pPr><w:spacing w:line="240" w:lineRule="auto"/></w:pPr></w:style>` +
+    `<w:style w:type="paragraph" w:customStyle="1" w:styleId="B2"><w:name w:val="B"/><w:pPr><w:spacing w:line="400" w:lineRule="exact"/></w:pPr></w:style>`;
+
+  it("lấy đúng định nghĩa của style theo mã", () => {
+    expect(hasExactLineRule(styleDefinition(styles, "B2"), 400)).toBe(true);
+    expect(hasExactLineRule(styleDefinition(styles, "A1"))).toBe(false);
+  });
+
+  it("style không tồn tại thì trả về chuỗi rỗng", () => {
+    expect(styleDefinition(styles, "KhongCo")).toBe("");
+  });
+});
+
+describe("readLineRule", () => {
+  it("đọc quy tắc giãn dòng đầu tiên", () => {
+    expect(readLineRule(`<w:spacing w:line="400" w:lineRule="exact"/>`)).toBe("exact");
+    expect(readLineRule(`<w:spacing w:line="280" w:lineRule="auto"/>`)).toBe("auto");
+    expect(readLineRule(`<w:spacing w:before="120"/>`)).toBeUndefined();
+  });
+});
+
+describe("paragraphStyleIds", () => {
+  it("liệt kê mã style của các đoạn", () => {
+    const xml = `<w:p><w:pPr><w:pStyle w:val="A1"/></w:pPr></w:p><w:p><w:pPr><w:pStyle w:val="B2"/></w:pPr></w:p>`;
+    expect(paragraphStyleIds(xml)).toEqual(["A1", "B2"]);
+    expect(paragraphStyleIds(`<w:p/>`)).toEqual([]);
   });
 });

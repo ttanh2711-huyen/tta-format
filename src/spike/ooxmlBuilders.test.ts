@@ -9,6 +9,7 @@ import {
   styledParagraphBody,
   styleDefinitionXml,
   styleImportJson,
+  withPgNumTypeStart,
   withTrailingParagraph,
 } from "./ooxmlBuilders";
 import {
@@ -181,5 +182,33 @@ describe("exactParagraphBody", () => {
     const xml = exactParagraphBody("Giãn dòng Exactly", 20);
     expect(hasExactLineRule(xml, 400)).toBe(true);
     expect(isBalanced(xml)).toBe(true);
+  });
+});
+
+describe("withPgNumTypeStart", () => {
+  const sect = (extra = "") => `<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:left="1701"/>${extra}<w:cols w:space="708"/></w:sectPr>`;
+  const doc = `<w:p><w:pPr>${sect()}</w:pPr></w:p><w:p><w:pPr>${sect()}</w:pPr></w:p>${sect()}`;
+
+  it("thêm pgNumType vào đúng phần thứ n, các phần khác giữ nguyên", () => {
+    const result = withPgNumTypeStart(doc, 1, 1);
+    const sections = result.match(/<w:sectPr>[\s\S]*?<\/w:sectPr>/g) ?? [];
+    expect(sections).toHaveLength(3);
+    expect(sections[0]).not.toContain("pgNumType");
+    expect(sections[1]).toContain('<w:pgNumType w:start="1"/>');
+    expect(sections[2]).not.toContain("pgNumType");
+    expect(sections[1].indexOf("pgMar")).toBeLessThan(sections[1].indexOf("pgNumType"));
+    expect(sections[1].indexOf("pgNumType")).toBeLessThan(sections[1].indexOf("<w:cols"));
+    expect(isBalanced(result)).toBe(true);
+  });
+
+  it("thay giá trị khi phần đã có pgNumType", () => {
+    const withExisting = `<w:p><w:pPr>${sect('<w:pgNumType w:start="5"/>')}</w:pPr></w:p>`;
+    const result = withPgNumTypeStart(withExisting, 0, 1);
+    expect(readPgNumTypeStart(result)).toBe(1);
+    expect(result.match(/pgNumType/g)).toHaveLength(1);
+  });
+
+  it("chỉ số phần không tồn tại là lỗi", () => {
+    expect(() => withPgNumTypeStart(doc, 7, 1)).toThrow(RangeError);
   });
 });

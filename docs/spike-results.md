@@ -1,6 +1,6 @@
 # Kết quả spike Office.js
 
-Chạy lúc: 2026-10-06T07:30:40.511Z
+Chạy lúc: 2026-10-06T07:39:14.335Z
 
 ## Môi trường
 
@@ -24,8 +24,8 @@ Chạy lúc: 2026-10-06T07:30:40.511Z
 
 ## Tổng hợp
 
-- pass: 10, fail: 3, unsupported: 0, manual: 2, skipped: 1
-- **Kết luận: go-with-fallback** (Đường kẻ ngắn bằng viền dưới của đoạn rỗng có thụt hai bên: fail; Chuẩn Đảng: giãn dòng Exactly 18-22 pt (style OOXML và API lineSpacing): fail; Phụ lục đánh số trang riêng: ngắt phần có pgNumType start=1 qua insertOoxml: fail)
+- pass: 12, fail: 1, unsupported: 0, manual: 2, skipped: 1
+- **Kết luận: go-with-fallback** (Phụ lục đánh số trang riêng: ngắt phần có pgNumType start=1 qua insertOoxml: fail)
 
 ## Chi tiết
 
@@ -36,14 +36,14 @@ Chạy lúc: 2026-10-06T07:30:40.511Z
 | p04 | Chuẩn Đảng: lề đối xứng khi in hai mặt (mirrorMargins) | hd05 | pass | lề trong (leftMargin) 30 mm; lề ngoài (rightMargin) 14.99 mm. Khi bật, lề trái là lề trong; mặt sau tự đảo thành trái 15, phải 30 (cần xem Print Preview để xác nhận bằng mắt). |
 | p05 | Khoảng cách header 10 mm và "trang đầu khác biệt" | hd05 | pass | khoảng cách header 10 mm. |
 | p06 | Số trang canh giữa ở header (insertField hoặc OOXML), trang đầu header trống | chung | pass | insertField: đạt; insertOoxml: đạt; header trang đầu trống. |
-| p07 | Đường kẻ ngắn bằng viền dưới của đoạn rỗng có thụt hai bên | chung | fail | không thấy viền dưới trong OOXML của thân văn bản; không thấy thụt trái và phải 1701 twips. Cần xem bằng mắt: đường kẻ phải ngắn hơn dòng chữ phía trên và nằm giữa. |
+| p07 | Đường kẻ ngắn bằng viền dưới của đoạn rỗng có thụt hai bên | chung | pass | đoạn đơn: không đạt (viền dưới mất, thụt mất); kèm đoạn rỗng phía sau: đạt; thay thế một đoạn bằng Paragraph.insertOoxml: không đạt (viền dưới mất, thụt mất). Cần xem bằng mắt: đường kẻ phải ngắn hơn dòng chữ phía trên và nằm giữa. |
 | p08 | Bảng đầu văn bản 3 hàng x 2 cột không viền bằng insertOoxml, vừa vùng chữ | chung | pass | bề rộng bảng vừa vùng chữ 453.55 pt; bảng 3 hàng, thụt 0 twips, 6 cạnh không viền; bảng rộng như file mẫu cũ: rộng 520 pt, thụt -800 twips (mong đợi -800). Cần xem bằng mắt khi chạy riêng: hai bảng không có đường viền nào. |
 | p09 | Bảng tạo bằng API insertTable rồi bỏ viền (phương án thay thế cho OOXML) | chung | pass | bảng 3 hàng, viền "None". |
-| p10 | Cài và cập nhật style: importStylesFromJson (Overwrite) hoặc insertOoxml | chung | pass | importStylesFromJson lần 1: đạt (cỡ 14, giãn dòng 20 pt); importStylesFromJson Overwrite cập nhật style cũ: đạt (cỡ 13, giãn dòng 22 pt); insertOoxml lần 1: không đạt ({"exists":false,"font":"","size":0,"lineSpacing":0,"spaceAfter":0}). |
-| p11 | Chuẩn Đảng: giãn dòng Exactly 18-22 pt (style OOXML và API lineSpacing) | hd05 | fail | OOXML của đoạn không còn giãn dòng Exactly 400 twips (20 pt) trong style. |
-| p12 | Phụ lục đánh số trang riêng: ngắt phần có pgNumType start=1 qua insertOoxml | chung | fail | pgNumType start đọc lại là không có, mong đợi 1. Cần xem bằng mắt: trang đầu của phụ lục phải hiện số 1 ở phần có đánh số. |
+| p10 | Cài và cập nhật style: importStylesFromJson (Overwrite) hoặc insertOoxml | chung | pass | importStylesFromJson lần 1: đạt (cỡ 14, giãn dòng 20 pt); importStylesFromJson Overwrite cập nhật style cũ: đạt (cỡ 13, giãn dòng 22 pt); insertOoxml (đoạn đơn): không cài được ({"exists":false,"font":"","size":0,"lineSpacing":0,"spaceAfter":0}); insertOoxml (kèm đoạn rỗng phía sau): cài được style, chèn lại với định nghĩa khác KHÔNG cập nhật style cũ; insertOoxml (thay thế một đoạn bằng Paragraph.insertOoxml): không cài được ({"exists":false,"font":"","size":0,"lineSpacing":0,"spaceAfter":0}). |
+| p11 | Chuẩn Đảng: giãn dòng Exactly 18-22 pt (OOXML thử nhiều cách chèn, và API lineSpacing) | hd05 | pass | style OOXML (đoạn đơn): Exactly đạt; đặt trực tiếp trên đoạn (đoạn đơn): Exactly đạt; style OOXML (kèm đoạn rỗng phía sau): Exactly đạt; đặt trực tiếp trên đoạn (kèm đoạn rỗng phía sau): Exactly đạt; style OOXML (thay thế một đoạn bằng Paragraph.insertOoxml): Exactly đạt; đặt trực tiếp trên đoạn (thay thế một đoạn bằng Paragraph.insertOoxml): Exactly đạt; API lineSpacing=20 cho ra quy tắc "auto" (là Exactly). |
+| p12 | Phụ lục đánh số trang riêng: ngắt phần có pgNumType start=1 qua insertOoxml | chung | fail | không cách chèn nào giữ được pgNumType start=1. Cần xem bằng mắt: trang đầu của phụ lục phải hiện số 1 ở phần có đánh số. |
 | p13 | "Chỉnh toàn bộ": chụp bản trước khi chỉnh và khôi phục (thân, bảng, header, lề) | chung | pass | lề trái sau khôi phục 30 mm; số đoạn trước 8, sau 8 (chênh lệch do đoạn rỗng cuối là bình thường). |
 | p14 | Hoàn tác: 3 thay đổi trong MỘT Word.run, bấm Ctrl+Z bao nhiêu lần? | chung | manual | Đã tô đỏ và in đậm 3 đoạn trong MỘT lần Word.run. Bấm Ctrl+Z trong Word: ghi lại cần bấm mấy lần để cả 3 đoạn trở lại bình thường (mong đợi 1). |
 | p15 | Hoàn tác: 3 thay đổi trong BA lần Word.run, bấm Ctrl+Z bao nhiêu lần? | chung | manual | Đã tô đỏ và in đậm 3 đoạn trong BA lần Word.run riêng. Bấm Ctrl+Z: ghi lại cần bấm mấy lần (để so với phép thử p14). |
-| p16 | Hiệu năng: 600 đoạn, đặt phông, cỡ, căn đều, giãn dòng trong một lượt | chung | pass | 600 đoạn: chèn 121202 ms, tải danh sách 875 ms, định dạng 542 ms (khoảng 3 giây cho 3000 đoạn nếu tuyến tính). |
+| p16 | Hiệu năng: 600 đoạn, định dạng hàng loạt; so sánh cách chèn đoạn | chung | pass | chèn 600 đoạn bằng một lệnh insertText: 161 ms (đọc lại được 600 đoạn); tải danh sách 635 ms; định dạng 600 đoạn: 846 ms (khoảng 4 giây cho 3000 đoạn nếu tuyến tính); chèn từng đoạn bằng insertParagraph: khoảng 22 ms mỗi đoạn. |
 | p17 | Tab stop (WordApiDesktop 1.4) | chung | skipped | Bỏ qua có chủ đích: các khối đầu và cuối văn bản dựng bằng bảng, không dùng tab stop. Không ảnh hưởng quyết định công nghệ. |

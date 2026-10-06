@@ -1,6 +1,6 @@
 # Spike T3: khả thi Office.js trên Word 365
 
-Trạng thái: **đã chạy lần 1; đang chạy lần 2** cho bốn mục fail do cách chèn OOXML (xem "Kết quả lần 1"). Báo cáo đầy đủ lần 1 ở `docs/spike-results-lan-1.md`; lần 2 ghi vào `docs/spike-results.md`.
+Trạng thái: **đã chạy 2 lần; đang chạy lần 3** cho p11 (kết quả lần 2 bị nhiễm, đã sửa phép thử) và p12. Báo cáo: `docs/spike-results-lan-1.md`, `docs/spike-results-lan-2.md`; lần 3 ghi vào `docs/spike-results.md`.
 
 ## Mục đích
 
@@ -91,6 +91,21 @@ Kết quả máy: pass 10, fail 3, thủ công 2, bỏ qua 1. **Cả 4 mục b�
 
 Bốn mục fail (p07, p10 phần OOXML, p11, p12) cùng một mẫu: gói OOXML **chỉ có một đoạn** cần giữ thuộc tính riêng (viền, style, thụt dòng, ngắt phần). Hai mục chèn bảng (p08) và `importStylesFromJson` thì đạt. Giả thuyết: Word bỏ thuộc tính của đoạn cuối cùng trong gói vì dấu kết đoạn cuối không được chèn kèm. Lần chạy 2 thử ba cách chèn cho từng mục: đoạn đơn (như lần 1), kèm một đoạn rỗng phía sau, và `Paragraph.insertOoxml` với `Replace`. Giả thuyết đúng khi hai cách sau đạt còn cách đầu fail.
 
-## Kết quả lần 2
+## Kết quả lần 2 (06/10/2026)
+
+Kết quả máy: pass 12, fail 1, thủ công 2, bỏ qua 1. Bốn mục bắt buộc vẫn đạt.
+
+**Giả thuyết ở lần 1 đã được xác nhận cho p07 và p10.** Gói OOXML chỉ có một đoạn thì Word bỏ thuộc tính của đoạn cuối (viền, thụt dòng, style). Chỉ cách **kèm một đoạn rỗng phía sau** giữ được; cách đoạn đơn và `Paragraph.insertOoxml(Replace)` đều mất.
+
+| Hạng mục | Kết quả lần 2 | Kết luận |
+|---|---|---|
+| Đường kẻ bằng viền dưới và thụt hai bên (p07) | Chỉ "kèm đoạn rỗng phía sau" đạt | **Quy tắc chung: chèn OOXML luôn kèm một đoạn rỗng sau, rồi xoá đoạn thừa.** Cần người xem bằng mắt: đường kẻ có ngắn hơn dòng chữ và nằm giữa |
+| Cài style bằng OOXML (p10) | Chỉ "kèm đoạn rỗng" cài được; chèn lại với định nghĩa khác **không** cập nhật style đã có | Xác nhận: dùng `importStylesFromJson` với `Overwrite` (đã đạt cả cài mới lẫn cập nhật) cho T5 |
+| Hiệu năng (p16) | Chèn 600 đoạn bằng một lệnh `insertText`: 161 ms; định dạng 600 đoạn: 846 ms (khoảng 4 giây cho 3000 đoạn); `insertParagraph` từng đoạn: khoảng 22 ms mỗi đoạn | Lần 1 mất 121 giây cho 600 `insertParagraph` trong một lượt, nên chèn nhiều đoạn bằng vòng lặp trong một lượt là **tăng nhanh hơn tuyến tính**. Luôn chèn hàng loạt bằng một lệnh |
+| Giãn dòng Exactly (p11) | **Kết quả không dùng được.** Mọi cách đều báo đạt, kể cả API, trong khi chính dòng đó ghi API cho ra quy tắc "auto" | Phép thử quét cả phần styles của gói, mà tài liệu còn các style Exactly do p10 cài trước đó. Đã sửa: chỉ xét phần thân và đúng định nghĩa style đang dùng, mã style theo từng lần chạy. Chạy lại ở lần 3 |
+| Đánh số trang phụ lục (p12) | Cả ba cách chèn đoạn chứa `sectPr` đều mất `pgNumType` | Đã thêm cách thứ tư (lấy OOXML cả thân, thêm `pgNumType` vào phần phụ lục, `Replace` lại) và ghi lại các đoạn `sectPr` để chẩn đoán. Chạy lại ở lần 3 |
+| Hoàn tác (p14, p15) | Chưa ghi số lần Ctrl+Z | Còn chờ |
+
+## Kết quả lần 3
 
 *Chưa có.*

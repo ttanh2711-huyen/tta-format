@@ -14,14 +14,19 @@ import {
   styledParagraphBody,
   styleDefinitionXml,
   styleImportJson,
+  withPgNumTypeStart,
   withTrailingParagraph,
 } from "./ooxmlBuilders";
 import {
+  bodyPart,
   hasExactLineRule,
   hasPageField,
+  paragraphStyleIds,
   readJustification,
+  readLineRule,
   readPgNumTypeStart,
   readTableIndentTwips,
+  styleDefinition,
   tableBordersAllNone,
 } from "./ooxmlFacts";
 import type { ProbeGroup } from "./report";
@@ -68,7 +73,8 @@ class Checks {
   outcome(extra = ""): ProbeOutcome {
     const tail = extra ? ` ${extra}` : "";
     if (this.failures.length > 0) {
-      return { status: "fail", detail: `${this.failures.join("; ")}.${tail}` };
+      const notes = this.notes.length > 0 ? ` Ghi chú: ${this.notes.join("; ")}.` : "";
+      return { status: "fail", detail: `${this.failures.join("; ")}.${notes}${tail}` };
     }
     return { status: "pass", detail: `${this.notes.join("; ")}.${tail}` };
   }
@@ -95,6 +101,11 @@ async function optional<T>(action: () => Promise<T>): Promise<{ value?: T; error
 }
 
 const A4_MM = { width: 210, height: 297 };
+
+/** Hậu tố riêng mỗi lần chạy, để style còn sót từ lần trước không làm lệch kết quả. */
+function runStamp(): string {
+  return Date.now().toString(36);
+}
 
 // ---------------------------------------------------------------------------------------------
 
@@ -325,7 +336,7 @@ const lineProbe: Probe = {
       for (const { how, label } of INSERT_HOW) {
         await writeTitle();
         await insertBy(context, how, line);
-        const xml = await bodyOoxml(context);
+        const xml = bodyPart(await bodyOoxml(context));
         const border = /<w:pBdr>[\s\S]*?<w:bottom\b[^>]*w:val="single"/.test(xml);
         const indent = new RegExp(`w:(left|start)="${left}"`).test(xml) && new RegExp(`w:(right|end)="${left}"`).test(xml);
         results[how] = border && indent;
@@ -448,7 +459,8 @@ const styleProbe: Probe = {
       const checks = new Checks();
 
       // Cách A: importStylesFromJson, rồi nhập lại với Overwrite để cập nhật.
-      const nameA = "ND30_ThuA";
+      const stamp = runStamp();
+      const nameA = `ND30_A${stamp}`;
       const importA = await optional(async () => {
         context.document.importStylesFromJson(styleImportJson({ name: nameA, fontPt: 14, lineSpacingPt: 20 }));
         await context.sync();
@@ -482,8 +494,8 @@ const styleProbe: Probe = {
       let n = 0;
       for (const { how, label } of INSERT_HOW) {
         n += 1;
-        const id = `NDThuB${n}`;
-        const name = `ND30_ThuB${n}`;
+        const id = `NDB${stamp}${n}`;
+        const name = `ND30_B${stamp}${n}`;
         const insert = async (fontPt: number, exactPt: number) => {
           await insertBy(
             context,
@@ -516,18 +528,22 @@ const styleProbe: Probe = {
 
 const exactSpacingProbe: Probe = {
   id: "p11",
-  title: "Chuẩn Đảng: giãn dòng Exactly 18-22 pt (OOXML thử nhiều cách chèn, và API lineSpacing)",
+  title: "Chuẩn Đảng: giãn dòng Exactly 18-22 pt (OOXML thử nhiều cách chèn, importStylesFromJson và API lineSpacing)",
   group: "hd05",
   critical: false,
   async run() {
     return Word.run(async (context) => {
       const checks = new Checks();
       const body = context.document.body;
+      const stamp = runStamp();
       const results: Record<string, boolean> = {};
+
+      // Chỉ xét phần thân và đúng định nghĩa của style đang dùng, không quét cả phần styles của gói
+      // (tài liệu còn giữ các style Exactly do phép thử trước cài, sẽ gây kết quả sai).
       let n = 0;
       for (const { how, label } of INSERT_HOW) {
         n += 1;
-        const id = `NDThuC${n}`;
+        const id = `NDC${stamp}${n}`;
         body.clear();
         await context.sync();
         await optional(() =>
@@ -535,41 +551,64 @@ const exactSpacingProbe: Probe = {
             context,
             how,
             styledParagraphBody(id, "Giãn dòng Exactly 20 pt qua style"),
-            styleDefinitionXml({ id, name: `ND30_ThuC${n}`, fontPt: 14, exactLineSpacingPt: 20 }),
+            styleDefinitionXml({ id, name: `ND30_C${stamp}${n}`, fontPt: 14, exactLineSpacingPt: 20 }),
           ),
         );
-        const viaStyle = hasExactLineRule(await bodyOoxml(context), 400);
-        results[`style/${how}`] = viaStyle;
-        checks.note(`style OOXML (${label}): Exactly ${viaStyle ? "đạt" : "mất"}`);
+        const xml = await bodyOoxml(context);
+        const kept = paragraphStyleIds(bodyPart(xml)).includes(id);
+        const exact = hasExactLineRule(styleDefinition(xml, id), 400);
+        results[`style/${how}`] = kept && exact;
+        checks.note(`style OOXML (${label}): đoạn ${kept ? "giữ" : "mất"} style, định nghĩa style ${exact ? "có" : "không có"} Exactly 20 pt`);
 
         body.clear();
         await context.sync();
         await optional(() => insertBy(context, how, exactParagraphBody("Giãn dòng Exactly 20 pt đặt trực tiếp", 20)));
-        const direct = hasExactLineRule(await bodyOoxml(context), 400);
+        const direct = hasExactLineRule(bodyPart(await bodyOoxml(context)), 400);
         results[`direct/${how}`] = direct;
         checks.note(`đặt trực tiếp trên đoạn (${label}): Exactly ${direct ? "đạt" : "mất"}`);
       }
-      checks.expect(Object.values(results).some(Boolean), "không cách OOXML nào giữ được giãn dòng Exactly");
 
+      // importStylesFromJson với lineSpacing 20 pt: quy tắc giãn dòng thực tế của style là gì?
+      body.clear();
+      await context.sync();
+      const jsonName = `ND30_J${stamp}`;
+      const jsonRule = await optional(async () => {
+        context.document.importStylesFromJson(styleImportJson({ name: jsonName, fontPt: 14, lineSpacingPt: 20 }));
+        await context.sync();
+        const paragraph = body.insertParagraph("Giãn dòng qua importStylesFromJson", "End");
+        paragraph.style = jsonName;
+        await context.sync();
+        const xml = await bodyOoxml(context);
+        const styleId = paragraphStyleIds(bodyPart(xml)).find((id) => styleDefinition(xml, id).includes(jsonName)) ?? "";
+        return { styleId, rule: readLineRule(styleDefinition(xml, styleId)) ?? "không ghi", exact: hasExactLineRule(styleDefinition(xml, styleId), 400) };
+      });
+      results["importJson"] = jsonRule.value?.exact === true;
+      checks.note(
+        `importStylesFromJson lineSpacing=20: quy tắc "${jsonRule.value?.rule ?? jsonRule.error ?? "không đọc được"}" (${results["importJson"] ? "là Exactly" : "không phải Exactly"})`,
+      );
+
+      // API lineSpacing đặt trực tiếp trên đoạn.
       body.clear();
       const plain = body.insertParagraph("Giãn dòng đặt bằng API lineSpacing = 20", "End");
       plain.lineSpacing = 20;
       await context.sync();
-      const plainXml = plain.getOoxml();
-      await context.sync();
-      const apiRule = /<w:spacing\b[^>]*w:lineRule="(\w+)"/.exec(plainXml.value)?.[1] ?? "không ghi";
-      results["api"] = hasExactLineRule(plainXml.value, 400);
+      const plainBody = bodyPart(await bodyOoxml(context));
+      const apiRule = readLineRule(plainBody) ?? "không ghi";
+      results["api"] = apiRule === "exact";
       checks.note(`API lineSpacing=20 cho ra quy tắc "${apiRule}" (${results["api"] ? "là Exactly" : "KHÔNG phải Exactly"})`);
+
+      const oneWorks = Object.entries(results).some(([key, ok]) => ok && key !== "api");
+      checks.expect(oneWorks, "không cách nào ngoài API giữ được giãn dòng Exactly");
       body.clear();
       await context.sync();
-      return { ...checks.outcome(), data: { results, apiRule } };
+      return { ...checks.outcome(), data: { results, apiRule, importJson: jsonRule.value } };
     });
   },
 };
 
 const appendixNumberingProbe: Probe = {
   id: "p12",
-  title: "Phụ lục đánh số trang riêng: ngắt phần có pgNumType start=1 qua insertOoxml",
+  title: "Phụ lục đánh số trang riêng: pgNumType start=1 (OOXML trong đoạn, hoặc sửa sectPr của cả thân rồi thay thế)",
   group: "chung",
   critical: false,
   async run() {
@@ -577,6 +616,20 @@ const appendixNumberingProbe: Probe = {
       const checks = new Checks();
       const body = context.document.body;
       const results: Record<string, boolean> = {};
+      const fragments: Record<string, string[]> = {};
+      const sectPrs = (xml: string) => (xml.match(/<w:sectPr\b[\s\S]*?<\/w:sectPr>/g) ?? []).map((t) => t.slice(0, 260));
+
+      const buildThreeSections = async () => {
+        body.clear();
+        body.insertText("Văn bản chính", "Start");
+        body.insertBreak("SectionNext", "End");
+        body.insertText("Phụ lục I", "End");
+        body.insertBreak("SectionNext", "End");
+        body.insertText("Sau phụ lục", "End");
+        await context.sync();
+      };
+
+      // Cách 1: chèn đoạn chứa sectPr có pgNumType (ba kiểu chèn).
       for (const { how, label } of INSERT_HOW) {
         body.clear();
         body.insertText("Văn bản chính", "Start");
@@ -588,14 +641,37 @@ const appendixNumberingProbe: Probe = {
         const sections = context.document.sections;
         sections.load("items");
         await context.sync();
-        const start = readPgNumTypeStart(await bodyOoxml(context));
-        results[how] = start === 1;
-        checks.note(`${label}: ${sections.items.length} phần, pgNumType start=${start ?? "không có"} (${start === 1 ? "đạt" : "không đạt"})`);
+        const xml = await bodyOoxml(context);
+        const start = readPgNumTypeStart(xml);
+        results[`doan/${how}`] = start === 1;
+        fragments[`doan/${how}`] = sectPrs(xml);
+        checks.note(`đoạn sectPr (${label}): ${sections.items.length} phần, pgNumType start=${start ?? "không có"}`);
       }
-      checks.expect(Object.values(results).some(Boolean), "không cách chèn nào giữ được pgNumType start=1");
+
+      // Cách 2: tạo 3 phần bằng insertBreak, lấy OOXML cả thân, thêm pgNumType vào phần 2 rồi thay thế.
+      await buildThreeSections();
+      const roundTrip = await optional(async () => {
+        const original = await bodyOoxml(context);
+        const modified = withPgNumTypeStart(original, 1, 1);
+        body.insertOoxml(modified, "Replace");
+        await context.sync();
+        const sections = context.document.sections;
+        sections.load("items");
+        const after = await bodyOoxml(context);
+        await context.sync();
+        return { count: sections.items.length, after };
+      });
+      const afterXml = roundTrip.value?.after ?? "";
+      results["thanVanBan"] = afterXml !== "" && /<w:sectPr\b[^>]*>(?:(?!<\/w:sectPr>)[\s\S])*<w:pgNumType\b[^>]*w:start="1"/.test(afterXml);
+      fragments["thanVanBan"] = sectPrs(afterXml);
+      checks.note(
+        `sửa sectPr của cả thân rồi Replace: ${roundTrip.value ? `${roundTrip.value.count} phần, pgNumType ${results["thanVanBan"] ? "còn nguyên" : "mất"}` : `lỗi (${roundTrip.error})`}`,
+      );
+
+      checks.expect(Object.values(results).some(Boolean), "không cách nào giữ được pgNumType start=1");
       body.clear();
       await context.sync();
-      return { ...checks.outcome("Cần xem bằng mắt: trang đầu của phụ lục phải hiện số 1 ở phần có đánh số."), data: results };
+      return { ...checks.outcome("Cần xem bằng mắt: trang đầu của phụ lục phải hiện số 1 ở phần có đánh số."), data: { results, fragments } };
     });
   },
 };

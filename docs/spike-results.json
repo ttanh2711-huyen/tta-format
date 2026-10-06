@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-06T07:30:40.511Z",
+  "generatedAt": "2026-10-06T07:39:14.335Z",
   "environment": {
     "host": "Word",
     "platform": "PC",
@@ -29,7 +29,7 @@
       "critical": true,
       "status": "pass",
       "detail": "rộng 210.03 mm; cao 297.02 mm; lề trên 20 mm; lề dưới 20 mm; lề trái 30 mm; lề phải 20 mm.",
-      "durationMs": 615
+      "durationMs": 354
     },
     {
       "id": "p03",
@@ -38,7 +38,7 @@
       "critical": false,
       "status": "pass",
       "detail": "lề trái phần 1 30 mm; lề trái phần 2 14.99 mm.",
-      "durationMs": 132
+      "durationMs": 97
     },
     {
       "id": "p04",
@@ -47,7 +47,7 @@
       "critical": false,
       "status": "pass",
       "detail": "lề trong (leftMargin) 30 mm; lề ngoài (rightMargin) 14.99 mm. Khi bật, lề trái là lề trong; mặt sau tự đảo thành trái 15, phải 30 (cần xem Print Preview để xác nhận bằng mắt).",
-      "durationMs": 81
+      "durationMs": 55
     },
     {
       "id": "p05",
@@ -56,7 +56,7 @@
       "critical": false,
       "status": "pass",
       "detail": "khoảng cách header 10 mm.",
-      "durationMs": 105
+      "durationMs": 53
     },
     {
       "id": "p06",
@@ -65,16 +65,21 @@
       "critical": true,
       "status": "pass",
       "detail": "insertField: đạt; insertOoxml: đạt; header trang đầu trống.",
-      "durationMs": 255
+      "durationMs": 230
     },
     {
       "id": "p07",
       "title": "Đường kẻ ngắn bằng viền dưới của đoạn rỗng có thụt hai bên",
       "group": "chung",
       "critical": false,
-      "status": "fail",
-      "detail": "không thấy viền dưới trong OOXML của thân văn bản; không thấy thụt trái và phải 1701 twips. Cần xem bằng mắt: đường kẻ phải ngắn hơn dòng chữ phía trên và nằm giữa.",
-      "durationMs": 93
+      "status": "pass",
+      "detail": "đoạn đơn: không đạt (viền dưới mất, thụt mất); kèm đoạn rỗng phía sau: đạt; thay thế một đoạn bằng Paragraph.insertOoxml: không đạt (viền dưới mất, thụt mất). Cần xem bằng mắt: đường kẻ phải ngắn hơn dòng chữ phía trên và nằm giữa.",
+      "data": {
+        "single": false,
+        "trailing": true,
+        "replace": false
+      },
+      "durationMs": 343
     },
     {
       "id": "p08",
@@ -83,7 +88,7 @@
       "critical": true,
       "status": "pass",
       "detail": "bề rộng bảng vừa vùng chữ 453.55 pt; bảng 3 hàng, thụt 0 twips, 6 cạnh không viền; bảng rộng như file mẫu cũ: rộng 520 pt, thụt -800 twips (mong đợi -800). Cần xem bằng mắt khi chạy riêng: hai bảng không có đường viền nào.",
-      "durationMs": 245
+      "durationMs": 230
     },
     {
       "id": "p09",
@@ -92,7 +97,7 @@
       "critical": false,
       "status": "pass",
       "detail": "bảng 3 hàng, viền \"None\".",
-      "durationMs": 64
+      "durationMs": 74
     },
     {
       "id": "p10",
@@ -100,28 +105,45 @@
       "group": "chung",
       "critical": true,
       "status": "pass",
-      "detail": "importStylesFromJson lần 1: đạt (cỡ 14, giãn dòng 20 pt); importStylesFromJson Overwrite cập nhật style cũ: đạt (cỡ 13, giãn dòng 22 pt); insertOoxml lần 1: không đạt ({\"exists\":false,\"font\":\"\",\"size\":0,\"lineSpacing\":0,\"spaceAfter\":0}).",
+      "detail": "importStylesFromJson lần 1: đạt (cỡ 14, giãn dòng 20 pt); importStylesFromJson Overwrite cập nhật style cũ: đạt (cỡ 13, giãn dòng 22 pt); insertOoxml (đoạn đơn): không cài được ({\"exists\":false,\"font\":\"\",\"size\":0,\"lineSpacing\":0,\"spaceAfter\":0}); insertOoxml (kèm đoạn rỗng phía sau): cài được style, chèn lại với định nghĩa khác KHÔNG cập nhật style cũ; insertOoxml (thay thế một đoạn bằng Paragraph.insertOoxml): không cài được ({\"exists\":false,\"font\":\"\",\"size\":0,\"lineSpacing\":0,\"spaceAfter\":0}).",
       "data": {
         "importedOk": true,
         "overwriteOk": true,
-        "ooxmlOk": false,
-        "ooxmlUpdates": false
+        "ooxml": {
+          "single": {
+            "installed": false
+          },
+          "trailing": {
+            "installed": true,
+            "updatedOnReinsert": false
+          },
+          "replace": {
+            "installed": false
+          }
+        }
       },
-      "durationMs": 96
+      "durationMs": 238
     },
     {
       "id": "p11",
-      "title": "Chuẩn Đảng: giãn dòng Exactly 18-22 pt (style OOXML và API lineSpacing)",
+      "title": "Chuẩn Đảng: giãn dòng Exactly 18-22 pt (OOXML thử nhiều cách chèn, và API lineSpacing)",
       "group": "hd05",
       "critical": false,
-      "status": "fail",
-      "detail": "OOXML của đoạn không còn giãn dòng Exactly 400 twips (20 pt) trong style.",
+      "status": "pass",
+      "detail": "style OOXML (đoạn đơn): Exactly đạt; đặt trực tiếp trên đoạn (đoạn đơn): Exactly đạt; style OOXML (kèm đoạn rỗng phía sau): Exactly đạt; đặt trực tiếp trên đoạn (kèm đoạn rỗng phía sau): Exactly đạt; style OOXML (thay thế một đoạn bằng Paragraph.insertOoxml): Exactly đạt; đặt trực tiếp trên đoạn (thay thế một đoạn bằng Paragraph.insertOoxml): Exactly đạt; API lineSpacing=20 cho ra quy tắc \"auto\" (là Exactly).",
       "data": {
-        "exactInStyle": false,
-        "apiExact": false,
+        "results": {
+          "style/single": true,
+          "direct/single": true,
+          "style/trailing": true,
+          "direct/trailing": true,
+          "style/replace": true,
+          "direct/replace": true,
+          "api": true
+        },
         "apiRule": "auto"
       },
-      "durationMs": 156
+      "durationMs": 532
     },
     {
       "id": "p12",
@@ -129,8 +151,13 @@
       "group": "chung",
       "critical": false,
       "status": "fail",
-      "detail": "pgNumType start đọc lại là không có, mong đợi 1. Cần xem bằng mắt: trang đầu của phụ lục phải hiện số 1 ở phần có đánh số.",
-      "durationMs": 120
+      "detail": "không cách chèn nào giữ được pgNumType start=1. Cần xem bằng mắt: trang đầu của phụ lục phải hiện số 1 ở phần có đánh số.",
+      "data": {
+        "single": false,
+        "trailing": false,
+        "replace": false
+      },
+      "durationMs": 381
     },
     {
       "id": "p13",
@@ -139,7 +166,7 @@
       "critical": false,
       "status": "pass",
       "detail": "lề trái sau khôi phục 30 mm; số đoạn trước 8, sau 8 (chênh lệch do đoạn rỗng cuối là bình thường).",
-      "durationMs": 435
+      "durationMs": 420
     },
     {
       "id": "p14",
@@ -148,7 +175,7 @@
       "critical": false,
       "status": "manual",
       "detail": "Đã tô đỏ và in đậm 3 đoạn trong MỘT lần Word.run. Bấm Ctrl+Z trong Word: ghi lại cần bấm mấy lần để cả 3 đoạn trở lại bình thường (mong đợi 1).",
-      "durationMs": 57
+      "durationMs": 74
     },
     {
       "id": "p15",
@@ -157,22 +184,24 @@
       "critical": false,
       "status": "manual",
       "detail": "Đã tô đỏ và in đậm 3 đoạn trong BA lần Word.run riêng. Bấm Ctrl+Z: ghi lại cần bấm mấy lần (để so với phép thử p14).",
-      "durationMs": 129
+      "durationMs": 132
     },
     {
       "id": "p16",
-      "title": "Hiệu năng: 600 đoạn, đặt phông, cỡ, căn đều, giãn dòng trong một lượt",
+      "title": "Hiệu năng: 600 đoạn, định dạng hàng loạt; so sánh cách chèn đoạn",
       "group": "chung",
       "critical": false,
       "status": "pass",
-      "detail": "600 đoạn: chèn 121202 ms, tải danh sách 875 ms, định dạng 542 ms (khoảng 3 giây cho 3000 đoạn nếu tuyến tính).",
+      "detail": "chèn 600 đoạn bằng một lệnh insertText: 161 ms (đọc lại được 600 đoạn); tải danh sách 635 ms; định dạng 600 đoạn: 846 ms (khoảng 4 giây cho 3000 đoạn nếu tuyến tính); chèn từng đoạn bằng insertParagraph: khoảng 22 ms mỗi đoạn.",
       "data": {
         "count": 600,
-        "insertMs": 121202,
-        "loadMs": 875,
-        "formatMs": 542
+        "realCount": 600,
+        "bulkMs": 161,
+        "loadMs": 635,
+        "formatMs": 846,
+        "perParagraphMs": 22
       },
-      "durationMs": 122949
+      "durationMs": 2385
     },
     {
       "id": "p17",
