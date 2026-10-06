@@ -1,6 +1,7 @@
 import { insertSampleParagraph } from "../office/insertSample";
 import { isDocumentStandardSupported, readDocumentSnapshot, writeDocumentNoAsk, writeDocumentStandard } from "../office/documentStandard";
 import { browserStore } from "../settings/storage";
+import { mountFixAllButton } from "../ui/FixAllButton";
 import { mountFormatPanel } from "../ui/FormatPanel";
 import { mountPageSetupPanel } from "../ui/PageSetupPanel";
 import { mountQuickOptions } from "../ui/QuickOptions";
@@ -36,10 +37,11 @@ Office.onReady((info) => {
   });
 
   const switcherEl = document.getElementById("standard-switcher");
+  const fixAllEl = document.getElementById("fix-all");
   const quickEl = document.getElementById("quick-options");
   const pageEl = document.getElementById("page-setup-panel");
   const formatEl = document.getElementById("format-panel");
-  if (!switcherEl || !quickEl || !pageEl || !formatEl) {
+  if (!switcherEl || !fixAllEl || !quickEl || !pageEl || !formatEl) {
     setStatus("Thiếu vùng hiển thị trong trang; hãy tải lại add-in.");
     return;
   }
@@ -54,6 +56,7 @@ Office.onReady((info) => {
   });
   const quick = mountQuickOptions(quickEl, { currentStandard: switcher.currentStandard, store });
   switcher.onChange(() => quick.refresh());
+  mountFixAllButton(fixAllEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs, behavior: quick.behavior });
   mountPageSetupPanel(pageEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs });
   mountFormatPanel(formatEl, { currentStandard: switcher.currentStandard, behavior: quick.behavior, styleSpecs: quick.styleSpecs });
   setStatus("Sẵn sàng.");

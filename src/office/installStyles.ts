@@ -92,3 +92,29 @@ export async function installStyles(specs: readonly StyleSpec[]): Promise<Instal
     return { items, notes };
   });
 }
+
+/** Cách một lần cài sẽ thay đổi tài liệu, tính từ trạng thái hiện tại; chỉ đọc. */
+export interface StyleInstallPlan {
+  toCreate: number;
+  toUpdate: number;
+}
+
+/** Quy tắc giãn dòng Exactly không đạt qua importStylesFromJson (spike T3), không tính là "cần cập nhật". */
+const KNOWN_LIMIT = /^quy tắc giãn dòng/;
+
+export async function planStyleInstall(specs: readonly StyleSpec[]): Promise<StyleInstallPlan> {
+  return Word.run(async (context) => {
+    const current = await readStyles(context, specs);
+    let toCreate = 0;
+    let toUpdate = 0;
+    for (const spec of specs) {
+      const readback = current.get(spec.name);
+      if (!readback || !readback.exists) {
+        toCreate += 1;
+      } else if (findStyleMismatches(spec, readback).some((m) => !KNOWN_LIMIT.test(m))) {
+        toUpdate += 1;
+      }
+    }
+    return { toCreate, toUpdate };
+  });
+}

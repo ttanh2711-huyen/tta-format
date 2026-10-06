@@ -197,16 +197,17 @@ Preset đặt tên ("Công văn thường", "Báo cáo dài"...): lưu, đổi t
 ### T6C: Nút "Chỉnh toàn bộ"
 **Mô tả:** Nút nổi bật ở đầu task pane, chuẩn hoá **cả tài liệu** bằng một lần bấm theo chuẩn đang chọn (T6B) và các tuỳ chọn hiện hành (T6A). Dựng một **khung chạy nhiều bước** (pipeline) cho phép các task sau đăng ký thêm bước. Bản đầu có các bước: (1) thiết lập trang (T4), (2) cài/cập nhật style (T5), (3) định dạng phần thân và bảng biểu (T6). Luồng: bấm nút → hộp xem trước nêu chuẩn đã nhận diện, danh sách bước sẽ chạy, số đoạn/bảng sẽ bị đổi và phần sẽ bỏ qua → xác nhận → chạy → báo cáo từng bước (đã làm, bỏ qua, lỗi) → nút "Khôi phục bản trước khi chỉnh". Phần nào không nhận diện được với độ tin cậy cao thì bỏ qua và báo, không đoán.
 **Tiêu chí nghiệm thu:**
-- [ ] Văn bản có sẵn lộn xộn (nhiều phông, nhiều cỡ, giãn dòng lung tung) bấm một lần ra đúng thể thức phần thân và trang theo chuẩn đang chọn; chạy lại lần hai không đổi gì thêm (idempotent)
-- [ ] Hộp xem trước hiện đúng chuẩn, đúng bước và số lượng thay đổi; huỷ ở bước này không đổi gì trong tài liệu
-- [ ] Hoàn tác được: Ctrl+Z quay lại trọn một lần, và nút "Khôi phục" đưa tài liệu về trạng thái trước khi chỉnh (phạm vi khôi phục theo kết quả T3)
-- [ ] Bước nào lỗi thì các bước trước vẫn giữ nguyên, báo rõ bước lỗi; không để tài liệu ở trạng thái nửa chừng không rõ
-- [ ] Giao diện cho các task sau đăng ký bước mới (số trang, khối đầu/cuối, sửa lỗi còn lại) mà không sửa khung
+- [ ] Văn bản có sẵn lộn xộn bấm một lần ra đúng thể thức phần thân và trang theo chuẩn đang chọn; chạy lại lần hai không đổi gì thêm (idempotent): mã xong (mỗi bước tự kiểm tra trạng thái hiện tại và bỏ qua khi đã đúng; đoạn đã dùng style của bộ chuẩn không bị áp lại); **chờ bạn thử trong Word**
+- [x] Hộp xem trước hiện đúng chuẩn, đúng bước và số lượng thay đổi; huỷ ở bước này không đổi gì trong tài liệu (lập kế hoạch chỉ đọc; đã thử luồng trong trình duyệt giả lập; số liệu thật **chờ bạn thử**)
+- [ ] Hoàn tác được: nút "Khôi phục bản trước khi chỉnh" thay lại thân văn bản và lề bằng bản chụp (cách đã đạt ở spike p13); **Ctrl+Z quay lại trọn một lần thì chưa kiểm chứng** (p14/p15 chưa có số liệu), nhiều bước nên có thể cần bấm nhiều lần. Chờ bạn thử
+- [x] Bước nào lỗi thì dừng, các bước trước giữ nguyên, báo rõ bước lỗi, các bước sau ghi "chưa chạy", và hiện nút Khôi phục (có test và đã thử luồng giả lập)
+- [x] Task sau đăng ký bước mới bằng `StepRegistry.register` với `order`, truyền registry vào `mountFixAllButton`; không sửa khung (có test thứ tự và trùng mã)
 **Kiểm chứng:**
-- [ ] `npm test`: khung chạy bước (thứ tự, lỗi giữa chừng, bỏ qua, chạy lại); test hộp xem trước tạo từ kế hoạch chạy
+- [x] `npm test`: 424 test; khung chạy bước (thứ tự, lỗi giữa chừng, bỏ qua, chạy lại, tiến độ), hộp xem trước, báo cáo, câu chữ kế hoạch từng bước, phân loại bảng
 - [ ] Thủ công: văn bản mẫu lộn xộn trước/sau cho cả hai chuẩn; Ctrl+Z; nút Khôi phục
 **Phụ thuộc:** T4, T5, T6, T6A, T6B (và kết quả T3 về khôi phục)
-**File dự kiến:** `src/pipeline/runner.ts`, `src/pipeline/steps.ts`, `src/ui/FixAllButton.ts`, `src/pipeline/runner.test.ts`
+**Trạng thái:** mã, giao diện (nút xanh dưới công tắc chuẩn) và test xong; `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Bốn bước: (1) thiết lập trang theo Tuỳ chọn nhanh và đặt phông mặc định, (2) cài/cập nhật style, (3) định dạng phần thân cả tài liệu (chuẩn Đảng đặt Exactly như T6), (4) áp style chữ bảng cho **bảng có viền**. Bảng không viền (đầu văn bản, nơi nhận, chữ ký) và bảng lồng nhau được giữ nguyên và báo trong xem trước; viền và hàng tiêu đề của bảng chưa được đổi (hai tuỳ chọn này là "áp khi tạo văn bản"). Chụp bản gốc (thân văn bản + lề từng phần) ngay trước khi chạy; nếu không chụp được thì không chạy gì. Khôi phục: thay lại thân bằng `insertOoxml(Replace)` và đặt lại lề; **không khôi phục** header/footer (chưa bước nào sửa chúng; task sửa header/footer phải mở rộng `snapshot.ts`) và định nghĩa style ND30_/HD05_ (giữ giá trị mới); bản chụp nằm trong bộ nhớ task pane, đóng pane là mất; khôi phục có thể ảnh hưởng bình luận, đánh dấu. Bước chuẩn Đảng ghi lại từng đoạn nên kế thừa rủi ro của T6. Idempotent nhờ mỗi bước tự đọc trạng thái; riêng quy tắc giãn dòng Exactly của style do JSON cài không được tính là "cần cập nhật" (giới hạn đã biết). Có `snapshots` và `registry` truyền vào được để thử giao diện không cần Word.
+**File thực tế:** `src/pipeline/{runner,steps,planText}.ts` (+ test), `src/office/{snapshot,formatTables}.ts`, `src/ui/FixAllButton.ts`; thêm `checkPageSetup` (pageSetup.ts), `planStyleInstall` (installStyles.ts), `previewFormatBody` (formatBody.ts), `classifyTable`/`describeSkipped` (paragraphClassifier.ts)
 **Kích cỡ:** M
 
 ### Checkpoint 1 – Chuẩn hoá phần thân

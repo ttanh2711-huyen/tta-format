@@ -174,3 +174,33 @@ export async function formatBody(profile: StandardProfile, options: FormatBodyOp
     return { applied: targets.length, skipped: plan.skipped, notes, summary };
   });
 }
+
+export interface FormatBodyPreview {
+  targets: number;
+  skipped: SkippedCounts;
+  /** Chưa có style nội dung của chuẩn trong tài liệu. */
+  styleMissing: boolean;
+}
+
+/** Chỉ đọc: sẽ có bao nhiêu đoạn được định dạng và bao nhiêu đoạn bị bỏ qua. */
+export async function previewFormatBody(profile: StandardProfile, scope: FormatScope): Promise<FormatBodyPreview> {
+  const styleName = `${profile.styles.prefix}NoiDung`;
+  return Word.run(async (context) => {
+    const style = context.document.getStyles().getByNameOrNullObject(styleName);
+    style.load("isNullObject");
+    const paragraphs = scope === "selection" ? context.document.getSelection().paragraphs : context.document.body.paragraphs;
+    paragraphs.load("items/text,items/style,items/styleBuiltIn,items/tableNestingLevel,items/isListItem");
+    await context.sync();
+    const plan = planFormatBody(
+      paragraphs.items.map((paragraph) => ({
+        text: paragraph.text,
+        styleName: paragraph.style,
+        styleBuiltIn: paragraph.styleBuiltIn,
+        tableNestingLevel: paragraph.tableNestingLevel,
+        isListItem: paragraph.isListItem,
+      })),
+      profile,
+    );
+    return { targets: plan.targets.length, skipped: plan.skipped, styleMissing: style.isNullObject };
+  });
+}

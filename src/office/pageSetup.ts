@@ -39,6 +39,44 @@ async function setDefaultFont(context: Word.RequestContext, fontName: string): P
   }
 }
 
+async function readMismatches(context: Word.RequestContext, items: Word.Section[], settings: PageSetupSettings): Promise<string[]> {
+  for (const section of items) {
+    section.pageSetup.load(
+      "pageWidth,pageHeight,topMargin,bottomMargin,leftMargin,rightMargin,headerDistance,footerDistance,mirrorMargins",
+    );
+  }
+  await context.sync();
+
+  const mismatches: string[] = [];
+  items.forEach((section, index) => {
+    const ps = section.pageSetup;
+    const found = findPageSetupMismatches(settings, {
+      widthPt: ps.pageWidth,
+      heightPt: ps.pageHeight,
+      topPt: ps.topMargin,
+      bottomPt: ps.bottomMargin,
+      leftPt: ps.leftMargin,
+      rightPt: ps.rightMargin,
+      headerDistancePt: ps.headerDistance,
+      footerDistancePt: ps.footerDistance,
+      mirrorMargins: ps.mirrorMargins,
+    });
+    const prefix = items.length > 1 ? `Phần ${index + 1}: ` : "";
+    mismatches.push(...found.map((m) => `${prefix}${m}`));
+  });
+  return mismatches;
+}
+
+/** Chỉ đọc: trang hiện tại có khớp thiết lập không (mỗi phần một lần so). Rỗng nghĩa là đã đúng. */
+export async function checkPageSetup(settings: PageSetupSettings): Promise<{ sections: number; mismatches: string[] }> {
+  return Word.run(async (context) => {
+    const sections = context.document.sections;
+    sections.load("items");
+    await context.sync();
+    return { sections: sections.items.length, mismatches: await readMismatches(context, sections.items, settings) };
+  });
+}
+
 /**
  * Áp dụng kế hoạch lên **mọi phần** của tài liệu rồi đọc lại để xác nhận. Khổ giấy đặt và đồng bộ
  * trước, lề đặt sau, vì đổi khổ giấy có thể làm Word tính lại lề (kết quả spike T3, phép thử p02).
@@ -68,30 +106,7 @@ export async function applyPageSetup(settings: PageSetupSettings, options: Apply
     }
     await context.sync();
 
-    for (const section of items) {
-      section.pageSetup.load(
-        "pageWidth,pageHeight,topMargin,bottomMargin,leftMargin,rightMargin,headerDistance,footerDistance,mirrorMargins",
-      );
-    }
-    await context.sync();
-
-    const mismatches: string[] = [];
-    items.forEach((section, index) => {
-      const ps = section.pageSetup;
-      const found = findPageSetupMismatches(settings, {
-        widthPt: ps.pageWidth,
-        heightPt: ps.pageHeight,
-        topPt: ps.topMargin,
-        bottomPt: ps.bottomMargin,
-        leftPt: ps.leftMargin,
-        rightPt: ps.rightMargin,
-        headerDistancePt: ps.headerDistance,
-        footerDistancePt: ps.footerDistance,
-        mirrorMargins: ps.mirrorMargins,
-      });
-      const prefix = items.length > 1 ? `Phần ${index + 1}: ` : "";
-      mismatches.push(...found.map((m) => `${prefix}${m}`));
-    });
+    const mismatches = await readMismatches(context, items, settings);
 
     const fontNote = options.defaultFontName ? await setDefaultFont(context, options.defaultFontName) : undefined;
     return { sections: items.length, mismatches, fontNote };

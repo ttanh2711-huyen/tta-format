@@ -2,6 +2,7 @@ import { HD05 } from "../standards/hd05/profile";
 import { ND30 } from "../standards/nd30/profile";
 import {
   classifyParagraph,
+  classifyTable,
   planFormatBody,
   summarizeFormat,
   type ParagraphInfo,
@@ -111,5 +112,29 @@ describe("summarizeFormat", () => {
     const result = summarizeFormat({ applied: 3, skipped: { empty: 0, table: 0, standardStyle: 0, list: 0, heading: 0 }, notes: ["Giãn dòng Exactly chưa đặt được."], warn: true });
     expect(result.kind).toBe("warning");
     expect(result.text).toBe("Đã định dạng 3 đoạn. Giãn dòng Exactly chưa đặt được.");
+  });
+});
+
+describe("classifyTable", () => {
+  const six = (type: string) => Array.from({ length: 6 }, () => type);
+
+  it("bảng có viền là bảng dữ liệu", () => {
+    expect(classifyTable({ nestingLevel: 1, borderTypes: six("Single") })).toBe("data");
+  });
+
+  it("chỉ cần một đường viền hiện là bảng dữ liệu", () => {
+    expect(classifyTable({ nestingLevel: 1, borderTypes: ["None", "None", "Single", "None", "None", "None"] })).toBe("data");
+  });
+
+  it("bảng không viền (bảng đầu văn bản, bảng nơi nhận và chữ ký) là bảng bố cục, bỏ qua", () => {
+    expect(classifyTable({ nestingLevel: 1, borderTypes: six("None") })).toBe("layout");
+  });
+
+  it("không đọc được viền thì không đoán: coi là bảng bố cục", () => {
+    expect(classifyTable({ nestingLevel: 1, borderTypes: [] })).toBe("layout");
+  });
+
+  it("bảng lồng trong bảng khác bị bỏ qua dù có viền", () => {
+    expect(classifyTable({ nestingLevel: 2, borderTypes: six("Single") })).toBe("nested");
   });
 });
