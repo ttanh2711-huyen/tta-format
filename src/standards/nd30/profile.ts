@@ -19,6 +19,12 @@ export const ND30: StandardProfile = {
   effectiveDate: "2020-03-05",
   identifyingTitle: "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM",
   page: PAGE,
+  pageDefaults: {
+    marginsMm: { top: 20, bottom: 20, left: 30, right: 20 },
+    headerDistanceMm: 12.5,
+    footerDistanceMm: 5.3,
+    source: "File mẫu công văn của người dùng (lề 20/20/30/20 mm, header 12,5 mm, footer khoảng 5,3 mm); lề nằm trong khoảng của NĐ 30",
+  },
   font: FONT,
   pageNumber: PAGE_NUMBER,
   content: CONTENT_LAYOUT,

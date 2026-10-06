@@ -101,6 +101,14 @@ export interface DocType<Layout extends string = string> {
   note?: string;
 }
 
+/** Giá trị trang mặc định khi bấm "Thiết lập trang"; mọi giá trị phải hợp lệ với chính chuẩn. */
+export interface PageDefaults {
+  marginsMm: Record<MarginSide, number>;
+  headerDistanceMm: number;
+  footerDistanceMm: number;
+  source: string;
+}
+
 export type StandardId = "nd30" | "hd05";
 
 export interface StandardProfile {
@@ -113,6 +121,7 @@ export interface StandardProfile {
   /** Dòng chữ nhận diện chuẩn ở đầu văn bản (dùng khi tự nhận diện chuẩn của tài liệu). */
   identifyingTitle: string;
   page: PageRules;
+  pageDefaults: PageDefaults;
   font: FontRules;
   pageNumber: PageNumberRules;
   content: ContentLayout;

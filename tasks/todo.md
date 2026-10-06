@@ -95,14 +95,15 @@ Kích cỡ: XS 1 file, S 1–2, M 3–5. Không task nào quá 5 file.
 ### T4: Thiết lập trang chuẩn
 **Mô tả:** Nút "Thiết lập trang" đặt A4 dọc, lề mặc định theo file mẫu của bạn (trên 20, dưới 20, trái 30, phải 20 mm; header 12,5 mm, footer khoảng 5,3 mm), phông mặc định Times New Roman. Người dùng chỉnh lề trong khoảng cho phép; ngoài khoảng thì cảnh báo. Giá trị chọn nhanh đầy đủ nằm ở T6A. Nhận `StandardProfile`: chuẩn Đảng dùng lề 20/20/30/15 mm và tuỳ chọn "In hai mặt" (lề đối xứng, `mirrorMargins`), cho phép trang ngang cho bảng biểu; chuẩn Chính quyền dùng giá trị theo file mẫu.
 **Tiêu chí nghiệm thu:**
-- [ ] Sau khi bấm, mọi section của tài liệu có đúng khổ và lề (sai số ≤ 0,1 mm)
-- [ ] Nhập lề ngoài khoảng NĐ 30 thì hiện cảnh báo, không áp dụng
-- [ ] Hoạt động với tài liệu nhiều section
+- [ ] Sau khi bấm, mọi section của tài liệu có đúng khổ và lề (sai số ≤ 0,1 mm): mã áp dụng lên từng phần và đọc lại, so với kế hoạch bằng `findPageSetupMismatches` (có test); **chờ bạn thử trong Word**
+- [x] Nhập lề ngoài khoảng của chuẩn thì hiện cảnh báo bằng tiếng Việt, không áp dụng (có test; áp dụng cả hai chuẩn, chuẩn Đảng báo "đúng 15 mm")
+- [ ] Hoạt động với tài liệu nhiều section: vòng lặp áp dụng từng phần (spike p03 đã chứng minh đặt riêng từng phần), thông báo ghi "cho N phần"; **chờ bạn thử trong Word**
 **Kiểm chứng:**
-- [ ] `npm test`: validator lề, đổi mm → pt
-- [ ] Thủ công: mở tài liệu Letter, bấm nút, kiểm tra Page Setup trong Word
+- [x] `npm test`: 244 test; validator lề, đổi mm → pt, mặc định từng chuẩn, từ chối lề sai, in hai mặt, đọc số có dấu phẩy, so sánh sau khi đọc lại, câu thông báo
+- [ ] Thủ công: mở tài liệu Letter (hoặc A4 có nhiều phần), bấm nút, kiểm tra Page Setup trong Word
+**Trạng thái:** mã, giao diện và test xong, `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Bước "phông mặc định Times New Roman" (style Normal) là bước phụ, lỗi ở bước này không làm hỏng thiết lập trang và chưa kiểm chứng trong Word. Chuẩn được chọn tạm trong bảng này; T6B sẽ chuyển công tắc chuẩn lên đầu task pane; ô "Tuỳ chỉnh" ngoài khoảng của chuẩn (Q15) làm ở T6A.
 **Phụ thuộc:** T2, T2B, T3
-**File dự kiến:** `src/office/pageSetup.ts`, `src/ui/PageSetupPanel.ts`, `src/office/pageSetup.test.ts`
+**File thực tế:** `src/office/pageSetupPlan.ts` (kế hoạch, kiểm tra, so sánh, thông báo), `src/office/pageSetup.ts` (áp dụng bằng Word.PageSetup), `src/ui/PageSetupPanel.ts`, thêm `pageDefaults` vào `StandardProfile`
 **Kích cỡ:** S
 
 ### T5: Cài bộ style theo chuẩn (`ND30_*`, `HD05_*`)

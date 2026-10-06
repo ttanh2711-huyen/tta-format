@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-06T07:56:32.750Z",
+  "generatedAt": "2026-10-06T08:02:16.573Z",
   "environment": {
     "host": "Word",
     "platform": "PC",
@@ -29,7 +29,7 @@
       "critical": true,
       "status": "pass",
       "detail": "rộng 210.03 mm; cao 297.02 mm; lề trên 20 mm; lề dưới 20 mm; lề trái 30 mm; lề phải 20 mm.",
-      "durationMs": 549
+      "durationMs": 446
     },
     {
       "id": "p03",
@@ -38,7 +38,7 @@
       "critical": false,
       "status": "pass",
       "detail": "lề trái phần 1 30 mm; lề trái phần 2 14.99 mm.",
-      "durationMs": 134
+      "durationMs": 88
     },
     {
       "id": "p04",
@@ -47,7 +47,7 @@
       "critical": false,
       "status": "pass",
       "detail": "lề trong (leftMargin) 30 mm; lề ngoài (rightMargin) 14.99 mm. Khi bật, lề trái là lề trong; mặt sau tự đảo thành trái 15, phải 30 (cần xem Print Preview để xác nhận bằng mắt).",
-      "durationMs": 75
+      "durationMs": 66
     },
     {
       "id": "p05",
@@ -56,7 +56,7 @@
       "critical": false,
       "status": "pass",
       "detail": "khoảng cách header 10 mm.",
-      "durationMs": 51
+      "durationMs": 75
     },
     {
       "id": "p06",
@@ -65,7 +65,7 @@
       "critical": true,
       "status": "pass",
       "detail": "insertField: đạt; insertOoxml: đạt; header trang đầu trống.",
-      "durationMs": 267
+      "durationMs": 144
     },
     {
       "id": "p07",
@@ -79,7 +79,7 @@
         "trailing": true,
         "replace": false
       },
-      "durationMs": 367
+      "durationMs": 310
     },
     {
       "id": "p08",
@@ -88,7 +88,7 @@
       "critical": true,
       "status": "pass",
       "detail": "bề rộng bảng vừa vùng chữ 453.55 pt; bảng 3 hàng, thụt 0 twips, 6 cạnh không viền; bảng rộng như file mẫu cũ: rộng 520 pt, thụt -800 twips (mong đợi -800). Cần xem bằng mắt khi chạy riêng: hai bảng không có đường viền nào.",
-      "durationMs": 261
+      "durationMs": 190
     },
     {
       "id": "p09",
@@ -97,7 +97,7 @@
       "critical": false,
       "status": "pass",
       "detail": "bảng 3 hàng, viền \"None\".",
-      "durationMs": 104
+      "durationMs": 61
     },
     {
       "id": "p10",
@@ -122,7 +122,7 @@
           }
         }
       },
-      "durationMs": 253
+      "durationMs": 239
     },
     {
       "id": "p11",
@@ -130,12 +130,13 @@
       "group": "hd05",
       "critical": false,
       "status": "pass",
-      "detail": "style OOXML (đoạn đơn): đoạn mất style, định nghĩa style không có Exactly 20 pt; đặt trực tiếp trên đoạn (đoạn đơn): Exactly mất; style OOXML (kèm đoạn rỗng phía sau): đoạn mất style, định nghĩa style không có Exactly 20 pt; đặt trực tiếp trên đoạn (kèm đoạn rỗng phía sau): Exactly đạt; style OOXML (thay thế một đoạn bằng Paragraph.insertOoxml): đoạn mất style, định nghĩa style không có Exactly 20 pt; đặt trực tiếp trên đoạn (thay thế một đoạn bằng Paragraph.insertOoxml): Exactly mất; importStylesFromJson lineSpacing=20: quy tắc \"atLeast\" (không phải Exactly); API lineSpacing=20 cho ra quy tắc \"auto\" (KHÔNG phải Exactly).",
+      "detail": "style OOXML (đoạn đơn): style không được tạo, đoạn mất style, định nghĩa không có Exactly 20 pt; đặt trực tiếp trên đoạn (đoạn đơn): Exactly mất; style OOXML (kèm đoạn rỗng phía sau): style có (mã ND30Cmuwe4q502), đoạn giữ style, định nghĩa có Exactly 20 pt; đổi giãn dòng style Exactly từ 20 sang 22 pt bằng API: không giữ Exactly (quy tắc đổi); đặt trực tiếp trên đoạn (kèm đoạn rỗng phía sau): Exactly đạt; style OOXML (thay thế một đoạn bằng Paragraph.insertOoxml): style không được tạo, đoạn mất style, định nghĩa không có Exactly 20 pt; đặt trực tiếp trên đoạn (thay thế một đoạn bằng Paragraph.insertOoxml): Exactly mất; importStylesFromJson lineSpacing=20: quy tắc \"atLeast\" (không phải Exactly); API lineSpacing=20 cho ra quy tắc \"auto\" (KHÔNG phải Exactly).",
       "data": {
         "results": {
           "style/single": false,
           "direct/single": false,
-          "style/trailing": false,
+          "style/trailing": true,
+          "style/doiGiaTri": false,
           "direct/trailing": true,
           "style/replace": false,
           "direct/replace": false,
@@ -144,12 +145,12 @@
         },
         "apiRule": "auto",
         "importJson": {
-          "styleId": "ND30Jmuwdwoqw",
+          "styleId": "ND30Jmuwe4q50",
           "rule": "atLeast",
           "exact": false
         }
       },
-      "durationMs": 635
+      "durationMs": 593
     },
     {
       "id": "p12",
@@ -166,25 +167,23 @@
         },
         "fragments": {
           "doan/single": [
-            "<w:sectPr w:rsidR=\"003D2DF0\" w:rsidSect=\"003D2DF0\"><w:headerReference w:type=\"even\" r:id=\"rId6\"/><w:headerReference w:type=\"default\" r:id=\"rId7\"/><w:footerReference w:type=\"even\" r:id=\"rId8\"/><w:footerReference w:type=\"default\" r:id=\"rId9\"/><w:headerReference ",
-            "<w:sectPr w:rsidR=\"003D2DF0\" w:rsidSect=\"003D2DF0\"><w:pgSz w:w=\"11907\" w:h=\"16839\"/><w:pgMar w:top=\"1134\" w:right=\"850\" w:bottom=\"1134\" w:left=\"1701\" w:header=\"709\" w:footer=\"720\" w:gutter=\"0\"/><w:cols w:space=\"720\"/><w:titlePg/><w:docGrid w:linePitch=\"360\"/><",
-            "<w:sectPr w:rsidR=\"003D2DF0\" w:rsidSect=\"003D2DF0\"><w:pgSz w:w=\"11907\" w:h=\"16839\"/><w:pgMar w:top=\"1134\" w:right=\"850\" w:bottom=\"1134\" w:left=\"1701\" w:header=\"709\" w:footer=\"720\" w:gutter=\"0\"/><w:cols w:space=\"720\"/><w:titlePg/><w:docGrid w:linePitch=\"360\"/><",
-            "<w:sectPr w:rsidR=\"007B0EC8\" w:rsidSect=\"003D2DF0\"><w:headerReference w:type=\"even\" r:id=\"rId12\"/><w:headerReference w:type=\"default\" r:id=\"rId13\"/><w:footerReference w:type=\"even\" r:id=\"rId14\"/><w:footerReference w:type=\"default\" r:id=\"rId15\"/><w:headerRefere"
+            "<w:sectPr w:rsidR=\"00BA2CB7\" w:rsidSect=\"00BA2CB7\"><w:headerReference w:type=\"even\" r:id=\"rId6\"/><w:headerReference w:type=\"default\" r:id=\"rId7\"/><w:footerReference w:type=\"even\" r:id=\"rId8\"/><w:footerReference w:type=\"default\" r:id=\"rId9\"/><w:headerReference ",
+            "<w:sectPr w:rsidR=\"00BA2CB7\" w:rsidSect=\"00BA2CB7\"><w:pgSz w:w=\"11907\" w:h=\"16839\"/><w:pgMar w:top=\"1134\" w:right=\"850\" w:bottom=\"1134\" w:left=\"1701\" w:header=\"709\" w:footer=\"720\" w:gutter=\"0\"/><w:cols w:space=\"720\"/><w:titlePg/><w:docGrid w:linePitch=\"360\"/><",
+            "<w:sectPr w:rsidR=\"00E16C92\" w:rsidSect=\"00BA2CB7\"><w:pgSz w:w=\"11907\" w:h=\"16839\"/><w:pgMar w:top=\"1134\" w:right=\"850\" w:bottom=\"1134\" w:left=\"1701\" w:header=\"709\" w:footer=\"720\" w:gutter=\"0\"/><w:cols w:space=\"720\"/><w:titlePg/><w:docGrid w:linePitch=\"360\"/><"
           ],
           "doan/trailing": [
-            "<w:sectPr w:rsidR=\"000B673D\" w:rsidSect=\"000B673D\"><w:headerReference w:type=\"even\" r:id=\"rId6\"/><w:headerReference w:type=\"default\" r:id=\"rId7\"/><w:footerReference w:type=\"even\" r:id=\"rId8\"/><w:footerReference w:type=\"default\" r:id=\"rId9\"/><w:headerReference ",
-            "<w:sectPr w:rsidR=\"000B673D\" w:rsidSect=\"000B673D\"><w:pgSz w:w=\"11907\" w:h=\"16839\"/><w:pgMar w:top=\"1134\" w:right=\"850\" w:bottom=\"1134\" w:left=\"1701\" w:header=\"709\" w:footer=\"720\" w:gutter=\"0\"/><w:cols w:space=\"720\"/><w:titlePg/><w:docGrid w:linePitch=\"360\"/><",
-            "<w:sectPr w:rsidR=\"000B673D\" w:rsidSect=\"000B673D\"><w:pgSz w:w=\"11907\" w:h=\"16839\"/><w:pgMar w:top=\"1134\" w:right=\"850\" w:bottom=\"1134\" w:left=\"1701\" w:header=\"709\" w:footer=\"720\" w:gutter=\"0\"/><w:cols w:space=\"720\"/><w:titlePg/><w:docGrid w:linePitch=\"360\"/><",
-            "<w:sectPr w:rsidR=\"005D7DE8\" w:rsidSect=\"000B673D\"><w:headerReference w:type=\"even\" r:id=\"rId12\"/><w:headerReference w:type=\"default\" r:id=\"rId13\"/><w:footerReference w:type=\"even\" r:id=\"rId14\"/><w:footerReference w:type=\"default\" r:id=\"rId15\"/><w:headerRefere"
+            "<w:sectPr w:rsidR=\"00191B1F\" w:rsidSect=\"00191B1F\"><w:headerReference w:type=\"even\" r:id=\"rId6\"/><w:headerReference w:type=\"default\" r:id=\"rId7\"/><w:footerReference w:type=\"even\" r:id=\"rId8\"/><w:footerReference w:type=\"default\" r:id=\"rId9\"/><w:headerReference ",
+            "<w:sectPr w:rsidR=\"00191B1F\" w:rsidSect=\"00191B1F\"><w:pgSz w:w=\"11907\" w:h=\"16839\"/><w:pgMar w:top=\"1134\" w:right=\"850\" w:bottom=\"1134\" w:left=\"1701\" w:header=\"709\" w:footer=\"720\" w:gutter=\"0\"/><w:cols w:space=\"720\"/><w:titlePg/><w:docGrid w:linePitch=\"360\"/><",
+            "<w:sectPr w:rsidR=\"00F82EC5\" w:rsidSect=\"00191B1F\"><w:pgSz w:w=\"11907\" w:h=\"16839\"/><w:pgMar w:top=\"1134\" w:right=\"850\" w:bottom=\"1134\" w:left=\"1701\" w:header=\"709\" w:footer=\"720\" w:gutter=\"0\"/><w:cols w:space=\"720\"/><w:titlePg/><w:docGrid w:linePitch=\"360\"/><"
           ],
           "doan/replace": [
-            "<w:sectPr w:rsidR=\"00D56201\" w:rsidSect=\"00D56201\"><w:headerReference w:type=\"even\" r:id=\"rId6\"/><w:headerReference w:type=\"default\" r:id=\"rId7\"/><w:footerReference w:type=\"even\" r:id=\"rId8\"/><w:footerReference w:type=\"default\" r:id=\"rId9\"/><w:headerReference ",
-            "<w:sectPr w:rsidR=\"00D56201\" w:rsidSect=\"00D56201\"><w:pgSz w:w=\"11907\" w:h=\"16839\"/><w:pgMar w:top=\"1134\" w:right=\"850\" w:bottom=\"1134\" w:left=\"1701\" w:header=\"709\" w:footer=\"720\" w:gutter=\"0\"/><w:cols w:space=\"720\"/><w:titlePg/><w:docGrid w:linePitch=\"360\"/><",
-            "<w:sectPr w:rsidR=\"00312DB2\" w:rsidSect=\"00D56201\"><w:headerReference w:type=\"even\" r:id=\"rId12\"/><w:headerReference w:type=\"default\" r:id=\"rId13\"/><w:footerReference w:type=\"even\" r:id=\"rId14\"/><w:footerReference w:type=\"default\" r:id=\"rId15\"/><w:headerRefere"
+            "<w:sectPr w:rsidR=\"00484C73\" w:rsidSect=\"00484C73\"><w:headerReference w:type=\"even\" r:id=\"rId6\"/><w:headerReference w:type=\"default\" r:id=\"rId7\"/><w:footerReference w:type=\"even\" r:id=\"rId8\"/><w:footerReference w:type=\"default\" r:id=\"rId9\"/><w:headerReference ",
+            "<w:sectPr w:rsidR=\"00484C73\" w:rsidSect=\"00484C73\"><w:pgSz w:w=\"11907\" w:h=\"16839\"/><w:pgMar w:top=\"1134\" w:right=\"850\" w:bottom=\"1134\" w:left=\"1701\" w:header=\"709\" w:footer=\"720\" w:gutter=\"0\"/><w:cols w:space=\"720\"/><w:titlePg/><w:docGrid w:linePitch=\"360\"/><",
+            "<w:sectPr w:rsidR=\"00D841F9\" w:rsidSect=\"00484C73\"><w:pgSz w:w=\"11907\" w:h=\"16839\"/><w:pgMar w:top=\"1134\" w:right=\"850\" w:bottom=\"1134\" w:left=\"1701\" w:header=\"709\" w:footer=\"720\" w:gutter=\"0\"/><w:cols w:space=\"720\"/><w:titlePg/><w:docGrid w:linePitch=\"360\"/><"
           ]
         }
       },
-      "durationMs": 320
+      "durationMs": 269
     },
     {
       "id": "p13",
@@ -193,7 +192,7 @@
       "critical": false,
       "status": "pass",
       "detail": "lề trái sau khôi phục 30 mm; số đoạn trước 8, sau 8 (chênh lệch do đoạn rỗng cuối là bình thường).",
-      "durationMs": 412
+      "durationMs": 379
     },
     {
       "id": "p14",
@@ -202,7 +201,7 @@
       "critical": false,
       "status": "manual",
       "detail": "Đã tô đỏ và in đậm 3 đoạn trong MỘT lần Word.run. Bấm Ctrl+Z trong Word: ghi lại cần bấm mấy lần để cả 3 đoạn trở lại bình thường (mong đợi 1).",
-      "durationMs": 47
+      "durationMs": 37
     },
     {
       "id": "p15",
@@ -211,7 +210,7 @@
       "critical": false,
       "status": "manual",
       "detail": "Đã tô đỏ và in đậm 3 đoạn trong BA lần Word.run riêng. Bấm Ctrl+Z: ghi lại cần bấm mấy lần (để so với phép thử p14).",
-      "durationMs": 85
+      "durationMs": 70
     },
     {
       "id": "p16",
@@ -219,16 +218,16 @@
       "group": "chung",
       "critical": false,
       "status": "pass",
-      "detail": "chèn 600 đoạn bằng một lệnh insertText: 166 ms (đọc lại được 600 đoạn); tải danh sách 605 ms; định dạng 600 đoạn: 642 ms (khoảng 3 giây cho 3000 đoạn nếu tuyến tính); chèn từng đoạn bằng insertParagraph: khoảng 19 ms mỗi đoạn.",
+      "detail": "chèn 600 đoạn bằng một lệnh insertText: 157 ms (đọc lại được 600 đoạn); tải danh sách 633 ms; định dạng 600 đoạn: 605 ms (khoảng 3 giây cho 3000 đoạn nếu tuyến tính); chèn từng đoạn bằng insertParagraph: khoảng 25 ms mỗi đoạn.",
       "data": {
         "count": 600,
         "realCount": 600,
-        "bulkMs": 166,
-        "loadMs": 605,
-        "formatMs": 642,
-        "perParagraphMs": 19
+        "bulkMs": 157,
+        "loadMs": 633,
+        "formatMs": 605,
+        "perParagraphMs": 25
       },
-      "durationMs": 2058
+      "durationMs": 2229
     },
     {
       "id": "p17",

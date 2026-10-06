@@ -21,6 +21,13 @@ export const HD05: StandardProfile = {
   effectiveDate: "2026-05-27",
   identifyingTitle: HEADER_MARKS.identifyingTitle,
   page: PAGE,
+  pageDefaults: {
+    marginsMm: { top: 20, bottom: 20, left: 30, right: 15 },
+    headerDistanceMm: 10,
+    footerDistanceMm: 12.5,
+    source:
+      "HD 05 Phần II Mục IV.4.1 (lề) và IV.5.1 (số trang cách mép trên 10 mm); khoảng cách footer HD 05 không quy định, lấy mặc định của Word 12,5 mm",
+  },
   font: FONT,
   pageNumber: PAGE_NUMBER,
   content: CONTENT_LAYOUT,

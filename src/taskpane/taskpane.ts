@@ -1,4 +1,5 @@
 import { insertSampleParagraph } from "../office/insertSample";
+import { mountPageSetupPanel } from "../ui/PageSetupPanel";
 
 function setStatus(message: string): void {
   const status = document.getElementById("status");
@@ -28,5 +29,9 @@ Office.onReady((info) => {
   document.getElementById("btn-sample")?.addEventListener("click", () => {
     void onInsertSample();
   });
+  const panel = document.getElementById("page-setup-panel");
+  if (panel) {
+    mountPageSetupPanel(panel);
+  }
   setStatus("Sẵn sàng.");
 });
