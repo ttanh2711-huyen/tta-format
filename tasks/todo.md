@@ -72,13 +72,13 @@ Kích cỡ: XS 1 file, S 1–2, M 3–5. Không task nào quá 5 file.
 ### T3: Spike khả thi Office.js
 **Mô tả:** Viết mã thử nghiệm tối thiểu cho: (a) đặt A4 và lề theo mm, (b) đường kẻ ngang bằng border đoạn có độ dài tuỳ chỉnh (thụt hai bên), so sánh với đường thẳng nổi mà file mẫu đang dùng rồi chọn phương án ổn định hơn, (c) bảng 2 cột không viền bằng `insertOoxml`, kể cả bảng thụt âm/rộng hơn vùng chữ như file mẫu, (d) tab stop, (e) số trang ở header, bỏ trang 1, (f) thêm style qua `insertOoxml`, (g) cho chuẩn Đảng: lề đối xứng khi in hai mặt (mặt sau trái 15, phải 30 mm), giãn dòng kiểu Exactly 18–22 pt qua style, khoảng cách số trang cách mép trên 10 mm, gạch chân cụm "Nơi nhận", dòng dấu `*` và 5 dấu gạch nối canh giữa, khối "Phụ lục" đánh số trang riêng, (h) cho nút "Chỉnh toàn bộ": gộp nhiều thay đổi trong ít lượt `Word.run` nhất để Ctrl+Z hoàn tác được trọn một lần, và chụp bản trước khi chỉnh (nội dung chính, header/footer, thuộc tính trang) rồi khôi phục được; ghi rõ phần nào khôi phục được hoàn toàn và phần nào không. Chạy trên Word 365 desktop (Windows) là chính; nếu tiện thì thử thêm Word Online và Word for Mac để biết giới hạn, không bắt buộc. Ghi kết quả vào `docs/spike-office-api.md` kèm đề xuất go/no-go.
 **Tiêu chí nghiệm thu:**
-- [ ] Bảng "tính năng × môi trường" ghi rõ chạy được/không/ghi chú (Word 365 Windows bắt buộc)
-- [ ] Với mỗi tính năng không chạy, có phương án thay thế (ví dụ OOXML) hoặc kết luận cần đổi công nghệ
+- [x] Bảng "tính năng × môi trường" ghi rõ chạy được/không/ghi chú (Word 365 Windows; Online và Mac không thử vì không bắt buộc)
+- [ ] Với mỗi tính năng không chạy, có phương án thay thế hoặc kết luận cần đổi công nghệ: đã có cho mọi mục trừ hai mục còn mở là Exactly qua style (có phương án dự phòng đã kiểm chứng) và đánh số phụ lục (có ba phương án chưa kiểm chứng)
 - [x] Nêu rõ trạng thái GA/preview của từng requirement set và bản Microsoft 365 tối thiểu: WordApiDesktop 1.3 (page setup) cần bản 2507 (Build 19029.20208), 1.4 cần 2508; đều là bản phát hành chính thức, không có trên Office mua vĩnh viễn/LTSC (xem `docs/spike-office-api.md`)
 **Kiểm chứng:**
-- [ ] Thủ công trên Word 365 desktop, đính kèm ảnh chụp
-- [ ] Người duyệt đọc tài liệu và xác nhận go
-**Trạng thái:** mã spike (16 phép thử, giao diện, nhận báo cáo ở máy chủ dev), 62 test cho phần logic thuần và tài liệu đã xong. **Chưa chạy trong Word 365** nên hai mục trên (bảng tính năng × môi trường, phương án thay thế) và mục kiểm chứng thủ công còn chờ bạn chạy `npm start` (xem hướng dẫn trong `docs/spike-office-api.md`).
+- [ ] Thủ công trên Word 365 desktop: đã chạy; chưa có ảnh chụp và quan sát bằng mắt
+- [ ] Người duyệt đọc tài liệu và xác nhận go (Checkpoint 0)
+**Trạng thái:** đã chạy 3 lần trên Word 365 (16.0.20527); **kết luận GO với Office.js** (cả 4 mục bắt buộc đạt). Còn mở, không chặn: (1) chạy bổ sung p11 để biết style Exactly qua OOXML dùng được không; (2) đánh số trang phụ lục riêng chưa có cách đã kiểm chứng (để T21/TD8); (3) số lần Ctrl+Z (p14, p15) và quan sát bằng mắt (p07, p08) chờ bạn báo. Chi tiết và các quy tắc kỹ thuật rút ra ở `docs/spike-office-api.md`.
 **Phụ thuộc:** T1
 **File thực tế:** `src/spike/{probes,runner,report,ooxmlBuilders,ooxmlFacts,spike}.ts`, `src/spike/spike.html`, `tools/receiveSpikeReport.js`, `docs/spike-office-api.md`
 **Kích cỡ:** M

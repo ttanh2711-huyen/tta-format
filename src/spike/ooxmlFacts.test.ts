@@ -10,6 +10,7 @@ import {
   readPgNumTypeStart,
   readTableIndentTwips,
   styleDefinition,
+  styleIdByName,
   tableBordersAllNone,
 } from "./ooxmlFacts";
 
@@ -174,5 +175,25 @@ describe("paragraphStyleIds", () => {
     const xml = `<w:p><w:pPr><w:pStyle w:val="A1"/></w:pPr></w:p><w:p><w:pPr><w:pStyle w:val="B2"/></w:pPr></w:p>`;
     expect(paragraphStyleIds(xml)).toEqual(["A1", "B2"]);
     expect(paragraphStyleIds(`<w:p/>`)).toEqual([]);
+  });
+});
+
+describe("styleIdByName", () => {
+  const styles =
+    `<w:style w:type="paragraph" w:styleId="Normal" w:default="1"><w:name w:val="Normal"/></w:style>` +
+    `<w:style w:type="paragraph" w:customStyle="1" w:styleId="ND30C1"><w:name w:val="ND30_C1"/></w:style>`;
+
+  it("Word bỏ dấu gạch dưới khi tạo mã style từ tên; tra mã theo tên đúng", () => {
+    expect(styleIdByName(styles, "ND30_C1")).toBe("ND30C1");
+    expect(styleIdByName(styles, "Normal")).toBe("Normal");
+  });
+
+  it("tên không tồn tại thì trả về undefined", () => {
+    expect(styleIdByName(styles, "KhongCo")).toBeUndefined();
+  });
+
+  it("tên có ký tự đặc biệt của biểu thức chính quy vẫn tra đúng", () => {
+    const special = `<w:style w:styleId="X1"><w:name w:val="A (b) + c"/></w:style>`;
+    expect(styleIdByName(special, "A (b) + c")).toBe("X1");
   });
 });

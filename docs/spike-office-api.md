@@ -1,6 +1,6 @@
 # Spike T3: khả thi Office.js trên Word 365
 
-Trạng thái: **đã chạy 2 lần; đang chạy lần 3** cho p11 (kết quả lần 2 bị nhiễm, đã sửa phép thử) và p12. Báo cáo: `docs/spike-results-lan-1.md`, `docs/spike-results-lan-2.md`; lần 3 ghi vào `docs/spike-results.md`.
+Trạng thái: **đã chạy 3 lần trên Word 365; kết luận GO với Office.js**. Còn vài mục kiểm chứng bổ sung không chặn (xem cuối tài liệu). Báo cáo máy: `docs/spike-results-lan-1.md`, `lan-2`, `lan-3`; kết quả mới nhất ở `docs/spike-results.md`.
 
 ## Mục đích
 
@@ -111,6 +111,58 @@ Kết quả máy: pass 12, fail 1, thủ công 2, bỏ qua 1. Bốn mục bắt 
 | Đánh số trang phụ lục (p12) | Cả ba cách chèn đoạn chứa `sectPr` đều mất `pgNumType` | Đã thêm cách thứ tư (lấy OOXML cả thân, thêm `pgNumType` vào phần phụ lục, `Replace` lại) và ghi lại các đoạn `sectPr` để chẩn đoán. Chạy lại ở lần 3 |
 | Hoàn tác (p14, p15) | Chưa ghi số lần Ctrl+Z | Còn chờ |
 
-## Kết quả lần 3
+## Kết quả lần 3 (06/10/2026) và kết luận
 
-*Chưa có.*
+Chạy trọn 16 phép thử không sập (p18 bị loại khỏi lượt chạy). Báo cáo ở `docs/spike-results-lan-3.md`. Kết quả máy: pass 12, fail 1 (p12), thủ công 2, bỏ qua 1.
+
+**Về vụ Word tự đóng ở lần chạy trước:** lần này không sập, và khác biệt duy nhất so với lần sập là p18 (sửa `sectPr` của cả thân rồi `Replace`) không nằm trong lượt chạy. p18 là thủ phạm có khả năng cao nhất nhưng **chưa xác nhận**, vì chưa chạy riêng. Không dùng cách này trong add-in cho tới khi có kiểm chứng.
+
+### Giãn dòng Exactly (p11), dữ liệu sạch lần đầu
+
+| Cách | Kết quả |
+|---|---|
+| API `lineSpacing = 20` trên đoạn | Cho ra quy tắc **auto** (bội số), không phải Exactly |
+| `importStylesFromJson` với `lineSpacing = 20` | Cho ra quy tắc **atLeast** (tối thiểu), không phải Exactly |
+| Đặt trực tiếp trên đoạn bằng OOXML | **Đạt** nếu kèm đoạn rỗng phía sau; mất nếu chèn đoạn đơn hoặc `Replace` |
+| Style Exactly cài bằng OOXML | **Chưa kết luận.** Phép thử tra mã style sai (Word bỏ dấu gạch dưới khi tạo mã từ tên: `ND30_J...` thành `ND30J...`), nên báo "đoạn mất style" dù có thể style vẫn tồn tại. Đã sửa phép thử, cần chạy bổ sung |
+
+Hệ quả: chuẩn Đảng cần Exactly, mà **API và `importStylesFromJson` đều không đặt được**. Chỉ còn OOXML. Nếu style Exactly cài bằng OOXML hoạt động (chạy bổ sung), thì T5 cài style `HD05_*` lần đầu bằng OOXML (kèm đoạn rỗng), gán cho đoạn bằng API, và đổi cỡ giãn dòng bằng `style.paragraphFormat.lineSpacing` (phép thử mới kiểm tra quy tắc Exactly có còn nguyên sau khi đổi 20 sang 22 pt). Nếu không, phương án dự phòng đã chứng minh là đặt Exactly **trực tiếp trên từng đoạn** bằng OOXML (thay đoạn kèm đoạn rỗng), tốn kém hơn cho "Chỉnh toàn bộ".
+
+### Đánh số trang phụ lục (p12)
+
+Cả ba cách chèn đoạn chứa `sectPr` có `pgNumType start="1"` đều **mất `pgNumType`**, dù Word vẫn tạo đúng số phần (ngắt phần được giữ, thuộc tính đánh số thì không). Phương án còn lại: (1) p18, sửa OOXML cả thân rồi `Replace`, rủi ro sập; (2) trường công thức ở chân trang của phần phụ lục, kiểu `{ = { PAGE } - { PAGEREF DauPhuLuc } + 1 }` với dấu trang (bookmark) đặt đầu phụ lục; (3) hướng dẫn người dùng đặt "Start at" bằng tay. **Không chặn quyết định công nghệ**; để T21 và TD8 kiểm chứng phương án (2) khi làm phụ lục.
+
+### Bảng tính năng trên Word 365 cho Windows (16.0.20527)
+
+| Tính năng | Kết quả | Cách dùng trong add-in |
+|---|---|---|
+| Khổ A4, lề theo mm, lề từng phần | Đạt | `Word.PageSetup` (WordApiDesktop 1.3, cần bản 2507 trở lên) |
+| Lề đối xứng, header 10 mm, trang đầu khác biệt | Đạt | `PageSetup`; Print Preview cần xem bằng mắt |
+| Số trang canh giữa, header trang đầu trống | Đạt (hai cách) | `insertField`, OOXML dự phòng |
+| Bảng đầu văn bản không viền, vừa vùng chữ, bảng rộng thụt âm | Đạt | `insertOoxml` kèm đoạn rỗng |
+| Bảng API `insertTable` bỏ viền | Đạt | Dự phòng |
+| Đường kẻ viền đoạn có thụt hai bên | Đạt, chỉ khi kèm đoạn rỗng phía sau | `insertOoxml` kèm đoạn rỗng |
+| Cài và cập nhật style | `importStylesFromJson` Overwrite đạt; `insertOoxml` chỉ cài mới, không cập nhật | T5: `importStylesFromJson` (trừ giãn dòng Exactly, xem trên) |
+| Giãn dòng Exactly | Chỉ qua OOXML (trực tiếp trên đoạn đạt; qua style chờ kiểm chứng) | Xem mục Exactly |
+| Đánh số trang phụ lục riêng | Không đạt bằng `insertOoxml` | Xem mục p12 |
+| Chụp và khôi phục cho "Chỉnh toàn bộ" | Đạt (văn bản, định dạng, bảng, header, lề) | `getOoxml` và `insertOoxml(Replace)` |
+| Hiệu năng | Chèn 600 đoạn bằng một lệnh 166 ms; định dạng 600 đoạn 642 ms (khoảng 3 giây cho 3000 đoạn) | Chèn hàng loạt bằng `insertText` hoặc một gói OOXML; định dạng hàng loạt trong một lượt |
+| Tab stop | Bỏ qua có chủ đích | Không dùng |
+| Hoàn tác (p14, p15) | **Chưa có số liệu** | Thiết kế mặc định: gộp thay đổi trong ít lượt `Word.run` nhất |
+
+### Quy tắc kỹ thuật rút ra cho các task sau
+
+1. Mọi lần chèn OOXML chứa đoạn có thuộc tính riêng (viền, thụt dòng, style, Exactly) **phải kèm một đoạn rỗng phía sau**, rồi xoá đoạn thừa.
+2. Khi tạo văn bản, chèn hàng loạt bằng một lệnh; không chèn từng đoạn trong vòng lặp lớn.
+3. Mọi tính năng page setup cần kiểm tra `isSetSupported("WordApiDesktop", "1.3")` và báo rõ yêu cầu Microsoft 365 bản 2507 trở lên.
+4. Style cài lần đầu một lần và cập nhật bằng `importStylesFromJson` với `Overwrite`; mã style trong OOXML là mã Word tạo (bỏ dấu gạch dưới), không phải mã mình đặt.
+
+### Kết luận go/no-go
+
+**GO với Office.js trên Word 365.** Cả 4 mục bắt buộc (p02, p06, p08, p10) đạt ở cả ba lần chạy. Các điểm chưa có giải pháp đã kiểm chứng (giãn dòng Exactly qua style, đánh số phụ lục) có phương án dự phòng và không làm đổi hướng công nghệ.
+
+### Việc còn mở sau T3 (không chặn Checkpoint 0)
+
+- [ ] Chạy bổ sung p11 (đã sửa) để biết style Exactly qua OOXML có dùng được không; kết quả quyết định cách làm Exactly ở T5 và T6C.
+- [ ] Số lần Ctrl+Z của p14, p15; quan sát bằng mắt p07, p08.
+- [ ] Chạy riêng p18 nếu cần (có thể làm Word đóng); chỉ làm khi p12 trở thành chặn.

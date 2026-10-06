@@ -116,3 +116,10 @@ export function readLineRule(xml: string): string | undefined {
 export function paragraphStyleIds(xml: string): string[] {
   return [...xml.matchAll(/<w:pStyle\b[^>]*w:val="([^"]*)"/g)].map((m) => m[1]);
 }
+
+/** Mã style (w:styleId) theo tên style (w:name). Word tự bỏ dấu gạch dưới khi tạo mã từ tên. */
+export function styleIdByName(xml: string, name: string): string | undefined {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(String.raw`<w:style\b[^>]*w:styleId="([^"]+)"[^>]*>\s*<w:name w:val="${escaped}"`);
+  return pattern.exec(xml)?.[1];
+}

@@ -27,6 +27,7 @@ import {
   readPgNumTypeStart,
   readTableIndentTwips,
   styleDefinition,
+  styleIdByName,
   tableBordersAllNone,
 } from "./ooxmlFacts";
 import type { ProbeGroup } from "./report";
@@ -546,6 +547,7 @@ const exactSpacingProbe: Probe = {
       for (const { how, label } of INSERT_HOW) {
         n += 1;
         const id = `NDC${stamp}${n}`;
+        const styleName = `ND30_C${stamp}${n}`;
         body.clear();
         await context.sync();
         await optional(() =>
@@ -553,14 +555,32 @@ const exactSpacingProbe: Probe = {
             context,
             how,
             styledParagraphBody(id, "Giãn dòng Exactly 20 pt qua style"),
-            styleDefinitionXml({ id, name: `ND30_C${stamp}${n}`, fontPt: 14, exactLineSpacingPt: 20 }),
+            styleDefinitionXml({ id, name: styleName, fontPt: 14, exactLineSpacingPt: 20 }),
           ),
         );
         const xml = await bodyOoxml(context);
-        const kept = paragraphStyleIds(bodyPart(xml)).includes(id);
-        const exact = hasExactLineRule(styleDefinition(xml, id), 400);
+        // Word tự bỏ dấu gạch dưới khi tạo mã style từ tên, nên phải tra mã theo tên.
+        const realId = styleIdByName(xml, styleName);
+        const kept = realId !== undefined && paragraphStyleIds(bodyPart(xml)).includes(realId);
+        const exact = realId !== undefined && hasExactLineRule(styleDefinition(xml, realId), 400);
         results[`style/${how}`] = kept && exact;
-        checks.note(`style OOXML (${label}): đoạn ${kept ? "giữ" : "mất"} style, định nghĩa style ${exact ? "có" : "không có"} Exactly 20 pt`);
+        checks.note(
+          `style OOXML (${label}): style ${realId ? `có (mã ${realId})` : "không được tạo"}, đoạn ${kept ? "giữ" : "mất"} style, định nghĩa ${exact ? "có" : "không có"} Exactly 20 pt`,
+        );
+
+        // Đổi cỡ giãn dòng của style Exactly bằng API (18-22 pt): quy tắc Exactly còn không?
+        if (how === "trailing" && realId !== undefined && exact) {
+          const changed = await optional(async () => {
+            context.document.getStyles().getByName(styleName).paragraphFormat.lineSpacing = 22;
+            await context.sync();
+            const after = await bodyOoxml(context);
+            return hasExactLineRule(styleDefinition(after, realId), 440);
+          });
+          results["style/doiGiaTri"] = changed.value === true;
+          checks.note(
+            `đổi giãn dòng style Exactly từ 20 sang 22 pt bằng API: ${changed.value ? "vẫn là Exactly 22 pt" : `không giữ Exactly (${changed.error ?? "quy tắc đổi"})`}`,
+          );
+        }
 
         body.clear();
         await context.sync();
