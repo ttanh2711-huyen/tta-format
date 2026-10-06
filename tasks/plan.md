@@ -77,7 +77,7 @@ T1 Scaffold ──┬── T2 Quy tắc NĐ30 (dữ liệu) ──────�
                                                             │
         T13 Engine kiểm tra (T2,T2B,T5) ──► T14 Kiểm tra NĐ30 (T7–T10) ; T14B Kiểm tra HD05 (TD1–TD4) ──► T15 Sửa tất cả ──► [Checkpoint 4]
                                                             │
-        T16 Quyết định/Nghị quyết/Chỉ thị
+        T16 Quyết định/Nghị quyết (cá biệt)
         T17 Registry + nhóm "tên loại + trích yếu"  (T12)
         T18 Quy chế/Quy định (Chương/Điều)          (T16)
         T19 Biên bản + văn bản nhiều bên ký         (T17)
@@ -139,11 +139,11 @@ Song song được: T7–T9 với T13 (sau T5); T16, T17, T21 độc lập nhau 
 - **Checkpoint 4:** báo cáo lỗi đúng trên bộ văn bản mẫu có lỗi cài sẵn
 
 ### Giai đoạn 5 – Phủ mọi loại văn bản hành chính (theo họ mẫu)
-- [ ] T16: Quyết định, nghị quyết (cá biệt), chỉ thị: căn cứ, Điều/Khoản/Điểm
+- [ ] T16: Quyết định, nghị quyết (cá biệt): căn cứ, Điều/Khoản/Điểm
 - [ ] T17: Registry loại văn bản + nhóm "tên loại + trích yếu" (tờ trình, báo cáo, thông báo, kế hoạch, chương trình, hướng dẫn, đề án, dự án, phương án, thông cáo)
 - [ ] T18: Quy chế, quy định (Chương/Mục/Điều)
-- [ ] T19: Biên bản và văn bản nhiều bên ký (hợp đồng, thoả thuận, ghi nhớ, cam kết)
-- [ ] T20: Giấy tờ và mẫu nhỏ (giấy mời, giấy giới thiệu, giấy nghỉ phép, giấy uỷ quyền, phiếu gửi/chuyển/báo, thư công, công điện)
+- [ ] T19: Biên bản và văn bản nhiều bên ký (hợp đồng, bản ghi nhớ, bản thỏa thuận; ba loại này không có mẫu ở Phụ lục III)
+- [ ] T20: Giấy tờ mẫu riêng (giấy mời, giấy giới thiệu, giấy nghỉ phép, công điện, thư công)
 - [ ] T21: Phụ lục và dấu chỉ mức độ khẩn/mật
 - [ ] TD6: Đảng: Phần/Chương/Mục/Điều/Khoản/Điểm (nghị quyết, quyết định, quy định, quy chế)
 - [ ] TD7: Đảng: các thể loại còn lại theo Quy định 399-QĐ/TW
@@ -170,7 +170,7 @@ Nguồn: Phụ lục I và III của NĐ 30/2020/NĐ-CP. Phần trích dưới �
 | Số, ký hiệu | "Số:" cỡ 13, đứng; số nhỏ hơn 10 thêm số 0 phía trước; ký hiệu có "/" và "-" đúng quy cách |
 | Địa danh, ngày tháng | Cỡ 13–14, nghiêng; ngày < 10 và tháng 1–2 thêm số 0 |
 | Tên loại | In hoa, cỡ 13–14, đứng, đậm |
-| Trích yếu | In thường, cỡ 14, đứng, đậm, có đường kẻ ngang bên dưới; công văn dùng "V/v" cỡ 13–14, đứng |
+| Trích yếu | In thường, cỡ 14, đứng, đậm, có đường kẻ ngang bên dưới; công văn dùng "V/v" cỡ 12–13, đứng |
 | Nội dung | Cỡ 13–14, đứng, dàn đều hai lề; thụt dòng đầu 1–1,27 cm; giãn đoạn tối thiểu 6 pt; giãn dòng từ đơn đến 1,5 |
 | Phần/Chương/Mục/Điều/Khoản/Điểm | Quy cách cỡ chữ, kiểu chữ riêng từng cấp |
 | Chức vụ người ký | Quyền hạn (TM., KT., TL., TUQ.) và chức vụ: in hoa, đứng, đậm, cỡ 13–14 |

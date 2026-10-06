@@ -29,13 +29,14 @@ Kích cỡ: XS 1 file, S 1–2, M 3–5. Không task nào quá 5 file.
 ### T2: Mã hoá quy tắc NĐ 30 và danh sách loại văn bản thành dữ liệu
 **Mô tả:** Đọc văn bản gốc Phụ lục I và III, xác minh hiệu lực/sửa đổi, rồi mã hoá bảng quy tắc ở `plan.md` mục 6 thành `src/rules/nd30.ts` (id, điều khoản tham chiếu, khoảng/giá trị, mức độ, ghi chú ngoại lệ). Lập danh sách đầy đủ các tên loại văn bản hành chính (Điều 7) kèm chữ viết tắt ký hiệu (Phụ lục III) và họ mẫu bố cục thành `src/rules/docTypes.ts`. Ghi các điểm mơ hồ vào `docs/nd30-ambiguities.md`.
 **Tiêu chí nghiệm thu:**
-- [ ] Mỗi quy tắc có trích dẫn vị trí trong Phụ lục I/III
-- [ ] `docTypes.ts` liệt kê đủ mọi loại ở Điều 7, mỗi loại có ký hiệu viết tắt và họ mẫu (công văn / tên loại + trích yếu / Chương-Điều / nhiều bên ký / giấy tờ nhỏ)
-- [ ] Đã xác nhận NĐ 30 còn hiệu lực và nêu rõ văn bản sửa đổi (nếu có)
-- [ ] Có hàm thuần: `mmToPt`, `isMarginValid`, `formatSo`, `formatNgay` (thêm số 0) với test
+- [x] Mỗi quy tắc có trích dẫn vị trí trong Phụ lục I/III (trường `source`, có test)
+- [x] `docTypes.ts` liệt kê 29 loại ở Điều 7 (27 loại có chữ viết tắt đúng Phụ lục III + công văn + thư công), mỗi loại có mẫu và họ mẫu. Điều 7 mới đối chiếu qua nguồn thứ cấp
+- [ ] Đã xác nhận NĐ 30 còn hiệu lực và nêu rõ văn bản sửa đổi (nếu có): tìm kiếm chưa thấy văn bản sửa đổi, nhiều kế hoạch 2025–2026 vẫn viện dẫn; chờ bạn hoặc người am hiểu văn thư xác nhận (`docs/nd30-ambiguities.md`)
+- [x] Có hàm thuần: `mmToPt`, `ptToMm`, `isMarginValid`, `formatSo`, `formatNgay` (thêm số 0) với test
 **Kiểm chứng:**
-- [ ] `npm test`: test biên theo đúng quy tắc gốc (số 7 → "07"; ngày < 10 và tháng 1–2 thêm số 0; ngày tháng không hợp lệ bị từ chối)
-- [ ] Người am hiểu văn thư rà bảng quy tắc, ký xác nhận trong `docs/`
+- [x] `npm test`: test biên theo đúng quy tắc gốc (số 7 → "07"; ngày < 10 và tháng 1–2 thêm số 0; ngày tháng không hợp lệ bị từ chối). 70 test, `typecheck`, `lint`, `build` sạch
+- [ ] Người am hiểu văn thư rà bảng quy tắc, ký xác nhận trong `docs/nd30-ambiguities.md`
+**Trạng thái:** mã, test và tài liệu xong; còn hai mục chờ người xác nhận (hiệu lực, rà bảng quy tắc).
 **Phụ thuộc:** T1
 **File dự kiến:** `src/rules/nd30.ts`, `src/rules/docTypes.ts`, `src/rules/format.ts`, `src/rules/nd30.test.ts`, `docs/nd30-ambiguities.md`
 **Kích cỡ:** M
@@ -136,7 +137,7 @@ Kích cỡ: XS 1 file, S 1–2, M 3–5. Không task nào quá 5 file.
 | **Trang** | Khổ giấy A4 cố định · Lề: **Theo mẫu 20/20/30/20 mm**, Lề phải 15 mm, Đóng gáy 20/20/35/20 mm, Tuỳ chọn (từng cạnh trong khoảng cho phép) · Khoảng cách header **12,5 mm**, footer **5,3 mm** |
 | **Chữ** | Phông **Times New Roman** · Cỡ chữ nội dung 13 \| **14** · Màu **đen** |
 | **Đoạn** | Căn lề **đều hai bên** \| trái · Thụt dòng đầu 1,0 \| **1,27 cm** · Giãn trước/sau **6 pt** \| 8 \| 12 (không dưới 6) · Giãn dòng Đơn \| **1,17 (như mẫu)** \| 1,5 \| Tối thiểu 15 pt |
-| **Đầu văn bản** | Cỡ quốc hiệu 12 \| **13** · Cỡ tiêu ngữ 13 \| **14** · Cỡ tên cơ quan 12 \| **13** · Cỡ số/ký hiệu **13** \| 14 · Cỡ địa danh ngày **13** \| 14 · Cỡ V/v **13** \| 14 · Độ dài đường kẻ dưới cơ quan (1/3 \| **1/2** dòng chữ) · Bảng đầu văn bản: **vừa vùng chữ** \| rộng như mẫu cũ (Q9) |
+| **Đầu văn bản** | Cỡ quốc hiệu 12 \| **13** · Cỡ tiêu ngữ 13 \| **14** · Cỡ tên cơ quan 12 \| **13** · Cỡ số/ký hiệu **13** \| 14 · Cỡ địa danh ngày **13** \| 14 · Cỡ V/v 12 \| **13** · Độ dài đường kẻ dưới cơ quan (1/3 \| **1/2** dòng chữ) · Bảng đầu văn bản: **vừa vùng chữ** \| rộng như mẫu cũ (Q9) |
 | **Cuối văn bản** | Cỡ "Nơi nhận" **12** · Cỡ danh sách nơi nhận **11** · Số dòng trống chỗ ký 4 \| 5 \| **6** \| 7 · Cỡ quyền hạn/chức vụ/họ tên 13 \| **14** |
 | **Bảng biểu** | Cỡ chữ trong bảng 13 \| **14** · Giãn ô trước/sau 0 \| **3 pt** · Viền: **có** \| không · Hàng tiêu đề **đậm, căn giữa** |
 | **Số trang** | Vị trí **giữa lề trên** · Trang 1 **không hiện số** \| hiện · Cỡ **14** |
@@ -457,11 +458,11 @@ Dùng lại bảng quy tắc ở mục 6B của `plan.md`, bộ style `HD05_*` (
 
 Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ 30 ở T2, HD 05 ở T2B). Mỗi loại là một mục cấu hình trong registry (T17); T18–T20 (Chính quyền) và TD6–TD8 (Đảng) chỉ thêm họ mẫu mới và dữ liệu, không sửa wizard.
 
-### T16: Quyết định, nghị quyết (cá biệt), chỉ thị
+### T16: Quyết định và nghị quyết (cá biệt)
 **Mô tả:** Mẫu có phần "Căn cứ" (nghiêng, kết thúc ";"), dòng "QUYẾT ĐỊNH:" (hoặc tương ứng), đánh số Điều/Khoản/Điểm bằng multilevel list gắn với style `ND30_*`.
 **Tiêu chí nghiệm thu:**
 - [ ] Điều (đậm), Khoản (số), Điểm (chữ cái) đánh số tự động đúng cấp
-- [ ] Ba loại (quyết định, nghị quyết cá biệt, chỉ thị) sinh đúng thể thức
+- [ ] Hai loại sinh đúng thể thức: nghị quyết cá biệt (Mẫu 1.1) và quyết định cá biệt quy định trực tiếp (Mẫu 1.2) hoặc gián tiếp (Mẫu 1.3). Chỉ thị dùng Mẫu 1.4, làm ở T17
 - [ ] Bộ kiểm tra T14 nhận biết và kiểm tra các thành phần mới
 **Kiểm chứng:**
 - [ ] `npm test`: golden OOXML numbering
@@ -471,7 +472,7 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 **Kích cỡ:** M
 
 ### T17: Registry loại văn bản và nhóm "tên loại + trích yếu"
-**Mô tả:** Dựng registry cấu hình (mỗi loại khai báo khối đầu/cuối, trường bắt buộc, ký hiệu viết tắt) và đưa vào wizard bước chọn loại. Làm nhóm có tên loại + trích yếu: tờ trình, báo cáo, thông báo, kế hoạch, chương trình, hướng dẫn, đề án, dự án, phương án, thông cáo.
+**Mô tả:** Dựng registry cấu hình (mỗi loại khai báo khối đầu/cuối, trường bắt buộc, ký hiệu viết tắt) và đưa vào wizard bước chọn loại. Làm nhóm dùng Mẫu 1.4 (có tên loại + trích yếu), gồm 17 loại: chỉ thị, quy chế, quy định, thông cáo, thông báo, hướng dẫn, chương trình, kế hoạch, phương án, đề án, dự án, báo cáo, tờ trình, giấy ủy quyền, phiếu gửi, phiếu chuyển, phiếu báo (đọc từ `layout: "co-ten-loai"` trong `src/rules/docTypes.ts`). Quy chế và quy định có thêm cấu trúc Chương/Điều ở T18.
 **Tiêu chí nghiệm thu:**
 - [ ] Thêm một loại mới chỉ cần thêm một mục cấu hình, không sửa wizard
 - [ ] Các loại trong nhóm sinh đúng thể thức so với mẫu
@@ -497,7 +498,7 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 **Kích cỡ:** M
 
 ### T19: Biên bản và văn bản nhiều bên ký
-**Mô tả:** Biên bản (thời gian, địa điểm, thành phần, nội dung, khối ký chủ trì/thư ký), hợp đồng, thoả thuận, bản ghi nhớ, bản cam kết (khối ký hai hoặc nhiều bên, có thể không có "Nơi nhận").
+**Mô tả:** Biên bản (thời gian, địa điểm, thành phần, nội dung, khối ký chủ trì/thư ký), hợp đồng, bản ghi nhớ, bản thỏa thuận (khối ký hai hoặc nhiều bên, có thể không có "Nơi nhận"). Ba loại sau **không có mẫu ở Phụ lục III** nên cần bạn duyệt bố cục đề xuất (xem `docs/nd30-ambiguities.md`, mục 4). Bản cam kết không có trong NĐ 30.
 **Tiêu chí nghiệm thu:**
 - [ ] Khối ký nhiều bên (2–4 bên) dàn đều đúng bố cục, không vỡ khi tên dài
 - [ ] Các loại sinh đúng thể thức so với mẫu
@@ -510,7 +511,7 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 **Kích cỡ:** M
 
 ### T20: Giấy tờ và mẫu nhỏ
-**Mô tả:** Giấy mời, giấy giới thiệu, giấy nghỉ phép, giấy uỷ quyền, phiếu gửi, phiếu chuyển, phiếu báo, thư công, công điện. Mỗi mẫu có bố cục riêng, thường ngắn và có phần tuỳ biến (khung, bảng nhỏ). Nếu một mẫu quá phức tạp thì tách thành task riêng sau khi duyệt.
+**Mô tả:** Giấy mời (Mẫu 1.7), giấy giới thiệu (Mẫu 1.8), giấy nghỉ phép (Mẫu 1.10), công điện (Mẫu 1.6) và thư công (không có mẫu ở Phụ lục III). Giấy ủy quyền, phiếu gửi, phiếu chuyển, phiếu báo dùng Mẫu 1.4 nên làm ở T17. Mỗi mẫu có bố cục riêng, thường ngắn và có phần tuỳ biến (khung, bảng nhỏ). Nếu một mẫu quá phức tạp thì tách thành task riêng sau khi duyệt.
 **Tiêu chí nghiệm thu:**
 - [ ] Mỗi mẫu có trong registry và sinh đúng thể thức so với Phụ lục III
 - [ ] Mẫu chưa hỗ trợ (nếu có) được đánh dấu rõ trong giao diện, không im lặng
