@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kiểm tra API (T3)</title>
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <style>
+      body { font-family: "Segoe UI", sans-serif; font-size: 13px; margin: 0; padding: 10px; color: #222; }
+      h1 { font-size: 15px; margin: 0 0 6px; }
+      .warn { background: #fff4ce; border: 1px solid #e6c200; padding: 6px 8px; margin: 6px 0; }
+      button { font: inherit; padding: 4px 10px; cursor: pointer; }
+      button:disabled { cursor: default; }
+      .row { border-top: 1px solid #ddd; padding: 6px 0; }
+      .row .head { display: flex; gap: 6px; align-items: baseline; justify-content: space-between; }
+      .title { font-weight: 600; }
+      .badge { font-size: 11px; padding: 1px 6px; border-radius: 8px; background: #eee; white-space: nowrap; }
+      .pass { background: #c8f0c8; }
+      .fail { background: #f8c8c8; }
+      .unsupported { background: #f0d8b0; }
+      .manual { background: #cfe3ff; }
+      .detail { color: #444; margin-top: 3px; word-break: break-word; }
+      #summary { margin: 8px 0; font-weight: 600; }
+      #save-status { margin-top: 6px; color: #555; }
+      label { display: block; margin: 6px 0; }
+    </style>
+  </head>
+  <body>
+    <h1>Kiểm tra khả thi Office.js (T3)</h1>
+    <div class="warn">
+      Các phép thử <b>xoá nội dung và đổi lề trang</b>. Chỉ chạy trên một <b>tài liệu thử trống</b>, không chạy trên văn bản thật.
+    </div>
+    <label><input type="checkbox" id="confirm" /> Đây là tài liệu thử, tôi đồng ý cho xoá nội dung</label>
+    <div>
+      <button id="btn-all" type="button" disabled>Chạy tất cả</button>
+      <button id="btn-copy" type="button" disabled>Sao chép báo cáo</button>
+      <button id="btn-back" type="button">Quay lại</button>
+    </div>
+    <div id="summary" role="status" aria-live="polite">Chưa chạy.</div>
+    <div id="save-status"></div>
+    <div id="list"></div>
+  </body>
+</html>

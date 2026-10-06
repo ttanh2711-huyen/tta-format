@@ -74,12 +74,13 @@ Kích cỡ: XS 1 file, S 1–2, M 3–5. Không task nào quá 5 file.
 **Tiêu chí nghiệm thu:**
 - [ ] Bảng "tính năng × môi trường" ghi rõ chạy được/không/ghi chú (Word 365 Windows bắt buộc)
 - [ ] Với mỗi tính năng không chạy, có phương án thay thế (ví dụ OOXML) hoặc kết luận cần đổi công nghệ
-- [ ] Nêu rõ trạng thái GA/preview của từng requirement set (WordApiDesktop 1.3/1.4) và kênh cập nhật Microsoft 365 tối thiểu cần có
+- [x] Nêu rõ trạng thái GA/preview của từng requirement set và bản Microsoft 365 tối thiểu: WordApiDesktop 1.3 (page setup) cần bản 2507 (Build 19029.20208), 1.4 cần 2508; đều là bản phát hành chính thức, không có trên Office mua vĩnh viễn/LTSC (xem `docs/spike-office-api.md`)
 **Kiểm chứng:**
 - [ ] Thủ công trên Word 365 desktop, đính kèm ảnh chụp
 - [ ] Người duyệt đọc tài liệu và xác nhận go
+**Trạng thái:** mã spike (16 phép thử, giao diện, nhận báo cáo ở máy chủ dev), 62 test cho phần logic thuần và tài liệu đã xong. **Chưa chạy trong Word 365** nên hai mục trên (bảng tính năng × môi trường, phương án thay thế) và mục kiểm chứng thủ công còn chờ bạn chạy `npm start` (xem hướng dẫn trong `docs/spike-office-api.md`).
 **Phụ thuộc:** T1
-**File dự kiến:** `src/spike/*.ts`, `docs/spike-office-api.md`
+**File thực tế:** `src/spike/{probes,runner,report,ooxmlBuilders,ooxmlFacts,spike}.ts`, `src/spike/spike.html`, `tools/receiveSpikeReport.js`, `docs/spike-office-api.md`
 **Kích cỡ:** M
 
 ### Checkpoint 0 – Xác nhận công nghệ

@@ -1,6 +1,7 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const { receiveSpikeReport } = require("./tools/receiveSpikeReport");
 
 const port = Number(process.env.npm_package_config_dev_server_port) || 3000;
 
@@ -14,7 +15,10 @@ async function getHttpsOptions() {
 module.exports = async (env) => {
   const serving = Boolean(env && env.WEBPACK_SERVE);
   return {
-    entry: { taskpane: "./src/taskpane/taskpane.ts" },
+    entry: {
+      taskpane: "./src/taskpane/taskpane.ts",
+      spike: "./src/spike/spike.ts",
+    },
     output: {
       path: path.resolve(__dirname, "dist"),
       filename: "[name].js",
@@ -30,12 +34,18 @@ module.exports = async (env) => {
         template: "./src/taskpane/taskpane.html",
         chunks: ["taskpane"],
       }),
+      new HtmlWebpackPlugin({
+        filename: "spike.html",
+        template: "./src/spike/spike.html",
+        chunks: ["spike"],
+      }),
       new CopyWebpackPlugin({ patterns: [{ from: "assets", to: "assets" }] }),
     ],
     devServer: serving
       ? {
           headers: { "Access-Control-Allow-Origin": "*" },
           server: { type: "https", options: await getHttpsOptions() },
+          setupMiddlewares: receiveSpikeReport(path.resolve(__dirname, "docs")),
           port,
         }
       : undefined,

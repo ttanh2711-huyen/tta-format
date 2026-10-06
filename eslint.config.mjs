@@ -15,8 +15,21 @@ export default defineConfig(
         module: "writable",
         __dirname: "readonly",
         process: "readonly",
+        Buffer: "readonly",
       },
     },
     rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
+  {
+    files: ["**/*.test.js"],
+    languageOptions: {
+      globals: {
+        describe: "readonly",
+        it: "readonly",
+        expect: "readonly",
+        beforeEach: "readonly",
+        afterEach: "readonly",
+      },
+    },
   },
 );
