@@ -7,13 +7,17 @@
  * docs/nd30-ambiguities.md.
  */
 
-export interface Range {
-  min: number;
-  max: number;
-}
-
-export type Casing = "upper" | "lower"; // chữ in hoa | chữ in thường
-export type FontStyle = "upright" | "italic"; // kiểu chữ đứng | nghiêng
+import type {
+  ContentLayout,
+  ElementRule as GenericElementRule,
+  FontRules,
+  FontStyle,
+  Casing,
+  PageNumberRules,
+  PageRules,
+  SignAuthority,
+  UrgencyMark,
+} from "../types";
 
 export type ElementId =
   | "quocHieu"
@@ -49,15 +53,7 @@ export type ElementId =
   | "kyHieuNguoiSoan"
   | "diaChiCoQuan";
 
-export interface ElementRule {
-  id: ElementId;
-  label: string;
-  casing: Casing;
-  sizePt: Range;
-  style: FontStyle;
-  bold: boolean;
-  source: string;
-}
+export type ElementRule = GenericElementRule<ElementId>;
 
 const PL1 = "Phụ lục I, Phần I, Mục";
 
@@ -109,7 +105,7 @@ export const ELEMENTS: Record<ElementId, ElementRule> = {
   diaChiCoQuan: element("diaChiCoQuan", "Địa chỉ cơ quan, thư điện tử, trang thông tin điện tử, số điện thoại, số Fax", "lower", 11, 12, "upright", false, "III.4"),
 };
 
-export const PAGE = {
+export const PAGE: PageRules = {
   paper: {
     name: "A4",
     widthMm: 210,
@@ -123,32 +119,33 @@ export const PAGE = {
     left: { min: 30, max: 35, source: `${PL1} I.3` },
     right: { min: 15, max: 20, source: `${PL1} I.3` },
   },
+  landscapeAllowedForTables: true, // Phụ lục I, Phần I, Mục I.2
 };
 
-export type MarginSide = keyof typeof PAGE.marginsMm;
-
-export const FONT = {
+export const FONT: FontRules = {
   name: "Times New Roman",
   encoding: "Unicode TCVN 6909:2001",
   color: "#000000",
   source: `${PL1} I.4`,
 };
 
-export const PAGE_NUMBER = {
+export const PAGE_NUMBER: PageNumberRules = {
   sizePt: { min: 13, max: 14 },
-  align: "center" as const,
-  position: "top-margin" as const,
+  align: "center",
+  position: "top-margin",
   hideOnFirstPage: true,
+  appendixNumberedSeparately: true, // Phụ lục I, Phần I, Mục III.1.đ
   source: `${PL1} I.7`,
 };
 
-export const CONTENT_LAYOUT = {
-  align: "justify" as const,
+export const CONTENT_LAYOUT: ContentLayout = {
+  align: "justify",
   /** Chữ đầu dòng lùi vào 1 cm hoặc 1,27 cm. */
   firstLineIndentMm: [10, 12.7],
+  firstLineIndentToleranceMm: 0.1,
   paragraphSpacingMinPt: 6,
   /** Khoảng cách giữa các dòng: tối thiểu dòng đơn, tối đa 1,5 lines. */
-  lineSpacingLines: { min: 1, max: 1.5 },
+  lineSpacing: { kind: "multiple", min: 1, max: 1.5 },
   source: `${PL1} II.6.e`,
 };
 
@@ -159,11 +156,6 @@ export const LINE_RULES = {
   trichYeu: { lengthRatio: { min: 1 / 3, max: 1 / 2 }, source: `${PL1} II.5.b` },
 };
 
-export interface SignAuthority {
-  abbr: string;
-  meaning: string;
-}
-
 export const SIGN_AUTHORITY: readonly SignAuthority[] = [
   { abbr: "TM.", meaning: "ký thay mặt tập thể" },
   { abbr: "Q.", meaning: "quyền cấp trưởng" },
@@ -171,12 +163,6 @@ export const SIGN_AUTHORITY: readonly SignAuthority[] = [
   { abbr: "TL.", meaning: "ký thừa lệnh" },
   { abbr: "TUQ.", meaning: "ký thừa uỷ quyền" },
 ];
-
-export interface UrgencyMark {
-  text: string;
-  widthMm: number;
-  heightMm: number;
-}
 
 /** Con dấu chỉ mức độ khẩn: khung chữ nhật viền đơn (Phụ lục I, Phần I, Mục III.2.b). */
 export const URGENCY_MARKS: readonly UrgencyMark[] = [

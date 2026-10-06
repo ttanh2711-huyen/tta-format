@@ -1,52 +1,6 @@
-import { formatNgay, formatSo, isMarginValid, mmToPt, ptToMm } from "./format";
+import { formatNgay, formatSo } from "./dateNumber";
 
-describe("đổi đơn vị mm và pt", () => {
-  it("25,4 mm bằng 72 pt (1 inch)", () => {
-    expect(mmToPt(25.4)).toBeCloseTo(72, 6);
-    expect(ptToMm(72)).toBeCloseTo(25.4, 6);
-  });
-
-  it("lề trái 30 mm bằng khoảng 85,04 pt", () => {
-    expect(mmToPt(30)).toBeCloseTo(85.0394, 3);
-  });
-
-  it("đổi qua lại không làm lệch giá trị", () => {
-    expect(ptToMm(mmToPt(20))).toBeCloseTo(20, 9);
-  });
-});
-
-describe("isMarginValid (Phụ lục I, Phần I, Mục I.3)", () => {
-  it("chấp nhận lề nằm trong khoảng, kể cả hai đầu mút", () => {
-    expect(isMarginValid("top", 20)).toBe(true);
-    expect(isMarginValid("top", 25)).toBe(true);
-    expect(isMarginValid("bottom", 22.5)).toBe(true);
-    expect(isMarginValid("left", 30)).toBe(true);
-    expect(isMarginValid("left", 35)).toBe(true);
-    expect(isMarginValid("right", 15)).toBe(true);
-    expect(isMarginValid("right", 20)).toBe(true);
-  });
-
-  it("từ chối lề ngoài khoảng", () => {
-    expect(isMarginValid("top", 19.9)).toBe(false);
-    expect(isMarginValid("top", 25.1)).toBe(false);
-    expect(isMarginValid("left", 29.9)).toBe(false);
-    expect(isMarginValid("left", 35.1)).toBe(false);
-    expect(isMarginValid("right", 14.9)).toBe(false);
-    expect(isMarginValid("right", 20.1)).toBe(false);
-  });
-
-  it("chịu được sai số làm tròn khi đổi từ pt sang mm", () => {
-    expect(isMarginValid("left", ptToMm(85.04))).toBe(true);
-    expect(isMarginValid("right", ptToMm(42.5))).toBe(true);
-  });
-
-  it("từ chối giá trị không phải số hữu hạn", () => {
-    expect(isMarginValid("top", Number.NaN)).toBe(false);
-    expect(isMarginValid("top", Number.POSITIVE_INFINITY)).toBe(false);
-  });
-});
-
-describe("formatSo (Phụ lục I, Phần I, Mục II.3.c)", () => {
+describe("formatSo", () => {
   it("số nhỏ hơn 10 ghi thêm số 0 phía trước", () => {
     expect(formatSo(1)).toBe("01");
     expect(formatSo(7)).toBe("07");
@@ -66,7 +20,7 @@ describe("formatSo (Phụ lục I, Phần I, Mục II.3.c)", () => {
   });
 });
 
-describe("formatNgay (Phụ lục I, Phần I, Mục II.4.b)", () => {
+describe("formatNgay", () => {
   it("ngày nhỏ hơn 10 và tháng 1, 2 ghi thêm số 0", () => {
     expect(formatNgay(5, 1, 2020)).toBe("ngày 05 tháng 01 năm 2020");
     expect(formatNgay(9, 2, 2026)).toBe("ngày 09 tháng 02 năm 2026");
@@ -82,8 +36,9 @@ describe("formatNgay (Phụ lục I, Phần I, Mục II.4.b)", () => {
     expect(formatNgay(31, 12, 2026)).toBe("ngày 31 tháng 12 năm 2026");
   });
 
-  it("chấp nhận 29/2 của năm nhuận", () => {
+  it("chấp nhận 29/2 của năm nhuận, ví dụ ở HD 05: ngày 03 tháng 02 năm 2026", () => {
     expect(formatNgay(29, 2, 2024)).toBe("ngày 29 tháng 02 năm 2024");
+    expect(formatNgay(3, 2, 2026)).toBe("ngày 03 tháng 02 năm 2026");
   });
 
   it("từ chối ngày không tồn tại", () => {

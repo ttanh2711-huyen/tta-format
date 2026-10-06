@@ -6,6 +6,8 @@
  * tắt ở Phụ lục III (đọc nguyên văn). Công văn và thư công không có chữ viết tắt tên loại.
  */
 
+import type { DocType as GenericDocType } from "../types";
+
 export type LayoutFamily =
   | "nghi-quyet" // Mẫu 1.1
   | "quyet-dinh" // Mẫu 1.2, 1.3
@@ -18,15 +20,7 @@ export type LayoutFamily =
   | "giay-nghi-phep" // Mẫu 1.10
   | "chua-co-mau"; // Phụ lục III không có mẫu riêng
 
-export interface DocType {
-  id: string;
-  name: string;
-  /** Chữ viết tắt tên loại dùng trong ký hiệu văn bản; null nếu không có. */
-  abbr: string | null;
-  layout: LayoutFamily;
-  /** Số mẫu ở Phụ lục III, Mục II; null nếu không có mẫu. */
-  template: string | null;
-}
+export type DocType = GenericDocType<LayoutFamily>;
 
 function docType(
   id: string,
@@ -35,7 +29,7 @@ function docType(
   layout: LayoutFamily,
   template: string | null,
 ): DocType {
-  return { id, name, abbr, layout, template };
+  return { id, name, abbr, layout, template, abbrSource: abbr === null ? undefined : "explicit" };
 }
 
 const MAU_1_4 = "Mẫu 1.4";

@@ -7,10 +7,9 @@ import {
   PAGE_NUMBER,
   SIGN_AUTHORITY,
   URGENCY_MARKS,
-  type Casing,
   type ElementId,
-  type FontStyle,
-} from "./nd30";
+} from "./rules";
+import type { Casing, FontStyle } from "../types";
 
 describe("NĐ 30: khổ giấy và lề trang (Phụ lục I, Phần I, Mục I)", () => {
   it("khổ giấy là A4 210 x 297 mm", () => {
@@ -105,7 +104,7 @@ describe("NĐ 30: phần nội dung, đường kẻ, quyền hạn ký, dấu kh
       align: "justify",
       firstLineIndentMm: [10, 12.7],
       paragraphSpacingMinPt: 6,
-      lineSpacingLines: { min: 1, max: 1.5 },
+      lineSpacing: { kind: "multiple", min: 1, max: 1.5 },
     });
   });
 

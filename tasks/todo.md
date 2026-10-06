@@ -38,7 +38,7 @@ Kích cỡ: XS 1 file, S 1–2, M 3–5. Không task nào quá 5 file.
 - [ ] Người am hiểu văn thư rà bảng quy tắc, ký xác nhận trong `docs/nd30-ambiguities.md`
 **Trạng thái:** mã, test và tài liệu xong; còn hai mục chờ người xác nhận (hiệu lực, rà bảng quy tắc).
 **Phụ thuộc:** T1
-**File dự kiến:** `src/rules/nd30.ts`, `src/rules/docTypes.ts`, `src/rules/format.ts`, `src/rules/nd30.test.ts`, `docs/nd30-ambiguities.md`
+**File thực tế:** `src/standards/nd30/rules.ts`, `src/standards/nd30/docTypes.ts`, `src/standards/dateNumber.ts`, `src/standards/units.ts` (chuyển từ `src/rules/` ở T2B), `docs/nd30-ambiguities.md`
 **Kích cỡ:** M
 
 ### T2A: Trích file mẫu thành fixture ẩn danh (đáp án chuẩn)
@@ -55,17 +55,18 @@ Kích cỡ: XS 1 file, S 1–2, M 3–5. Không task nào quá 5 file.
 **Kích cỡ:** M
 
 ### T2B: Mã hoá Hướng dẫn 05-HD/VPTW và thể loại văn bản Đảng, dựng khung `StandardProfile`
-**Mô tả:** (1) Đọc nguyên văn Hướng dẫn 05-HD/VPTW ngày 27/5/2026 (Phần II, Phụ lục 1–2) và **Quy định 399-QĐ/TW ngày 09/01/2026** (thể loại, thẩm quyền ban hành), mã hoá bảng ở mục 6B của `plan.md` thành `src/standards/hd05/rules.ts`, danh sách thể loại và chữ viết tắt thành `src/standards/hd05/docTypes.ts`, bảng tra ký hiệu cơ quan đảng (UBKT, BTGDV, BXD, CB, TU...) thành `src/standards/hd05/agencyCodes.ts`. (2) Dựng khung `StandardProfile` dùng chung và chuyển phần NĐ 30 của T2 vào `src/standards/nd30/` theo cùng khung: quy tắc, khoảng giá trị, mặc định, tên bộ style, định dạng số/ký hiệu, danh sách loại văn bản, điểm mở rộng cho bộ dựng khối đầu/cuối và bộ kiểm tra.
+**Mô tả:** (1) Đọc nguyên văn Hướng dẫn 05-HD/VPTW ngày 27/5/2026 (Phần II, Phụ lục 1–2) và **Quy định 399-QĐ/TW ngày 09/01/2026** (thể loại, thẩm quyền ban hành), mã hoá bảng ở mục 6B của `plan.md` thành `src/standards/hd05/rules.ts`, danh sách thể loại và chữ viết tắt thành `src/standards/hd05/docTypes.ts`, bảng tra ký hiệu cơ quan đảng (UBKT, BTGDV, BXDĐ, CB, TU...) thành `src/standards/hd05/agencyCodes.ts`. (2) Dựng khung `StandardProfile` dùng chung và chuyển phần NĐ 30 của T2 vào `src/standards/nd30/` theo cùng khung: quy tắc, khoảng giá trị, mặc định, tên bộ style, định dạng số/ký hiệu, danh sách loại văn bản, điểm mở rộng cho bộ dựng khối đầu/cuối và bộ kiểm tra.
 **Tiêu chí nghiệm thu:**
-- [ ] Mọi giá trị ở mục 6B có trích dẫn vị trí (phần, mục, Phụ lục) và khớp với văn bản gốc; mục nào chưa chắc đánh dấu "cần xác minh" trong `docs/hd05-ambiguities.md`
-- [ ] Danh sách thể loại văn bản Đảng đủ theo Quy định 399-QĐ/TW, mỗi loại có ký hiệu viết tắt và họ mẫu bố cục
-- [ ] `StandardProfile` có hai bản cài đặt (`nd30`, `hd05`); mã dùng chung chỉ nhận `StandardProfile`, không có `if (standard === ...)` rải rác
-- [ ] Hàm thuần theo chuẩn: định dạng số/ký hiệu ("Số 05-HD/VPTW" so với "Số: 05/CCTL-ĐĐPCTT"), ngày tháng, kiểm tra khoảng lề/cỡ chữ/giãn dòng
+- [x] Mọi giá trị ở mục 6B có trích dẫn vị trí (trường `source` kiểm bằng test); cỡ chữ và chữ viết tắt cơ quan đã đối chiếu bằng ảnh trang PDF gốc. Điểm chưa chắc ghi ở `docs/hd05-ambiguities.md`
+- [ ] Danh sách thể loại văn bản Đảng đủ theo Quy định 399-QĐ/TW, mỗi loại có ký hiệu viết tắt: **đã mã hoá 25 thể loại (Điều 5) và 8 giấy tờ (Điều 6) từ hai nguồn thứ cấp trùng nhau; một bài báo ghi 27 thể loại nên cần đối chiếu nguyên văn Điều 5**. Họ mẫu bố cục: HD 05 chỉ có sơ đồ chung (Phụ lục 1), không có mẫu riêng từng thể loại
+- [x] `StandardProfile` có hai bản cài đặt (`nd30`, `hd05`); mã dùng chung chỉ nhận `StandardProfile`; test quét mã nguồn xác nhận không có `=== "nd30"`, `case "hd05"`... ngoài thư mục riêng của từng chuẩn
+- [x] Hàm thuần theo chuẩn: định dạng số/ký hiệu ("Số 05-HD/VPTW" so với "Số: 05/BNV-VP"), ngày tháng, kiểm tra lề, cỡ chữ, giãn dòng, thụt dòng đầu (`src/standards/validate.ts`)
 **Kiểm chứng:**
-- [ ] `npm test`: bảng ca kiểm thử cho hai chuẩn (số 7 → "07"; "05-HD/VPTW"; liên cơ quan "05-QC/BTCTU-BNCTU"; giãn dòng 17 pt bị từ chối, 20 pt hợp lệ; lề trái 15 mm hợp lệ khi in hai mặt mặt sau)
-- [ ] Thủ công: bạn rà bảng quy tắc HD 05 với bản PDF gốc, ký xác nhận trong `docs/`
+- [x] `npm test`: 156 test cho hai chuẩn (số 7 → "07"; "Số 05-HD/VPTW"; liên cơ quan "Số 05-QC/BTCTU-BNCTU"; giãn dòng 17 pt bị từ chối, 20 pt hợp lệ; lề trái 15 mm hợp lệ ở mặt sau khi in hai mặt). `typecheck`, `lint`, `build` sạch
+- [ ] Thủ công: bạn rà bảng quy tắc HD 05 với bản PDF gốc, ký xác nhận trong `docs/hd05-ambiguities.md`
+**Trạng thái:** mã, test và tài liệu xong; còn hai mục chờ người xác nhận (đối chiếu nguyên văn Điều 5 Quy định 399-QĐ/TW; rà bảng quy tắc).
 **Phụ thuộc:** T1, T2
-**File dự kiến:** `src/standards/StandardProfile.ts`, `src/standards/hd05/rules.ts`, `src/standards/hd05/docTypes.ts`, `src/standards/hd05/agencyCodes.ts`, `src/standards/hd05/rules.test.ts`
+**File thực tế:** `src/standards/types.ts` (kiểu `StandardProfile`), `src/standards/index.ts`, `src/standards/validate.ts`, `src/standards/soKyHieu.ts`, `src/standards/{nd30,hd05}/profile.ts`, `src/standards/hd05/{rules,docTypes,agencyCodes}.ts`
 **Kích cỡ:** M
 
 ### T3: Spike khả thi Office.js

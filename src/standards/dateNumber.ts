@@ -1,27 +1,7 @@
-import { PAGE, type MarginSide } from "./nd30";
-
-const MM_PER_INCH = 25.4;
-const PT_PER_INCH = 72;
-
-/** Sai số cho phép (mm) khi so lề đã qua đổi đơn vị, tránh báo sai do làm tròn. */
-const MARGIN_TOLERANCE_MM = 0.01;
-
-export function mmToPt(mm: number): number {
-  return (mm * PT_PER_INCH) / MM_PER_INCH;
-}
-
-export function ptToMm(pt: number): number {
-  return (pt * MM_PER_INCH) / PT_PER_INCH;
-}
-
-/** Lề (mm) có nằm trong khoảng NĐ 30 cho phép của cạnh đó không. */
-export function isMarginValid(side: MarginSide, mm: number): boolean {
-  if (!Number.isFinite(mm)) {
-    return false;
-  }
-  const { min, max } = PAGE.marginsMm[side];
-  return mm >= min - MARGIN_TOLERANCE_MM && mm <= max + MARGIN_TOLERANCE_MM;
-}
+/**
+ * Cách ghi số văn bản và thời gian ban hành. Hai chuẩn quy định giống nhau:
+ * NĐ 30 Phụ lục I Phần I Mục II.3.c và II.4.b; HD 05 Phần II Mục I.3.2.2 và I.4.2.2.
+ */
 
 /** Số văn bản: số nhỏ hơn 10 ghi thêm số 0 phía trước ("07"). */
 export function formatSo(n: number): string {
