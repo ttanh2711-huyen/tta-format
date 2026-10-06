@@ -29,7 +29,7 @@ import {
   styleDefinition,
   styleIdByName,
   tableBordersAllNone,
-} from "./ooxmlFacts";
+} from "../ooxml/facts";
 import type { ProbeGroup } from "./report";
 
 export interface ProbeOutcome {

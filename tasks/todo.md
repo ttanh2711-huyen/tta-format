@@ -109,14 +109,15 @@ Kích cỡ: XS 1 file, S 1–2, M 3–5. Không task nào quá 5 file.
 ### T5: Cài bộ style theo chuẩn (`ND30_*`, `HD05_*`)
 **Mô tả:** Thêm các style `ND30_NoiDung`, `ND30_KinhGui`, `ND30_BangDuLieu`, `ND30_Phan`, `ND30_Chuong`, `ND30_Dieu`, `ND30_Khoan`, `ND30_Diem` v.v. theo quy tắc và giá trị ở mục 6A của `plan.md`, cài idempotent (chạy lại không nhân đôi, cập nhật nếu khác). Giá trị style lấy từ `FormatOptions` hiện hành (T6A) để đổi tuỳ chọn là đổi cả văn bản. Mỗi chuẩn có bộ style riêng với tiền tố khác nhau (`ND30_*` và `HD05_*`) để hai chuẩn cùng tồn tại trong một tài liệu không đè lên nhau; bộ `HD05_*` gồm cả giãn dòng Exactly và các cấp Phần/Chương/Mục/Điều/Khoản/Điểm theo mục 6B.
 **Tiêu chí nghiệm thu:**
-- [ ] Các style xuất hiện trong thư viện style, thuộc tính đúng bảng quy tắc
-- [ ] Chạy lần hai không tạo bản sao, không làm mất định dạng của đoạn đã dùng style
-- [ ] Không đổi style Normal/Heading của người dùng
+- [ ] Các style xuất hiện trong thư viện style, thuộc tính đúng bảng quy tắc: mã cài bằng `importStylesFromJson` rồi đọc lại từng style so với spec (`findStyleMismatches`, có test); **chờ bạn thử trong Word**. **Riêng giãn dòng Exactly của chuẩn Đảng chưa đạt**: `importStylesFromJson` cho ra quy tắc atLeast (spike p11), nên kết quả cài `HD05_*` sẽ báo rõ "cần Exactly, Word ghi atLeast" cho các style nội dung
+- [ ] Chạy lần hai không tạo bản sao, không làm mất định dạng của đoạn đã dùng style: dùng `Overwrite` cập nhật tại chỗ (đã chứng minh ở p10); **chờ bạn thử trong Word**
+- [x] Không đổi style Normal/Heading của người dùng: chỉ nhập các style do spec khai báo, test kiểm tên có tiền tố ND30_/HD05_ và không trùng tên style có sẵn của Word
 **Kiểm chứng:**
-- [ ] `npm test`: bộ dựng OOXML styles khớp golden file
+- [x] `npm test`: 280 test; spec từng style, bộ dựng JSON và OOXML khớp file mẫu đối chiếu (`src/ooxml/__golden__/{nd30,hd05}-styles.{json,xml}`), so sánh sau khi đọc lại, câu thông báo
 - [ ] Thủ công: cài hai lần, kiểm tra danh sách style
+**Trạng thái:** mã, giao diện (nút "Cài bộ style" trong bảng thiết lập trang) và test xong; `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Giãn dòng Exactly cho `HD05_*`: bộ dựng OOXML đã có (`toStyleDefinitionsXml`, giãn dòng Exactly 400 twips, là cách duy nhất biết đặt được Exactly) nhưng **chưa dùng để cài** vì phải chèn một đoạn rỗng vào tài liệu rồi xoá, và chưa kiểm chứng style Exactly qua OOXML (chờ chạy bổ sung p11 sau khi sửa). Các style tiêu đề khối đầu/cuối (quốc hiệu, nơi nhận, họ tên...) thêm ở T7 đến T10; giá trị lấy từ `FormatOptions` (T6A) nối sau. `ND30_Phan`/`ND30_Chuong` gộp thành `ND30_PhanChuong`; phần chữ in hoa dựa vào chữ gõ vào, không dùng định dạng IN HOA của Word.
 **Phụ thuộc:** T2, T2B, T3
-**File dự kiến:** `src/ooxml/styles.ts`, `src/office/installStyles.ts`, `src/ooxml/styles.test.ts`, `src/ooxml/__golden__/styles.xml`
+**File thực tế:** `src/ooxml/{styleSpecs,styleJson,styleXml,facts}.ts`, `src/ooxml/__golden__/*`, `src/office/{installStyles,styleVerify}.ts`, `src/standards/{nd30,hd05}/styles.ts`, nút trong `src/ui/PageSetupPanel.ts`
 **Kích cỡ:** M
 
 ### T6: Áp định dạng nội dung cho văn bản có sẵn

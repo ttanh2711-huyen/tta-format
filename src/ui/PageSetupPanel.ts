@@ -1,4 +1,7 @@
+import { installStyles, isStyleInstallSupported } from "../office/installStyles";
 import { applyPageSetup, isPageSetupSupported } from "../office/pageSetup";
+import { summarizeInstall } from "../office/styleVerify";
+import { buildStyleSpecs } from "../ooxml/styleSpecs";
 import { parseMm, planPageSetup, summarizeApply } from "../office/pageSetupPlan";
 import { STANDARDS } from "../standards";
 import type { MarginSide, StandardProfile } from "../standards/types";
@@ -45,6 +48,9 @@ export function mountPageSetupPanel(container: HTMLElement): void {
   const apply = create("button", { id: "ps-apply", type: "button", textContent: "Thiết lập trang" });
   const message = create("p", { id: "ps-message" });
   message.setAttribute("role", "status");
+  const styleButton = create("button", { id: "ps-install-styles", type: "button", textContent: "Cài bộ style" });
+  const styleMessage = create("p", { id: "ps-style-message" });
+  styleMessage.setAttribute("role", "status");
 
   container.append(
     create("h2", { textContent: "Thiết lập trang chuẩn" }),
@@ -54,6 +60,10 @@ export function mountPageSetupPanel(container: HTMLElement): void {
     create("label", {}, font, " Đặt phông mặc định Times New Roman"),
     apply,
     message,
+    create("h2", { textContent: "Bộ style" }),
+    create("p", { className: "note", textContent: "Cài hoặc cập nhật các style của chuẩn đang chọn (ND30_*, HD05_*). Chạy lại thì cập nhật tại chỗ, không tạo bản sao; style Normal và Heading không bị đổi." }),
+    styleButton,
+    styleMessage,
   );
 
   const currentStandard = (): StandardProfile => {
@@ -85,6 +95,33 @@ export function mountPageSetupPanel(container: HTMLElement): void {
     radio.addEventListener("change", fillDefaults);
   }
   fillDefaults();
+
+  function showStyle(kind: "ok" | "warning" | "error", text: string): void {
+    styleMessage.className = kind;
+    styleMessage.textContent = text;
+  }
+
+  async function onInstallStyles(): Promise<void> {
+    styleButton.disabled = true;
+    try {
+      const result = await installStyles(buildStyleSpecs(currentStandard()));
+      const summary = summarizeInstall(result.items);
+      showStyle(summary.kind, [summary.text, ...result.notes].join(" "));
+    } catch (error) {
+      showStyle("error", `Không cài được style: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      styleButton.disabled = false;
+    }
+  }
+
+  if (isStyleInstallSupported()) {
+    styleButton.addEventListener("click", () => {
+      void onInstallStyles();
+    });
+  } else {
+    styleButton.disabled = true;
+    showStyle("error", "Cài style cần Microsoft 365 bản 2308 trở lên (WordApi 1.6). Hãy cập nhật Word rồi mở lại.");
+  }
 
   if (!isPageSetupSupported()) {
     apply.disabled = true;

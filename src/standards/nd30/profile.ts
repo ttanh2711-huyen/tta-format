@@ -2,6 +2,7 @@ import { formatSo } from "../dateNumber";
 import { assertAbbreviation, assertAgencyAbbreviations } from "../soKyHieu";
 import type { StandardProfile } from "../types";
 import { DOC_TYPES } from "./docTypes";
+import { STYLE_PLAN } from "./styles";
 import {
   CONTENT_LAYOUT,
   ELEMENTS,
@@ -25,6 +26,7 @@ export const ND30: StandardProfile = {
     footerDistanceMm: 5.3,
     source: "File mẫu công văn của người dùng (lề 20/20/30/20 mm, header 12,5 mm, footer khoảng 5,3 mm); lề nằm trong khoảng của NĐ 30",
   },
+  styles: STYLE_PLAN,
   font: FONT,
   pageNumber: PAGE_NUMBER,
   content: CONTENT_LAYOUT,

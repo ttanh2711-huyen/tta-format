@@ -21,7 +21,7 @@ import {
   readPgNumTypeStart,
   readTableIndentTwips,
   tableBordersAllNone,
-} from "./ooxmlFacts";
+} from "../ooxml/facts";
 
 /** Kiểm tra XML đóng mở thẻ cân đối, đủ để phát hiện lỗi dựng chuỗi. */
 function isBalanced(xml: string): boolean {

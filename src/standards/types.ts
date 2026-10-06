@@ -101,6 +101,41 @@ export interface DocType<Layout extends string = string> {
   note?: string;
 }
 
+export type ParagraphAlignment = "Left" | "Centered" | "Right" | "Justified";
+
+export type LineSpacingSetting =
+  | { kind: "multiple"; lines: number } // bội số dòng đơn (1 = dòng đơn)
+  | { kind: "exactly"; pt: number }; // Exactly, pt
+
+/** Giá trị người dùng chỉnh được (T6A sẽ nối vào giao diện chọn nhanh). */
+export interface StyleOptions {
+  fontSizePt: number;
+  spaceBeforePt: number;
+  spaceAfterPt: number;
+  firstLineIndentMm: number;
+  lineSpacing: LineSpacingSetting;
+}
+
+/** Cách trình bày một thành phần thể thức khi làm thành style đoạn. */
+export interface StyleElementPlan {
+  elementId: string;
+  alignment: ParagraphAlignment;
+  /** Có thụt dòng đầu theo tuỳ chọn không. */
+  indent?: boolean;
+  /** Giãn đoạn riêng, khác giá trị chung (ví dụ "Kính gửi" 12/12 pt). */
+  spacingPt?: { before: number; after: number };
+  keepWithNext?: boolean;
+}
+
+export interface StylePlan {
+  /** Tiền tố tên style, ví dụ "ND30_". Khác nhau giữa các chuẩn để cùng tồn tại trong một tài liệu. */
+  prefix: string;
+  defaults: StyleOptions;
+  elements: readonly StyleElementPlan[];
+  /** Style cho chữ trong bảng biểu của nội dung (không phải thành phần thể thức). */
+  table: { fontSizePt: number; spaceBeforePt: number; spaceAfterPt: number };
+}
+
 /** Giá trị trang mặc định khi bấm "Thiết lập trang"; mọi giá trị phải hợp lệ với chính chuẩn. */
 export interface PageDefaults {
   marginsMm: Record<MarginSide, number>;
@@ -122,6 +157,7 @@ export interface StandardProfile {
   identifyingTitle: string;
   page: PageRules;
   pageDefaults: PageDefaults;
+  styles: StylePlan;
   font: FontRules;
   pageNumber: PageNumberRules;
   content: ContentLayout;
