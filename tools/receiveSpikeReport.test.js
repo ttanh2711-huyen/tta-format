@@ -85,9 +85,26 @@ describe("createSpikeReportHandler", () => {
     expect(fs.readdirSync(docsDir)).toEqual([]);
   });
 
-  it("chỉ ghi vào hai file cố định trong thư mục docs, không theo đường dẫn do client gửi", () => {
+  it("không theo đường dẫn do client gửi: tên lạ bị từ chối, không ghi gì", () => {
     const handler = createSpikeReportHandler(docsDir);
-    send(handler, JSON.stringify({ report: {}, markdown: "m", path: "../../evil.txt", file: "../evil" }));
-    expect(fs.readdirSync(docsDir).sort()).toEqual(["spike-results.json", "spike-results.md"]);
+    const evil = send(handler, JSON.stringify({ report: {}, markdown: "m", name: "../../evil" }));
+    expect(evil.res.statusCode).toBe(400);
+    expect(send(handler, JSON.stringify({ report: {}, markdown: "m", name: "spike-results.js" })).res.statusCode).toBe(400);
+    expect(fs.readdirSync(docsDir)).toEqual([]);
+  });
+
+  it("chấp nhận tên trong danh sách cho phép để lưu lượt chạy riêng, không đè báo cáo đầy đủ", () => {
+    const handler = createSpikeReportHandler(docsDir);
+    send(handler, JSON.stringify({ report: { a: "đầy đủ" }, markdown: "đầy đủ" }));
+    const single = send(handler, JSON.stringify({ report: { a: "riêng" }, markdown: "riêng", name: "spike-rieng" }));
+    expect(single.res.statusCode).toBe(200);
+    expect(fs.readdirSync(docsDir).sort()).toEqual([
+      "spike-results.json",
+      "spike-results.md",
+      "spike-rieng.json",
+      "spike-rieng.md",
+    ]);
+    expect(fs.readFileSync(path.join(docsDir, "spike-results.md"), "utf8")).toBe("đầy đủ");
+    expect(fs.readFileSync(path.join(docsDir, "spike-rieng.md"), "utf8")).toBe("riêng");
   });
 });

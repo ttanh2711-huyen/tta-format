@@ -42,6 +42,10 @@ npm start
 6. Với p07, p08, p12 (cần nhìn bằng mắt): bấm **Chạy riêng** từng mục, xem tài liệu và cho mình biết đường kẻ và bảng trông thế nào.
 7. Dừng máy chủ: `npm run stop`.
 
+### Nếu Word tự đóng giữa lúc chạy
+
+Báo cáo được lưu **trước và sau từng phép thử**, kèm mã phép thử đang chạy. Mở lại Word, mở `docs/spike-results.md`: dòng "Dừng đột ngột khi đang chạy: pXX" cho biết phép thử gây sập. Phép thử đánh dấu ⚠ (p18) có nguy cơ cao nên **không** nằm trong "Chạy tất cả"; chỉ chạy riêng khi cần. Lượt "Chạy riêng" lưu vào `docs/spike-rieng.md`, không đè báo cáo đầy đủ.
+
 ## Các phép thử
 
 Mục có dấu * là bắt buộc cho quyết định go/no-go.
@@ -62,6 +66,7 @@ Mục có dấu * là bắt buộc cho quyết định go/no-go.
 | p13 | Chụp bản trước khi chỉnh và khôi phục (thân, bảng, header, lề) cho "Chỉnh toàn bộ" | chung |
 | p14, p15 | Hoàn tác: 3 thay đổi trong 1 lượt `Word.run` so với 3 lượt, đếm số lần Ctrl+Z | chung (thủ công) |
 | p16 | Hiệu năng: 600 đoạn định dạng trong một lượt | chung |
+| p18 ⚠ | Phụ lục đánh số riêng bằng cách sửa `sectPr` của cả thân rồi `Replace` (có thể làm Word đóng, chỉ chạy riêng) | chung |
 | p17 | Tab stop | bỏ qua có chủ đích |
 
 Quy ước kết luận: mục bắt buộc không đạt hoặc không hỗ trợ thì **no-go**; chỉ mục khác không đạt thì **go-with-fallback** kèm phương án thay thế; còn lại là **go**.

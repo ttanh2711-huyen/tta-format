@@ -96,3 +96,20 @@ describe("toMarkdown", () => {
     expect(md).toMatch(/Kết luận: go-with-fallback/);
   });
 });
+
+describe("toMarkdown khi chạy bị dừng đột ngột", () => {
+  const base: SpikeReport = {
+    generatedAt: "2026-10-06T10:00:00.000Z",
+    environment: { host: "Word", platform: "PC", version: "16.0", sets: {} },
+    results: [result({ id: "p02", status: "pass", critical: true })],
+  };
+
+  it("ghi rõ mục đang chạy lúc dừng", () => {
+    const md = toMarkdown({ ...base, running: "p12" });
+    expect(md).toContain("Dừng đột ngột khi đang chạy: p12");
+  });
+
+  it("không có dòng đó khi chạy xong bình thường", () => {
+    expect(toMarkdown(base)).not.toContain("Dừng đột ngột");
+  });
+});

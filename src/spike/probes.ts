@@ -47,6 +47,8 @@ export interface Probe {
   title: string;
   group: ProbeGroup;
   critical: boolean;
+  /** Có thể làm Word đóng: không nằm trong "Chạy tất cả", chỉ chạy riêng khi người dùng chủ động. */
+  risky?: boolean;
   requires?: readonly Requirement[];
   run(): Promise<ProbeOutcome>;
 }
@@ -608,7 +610,7 @@ const exactSpacingProbe: Probe = {
 
 const appendixNumberingProbe: Probe = {
   id: "p12",
-  title: "Phụ lục đánh số trang riêng: pgNumType start=1 (OOXML trong đoạn, hoặc sửa sectPr của cả thân rồi thay thế)",
+  title: "Phụ lục đánh số trang riêng: ngắt phần có pgNumType start=1 qua insertOoxml (ba cách chèn)",
   group: "chung",
   critical: false,
   async run() {
@@ -618,16 +620,6 @@ const appendixNumberingProbe: Probe = {
       const results: Record<string, boolean> = {};
       const fragments: Record<string, string[]> = {};
       const sectPrs = (xml: string) => (xml.match(/<w:sectPr\b[\s\S]*?<\/w:sectPr>/g) ?? []).map((t) => t.slice(0, 260));
-
-      const buildThreeSections = async () => {
-        body.clear();
-        body.insertText("Văn bản chính", "Start");
-        body.insertBreak("SectionNext", "End");
-        body.insertText("Phụ lục I", "End");
-        body.insertBreak("SectionNext", "End");
-        body.insertText("Sau phụ lục", "End");
-        await context.sync();
-      };
 
       // Cách 1: chèn đoạn chứa sectPr có pgNumType (ba kiểu chèn).
       for (const { how, label } of INSERT_HOW) {
@@ -648,30 +640,50 @@ const appendixNumberingProbe: Probe = {
         checks.note(`đoạn sectPr (${label}): ${sections.items.length} phần, pgNumType start=${start ?? "không có"}`);
       }
 
-      // Cách 2: tạo 3 phần bằng insertBreak, lấy OOXML cả thân, thêm pgNumType vào phần 2 rồi thay thế.
-      await buildThreeSections();
-      const roundTrip = await optional(async () => {
-        const original = await bodyOoxml(context);
-        const modified = withPgNumTypeStart(original, 1, 1);
-        body.insertOoxml(modified, "Replace");
-        await context.sync();
-        const sections = context.document.sections;
-        sections.load("items");
-        const after = await bodyOoxml(context);
-        await context.sync();
-        return { count: sections.items.length, after };
-      });
-      const afterXml = roundTrip.value?.after ?? "";
-      results["thanVanBan"] = afterXml !== "" && /<w:sectPr\b[^>]*>(?:(?!<\/w:sectPr>)[\s\S])*<w:pgNumType\b[^>]*w:start="1"/.test(afterXml);
-      fragments["thanVanBan"] = sectPrs(afterXml);
-      checks.note(
-        `sửa sectPr của cả thân rồi Replace: ${roundTrip.value ? `${roundTrip.value.count} phần, pgNumType ${results["thanVanBan"] ? "còn nguyên" : "mất"}` : `lỗi (${roundTrip.error})`}`,
-      );
-
-      checks.expect(Object.values(results).some(Boolean), "không cách nào giữ được pgNumType start=1");
+      checks.expect(Object.values(results).some(Boolean), "không cách chèn nào giữ được pgNumType start=1");
       body.clear();
       await context.sync();
       return { ...checks.outcome("Cần xem bằng mắt: trang đầu của phụ lục phải hiện số 1 ở phần có đánh số."), data: { results, fragments } };
+    });
+  },
+};
+
+const appendixRoundTripProbe: Probe = {
+  id: "p18",
+  title: "RỦI RO (có thể làm Word đóng): phụ lục đánh số riêng bằng cách sửa sectPr của cả thân rồi Replace",
+  group: "chung",
+  critical: false,
+  risky: true,
+  async run() {
+    return Word.run(async (context) => {
+      const checks = new Checks();
+      const body = context.document.body;
+      body.clear();
+      body.insertText("Văn bản chính", "Start");
+      body.insertBreak("SectionNext", "End");
+      body.insertText("Phụ lục I", "End");
+      body.insertBreak("SectionNext", "End");
+      body.insertText("Sau phụ lục", "End");
+      await context.sync();
+
+      const original = await bodyOoxml(context);
+      const modified = withPgNumTypeStart(original, 1, 1);
+      body.insertOoxml(modified, "Replace");
+      await context.sync();
+
+      const sections = context.document.sections;
+      sections.load("items");
+      const after = await bodyOoxml(context);
+      await context.sync();
+      const kept = /<w:sectPr\b[^>]*>(?:(?!<\/w:sectPr>)[\s\S])*<w:pgNumType\b[^>]*w:start="1"/.test(after);
+      checks.expect(kept, "pgNumType start=1 mất sau khi Replace");
+      checks.note(`${sections.items.length} phần, pgNumType ${kept ? "còn nguyên" : "mất"}`);
+      body.clear();
+      await context.sync();
+      return {
+        ...checks.outcome("Cần xem bằng mắt: trang đầu của phụ lục phải hiện số 1 ở phần có đánh số."),
+        data: { kept, sectPrs: (after.match(/<w:sectPr\b[\s\S]*?<\/w:sectPr>/g) ?? []).map((t) => t.slice(0, 260)) },
+      };
     });
   },
 };
@@ -896,6 +908,7 @@ export const PROBES: readonly Probe[] = [
   styleProbe,
   exactSpacingProbe,
   appendixNumberingProbe,
+  appendixRoundTripProbe,
   snapshotProbe,
   undoOneRunProbe,
   undoThreeRunsProbe,

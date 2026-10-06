@@ -12,11 +12,12 @@ function element<T extends HTMLElement>(id: string): T {
   return found as T;
 }
 
-function buildReport(): SpikeReport {
+function buildReport(running?: string): SpikeReport {
   return {
     generatedAt: new Date().toISOString(),
     environment: collectEnvironment(),
     results: PROBES.map((p) => results.get(p.id)).filter((r): r is ProbeResult => r !== undefined),
+    ...(running ? { running } : {}),
   };
 }
 
@@ -53,19 +54,30 @@ function record(result: ProbeResult): void {
   renderSummary();
 }
 
-async function saveReport(): Promise<void> {
-  const report = buildReport();
+interface SaveOptions {
+  /** Mã phép thử sắp chạy; lưu trước để nếu Word đóng đột ngột còn biết là mục nào. */
+  running?: string;
+  /** "spike-rieng" cho lượt chạy riêng, để không đè báo cáo đầy đủ. */
+  name?: "spike-results" | "spike-rieng";
+  quiet?: boolean;
+}
+
+async function saveReport(options: SaveOptions = {}): Promise<void> {
+  const report = buildReport(options.running);
   const markdown = toMarkdown(report);
+  const file = options.name ?? "spike-results";
   const status = element("save-status");
   try {
     const response = await fetch("/spike-report", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ report, markdown }),
+      body: JSON.stringify({ report, markdown, name: file }),
     });
-    status.textContent = response.ok
-      ? "Đã lưu báo cáo vào docs/spike-results.json và docs/spike-results.md (máy chủ dev)."
-      : `Máy chủ không nhận báo cáo (HTTP ${response.status}). Dùng nút "Sao chép báo cáo".`;
+    if (!options.quiet) {
+      status.textContent = response.ok
+        ? `Đã lưu báo cáo vào docs/${file}.json và docs/${file}.md (máy chủ dev).`
+        : `Máy chủ không nhận báo cáo (HTTP ${response.status}). Dùng nút "Sao chép báo cáo".`;
+    }
   } catch {
     status.textContent = 'Không gửi được báo cáo tới máy chủ dev. Dùng nút "Sao chép báo cáo".';
   }
@@ -75,7 +87,7 @@ async function onRunAll(): Promise<void> {
   setBusy(true);
   element("save-status").textContent = "";
   try {
-    await runAll(record);
+    await runAll((probe) => saveReport({ running: probe.id, quiet: true }), record);
     await saveReport();
   } finally {
     setBusy(false);
@@ -87,7 +99,9 @@ async function onRunOne(probeId: string): Promise<void> {
   if (!probe) return;
   setBusy(true);
   try {
+    await saveReport({ running: probe.id, name: "spike-rieng", quiet: true });
     record(await runProbe(probe));
+    await saveReport({ name: "spike-rieng" });
   } finally {
     setBusy(false);
   }
@@ -114,7 +128,7 @@ function buildList(): void {
     head.className = "head";
     const title = document.createElement("span");
     title.className = "title";
-    title.textContent = `${probe.id}${probe.critical ? " *" : ""}  ${probe.title}`;
+    title.textContent = `${probe.id}${probe.critical ? " *" : ""}${probe.risky ? " ⚠" : ""}  ${probe.title}`;
     const badge = document.createElement("span");
     badge.className = "badge";
     badge.textContent = "chưa chạy";
@@ -147,5 +161,5 @@ Office.onReady((info) => {
   element("btn-back").addEventListener("click", () => {
     window.location.href = "taskpane.html";
   });
-  element("summary").textContent = "Chưa chạy. Dấu * là mục bắt buộc cho quyết định go/no-go.";
+  element("summary").textContent = "Chưa chạy. Dấu * là mục bắt buộc cho quyết định go/no-go; dấu ⚠ là mục rủi ro, chỉ chạy riêng.";
 });

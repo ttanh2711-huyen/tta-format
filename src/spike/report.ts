@@ -25,6 +25,8 @@ export interface SpikeReport {
   generatedAt: string;
   environment: EnvironmentInfo;
   results: ProbeResult[];
+  /** Mã phép thử đang chạy lúc lưu; còn lại trong báo cáo cuối nghĩa là Word hoặc add-in dừng đột ngột. */
+  running?: string;
 }
 
 export function summarize(results: readonly ProbeResult[]): Record<ProbeStatus, number> {
@@ -69,6 +71,9 @@ export function toMarkdown(report: SpikeReport): string {
     "# Kết quả spike Office.js",
     "",
     `Chạy lúc: ${report.generatedAt}`,
+    ...(report.running
+      ? ["", `**Dừng đột ngột khi đang chạy: ${report.running}** (Word hoặc add-in đóng giữa chừng; nghi ngờ phép thử này gây lỗi).`]
+      : []),
     "",
     "## Môi trường",
     "",

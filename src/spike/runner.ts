@@ -1,5 +1,6 @@
 import { PROBES, type Probe } from "./probes";
 import type { EnvironmentInfo, ProbeResult } from "./report";
+import { probesForRunAll } from "./selection";
 
 const WORD_API_VERSIONS = ["1.1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.8", "1.9"];
 const WORD_API_DESKTOP_VERSIONS = ["1.1", "1.2", "1.3", "1.4", "1.5"];
@@ -65,9 +66,17 @@ export async function runProbe(probe: Probe): Promise<ProbeResult> {
   }
 }
 
-export async function runAll(onResult: (result: ProbeResult) => void): Promise<ProbeResult[]> {
+/**
+ * Chạy các phép thử không rủi ro lần lượt. `onBefore` được gọi trước mỗi phép thử để lưu mã đang
+ * chạy; nếu Word đóng giữa chừng thì báo cáo đã lưu cho biết phép thử nào là thủ phạm.
+ */
+export async function runAll(
+  onBefore: (probe: Probe) => Promise<void>,
+  onResult: (result: ProbeResult) => void,
+): Promise<ProbeResult[]> {
   const results: ProbeResult[] = [];
-  for (const probe of PROBES) {
+  for (const probe of probesForRunAll(PROBES)) {
+    await onBefore(probe);
     const result = await runProbe(probe);
     results.push(result);
     onResult(result);
