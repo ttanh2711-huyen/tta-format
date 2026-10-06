@@ -25,7 +25,7 @@ function create<K extends keyof HTMLElementTagNameMap>(
 }
 
 /** Bảng "Thiết lập trang chuẩn" trong task pane (T4). Chọn chuẩn tạm thời ở đây; T6B sẽ chuyển lên đầu task pane. */
-export function mountPageSetupPanel(container: HTMLElement): void {
+export function mountPageSetupPanel(container: HTMLElement): { currentStandard: () => StandardProfile } {
   // Dùng nút chọn (radio) thay cho ô thả xuống: ô thả xuống trong khung task pane của Word hay không mở được.
   const standardRadios = STANDARDS.map((standard, index) =>
     create("input", { type: "radio", name: "ps-standard", id: `ps-standard-${standard.id}`, value: standard.id, checked: index === 0 }),
@@ -126,7 +126,7 @@ export function mountPageSetupPanel(container: HTMLElement): void {
   if (!isPageSetupSupported()) {
     apply.disabled = true;
     show("error", "Tính năng này cần Microsoft 365 bản 2507 trở lên (WordApiDesktop 1.3). Hãy cập nhật Word rồi mở lại.");
-    return;
+    return { currentStandard };
   }
 
   async function onApply(): Promise<void> {
@@ -155,4 +155,6 @@ export function mountPageSetupPanel(container: HTMLElement): void {
   apply.addEventListener("click", () => {
     void onApply();
   });
+
+  return { currentStandard };
 }

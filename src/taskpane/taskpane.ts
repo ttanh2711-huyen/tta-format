@@ -1,4 +1,5 @@
 import { insertSampleParagraph } from "../office/insertSample";
+import { mountFormatPanel } from "../ui/FormatPanel";
 import { mountPageSetupPanel } from "../ui/PageSetupPanel";
 
 function setStatus(message: string): void {
@@ -30,8 +31,12 @@ Office.onReady((info) => {
     void onInsertSample();
   });
   const panel = document.getElementById("page-setup-panel");
+  const formatPanel = document.getElementById("format-panel");
   if (panel) {
-    mountPageSetupPanel(panel);
+    const { currentStandard } = mountPageSetupPanel(panel);
+    if (formatPanel) {
+      mountFormatPanel(formatPanel, currentStandard);
+    }
   }
   setStatus("Sẵn sàng.");
 });

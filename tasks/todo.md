@@ -123,14 +123,15 @@ Kích cỡ: XS 1 file, S 1–2, M 3–5. Không task nào quá 5 file.
 ### T6: Áp định dạng nội dung cho văn bản có sẵn
 **Mô tả:** Nút "Định dạng nội dung" áp style `ND30_NoiDung` (mặc định theo mẫu: dàn đều, thụt dòng đầu 1,27 cm, giãn trước và sau 6 pt, giãn dòng 1,17, cỡ 14; đổi được ở T6A) cho các đoạn thân văn bản trong vùng chọn hoặc toàn bộ; bỏ qua bảng, header/footer và các đoạn đã dùng style `ND30_*` khác.
 **Tiêu chí nghiệm thu:**
-- [ ] Đoạn thân văn bản đạt đúng thuộc tính; bảng và đoạn có style `ND30_*` khác không bị đổi
-- [ ] Không làm mất in đậm/nghiêng cục bộ do người dùng cố ý (cấu hình được: giữ/xoá)
+- [ ] Đoạn thân văn bản đạt đúng thuộc tính; bảng và đoạn có style `ND30_*`/`HD05_*` khác không bị đổi (logic chọn đoạn đã có test; **chờ bạn thử trong Word**)
+- [ ] Không làm mất in đậm/nghiêng cục bộ do người dùng cố ý (cấu hình được: giữ/xoá; chế độ xoá dùng `Font.reset()` + `Paragraph.reset()`, cần Word 2508; **chờ bạn thử**)
 - [ ] Hoàn tác (Ctrl+Z) quay lại trạng thái trước
 **Kiểm chứng:**
-- [ ] `npm test`: logic chọn đoạn áp dụng/bỏ qua
+- [x] `npm test`: 315 test; logic chọn đoạn áp dụng/bỏ qua, câu thông báo, đặt Exactly trong OOXML, bỏ sectPr cấp thân, kiểm tra kết quả Exactly
 - [ ] Thủ công: văn bản mẫu lộn xộn trước/sau
+**Trạng thái:** mã, giao diện (bảng "Định dạng nội dung" dưới bảng thiết lập trang, dùng chuẩn đang chọn ở đó) và test xong; `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Chuẩn Đảng (Exactly): theo lựa chọn của bạn, đặt Exactly trực tiếp trên từng đoạn bằng OOXML (`getOoxml` → `withExactLineSpacing` → `insertOoxml(..., "Replace")`). Vì chưa thử được trong Word, mã tự chạy một phép thử trên tài liệu tạm (`createDocument()`, không mở ra) rồi mới làm trên tài liệu thật; không đạt thì chỉ áp style và báo cảnh báo. Sau khi ghi, đọc lại số đoạn, chữ và số đoạn Exactly; lệch thì báo và nhắc Ctrl+Z. **Rủi ro chưa kiểm chứng**: (1) cách ghi lại đoạn có thể chèn thêm đoạn trống hay làm mất bình luận/đánh dấu gắn trong đoạn; (2) tài liệu tạm từ `createDocument()` chưa biết có tự đóng không; (3) Ctrl+Z có hoàn tác trọn một lần bấm không (như p14/p15). Chuẩn NĐ 30 không đi qua OOXML, chỉ áp style. Lựa chọn đoạn: bỏ qua trống, trong bảng, đã dùng style bộ chuẩn, tiêu đề có sẵn của Word, mục danh sách tự động.
 **Phụ thuộc:** T4, T5
-**File dự kiến:** `src/office/formatBody.ts`, `src/rules/paragraphClassifier.ts`, `src/ui/FormatPanel.ts`, `src/rules/paragraphClassifier.test.ts`
+**File thực tế:** `src/office/{paragraphClassifier,formatBody}.ts`, `src/ooxml/{exactSpacing,exactVerify}.ts`, `src/ui/FormatPanel.ts`; `mountPageSetupPanel` trả về `currentStandard` để dùng chung (T6B sẽ chuyển chọn chuẩn lên đầu task pane)
 **Kích cỡ:** M
 
 ### T6A: Chọn nhanh tuỳ chỉnh định dạng theo nhóm (registry + giao diện + preset)
