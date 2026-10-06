@@ -23,10 +23,14 @@ function create<K extends keyof HTMLElementTagNameMap>(
 
 /** Bảng "Thiết lập trang chuẩn" trong task pane (T4). Chọn chuẩn tạm thời ở đây; T6B sẽ chuyển lên đầu task pane. */
 export function mountPageSetupPanel(container: HTMLElement): void {
-  const standardSelect = create("select", { id: "ps-standard" });
-  for (const standard of STANDARDS) {
-    standardSelect.append(create("option", { value: standard.id, textContent: standard.name }));
-  }
+  // Dùng nút chọn (radio) thay cho ô thả xuống: ô thả xuống trong khung task pane của Word hay không mở được.
+  const standardRadios = STANDARDS.map((standard, index) =>
+    create("input", { type: "radio", name: "ps-standard", id: `ps-standard-${standard.id}`, value: standard.id, checked: index === 0 }),
+  );
+  const standardGroup = create("fieldset", { id: "ps-standard-group" }, create("legend", { textContent: "Chuẩn văn bản" }));
+  STANDARDS.forEach((standard, index) => {
+    standardGroup.append(create("label", {}, standardRadios[index], ` ${standard.name}`));
+  });
 
   const inputs = new Map<MarginSide, HTMLInputElement>();
   const rows = SIDES.map(({ side, label }) => {
@@ -44,7 +48,7 @@ export function mountPageSetupPanel(container: HTMLElement): void {
 
   container.append(
     create("h2", { textContent: "Thiết lập trang chuẩn" }),
-    create("label", {}, "Chuẩn văn bản ", standardSelect),
+    standardGroup,
     ...rows,
     create("label", {}, duplex, " In hai mặt (lề đối xứng) ", duplexNote),
     create("label", {}, font, " Đặt phông mặc định Times New Roman"),
@@ -52,7 +56,10 @@ export function mountPageSetupPanel(container: HTMLElement): void {
     message,
   );
 
-  const currentStandard = (): StandardProfile => STANDARDS.find((s) => s.id === standardSelect.value) ?? STANDARDS[0];
+  const currentStandard = (): StandardProfile => {
+    const checked = standardRadios.find((radio) => radio.checked);
+    return STANDARDS.find((s) => s.id === checked?.value) ?? STANDARDS[0];
+  };
 
   function show(kind: "ok" | "warning" | "error" | "", text: string): void {
     message.className = kind;
@@ -74,7 +81,9 @@ export function mountPageSetupPanel(container: HTMLElement): void {
     show("", "");
   }
 
-  standardSelect.addEventListener("change", fillDefaults);
+  for (const radio of standardRadios) {
+    radio.addEventListener("change", fillDefaults);
+  }
   fillDefaults();
 
   if (!isPageSetupSupported()) {
