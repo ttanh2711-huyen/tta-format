@@ -181,16 +181,17 @@ Preset đặt tên ("Công văn thường", "Báo cáo dài"...): lưu, đổi t
 ### T6B: Bộ chọn chuẩn (Chính quyền / Đảng) và tự nhận diện chuẩn của tài liệu
 **Mô tả:** Công tắc "Chuẩn văn bản" ở đầu task pane với hai lựa chọn "Chính quyền (NĐ 30)" và "Đảng (HD 05)". Chuẩn đang chọn quyết định registry tuỳ chọn nhanh (T6A), bộ style (T5), nút "Thiết lập trang" (T4), nút "Định dạng nội dung" (T6) và sau này wizard, bộ kiểm tra. Ghi chuẩn vào thuộc tính tuỳ chỉnh của tài liệu (`nd30.standard`). Mở tài liệu có sẵn thì tự nhận diện: tìm "ĐẢNG CỘNG SẢN VIỆT NAM" hoặc "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM" trong phần đầu; không chắc thì hỏi lại, không tự áp dụng. Chuẩn mặc định cho tài liệu mới lưu trong cài đặt cục bộ.
 **Tiêu chí nghiệm thu:**
-- [ ] Đổi chuẩn thì toàn bộ tuỳ chọn nhanh, nhãn và giá trị mặc định đổi theo; không còn sót tuỳ chọn của chuẩn kia
-- [ ] Chuẩn của tài liệu được nhớ qua lần mở sau; tài liệu chưa có chuẩn thì nhận diện hoặc hỏi
-- [ ] Nhận diện đúng với tài liệu chuẩn Chính quyền (file mẫu), tài liệu chuẩn Đảng (văn bản mẫu dựng từ T2B) và tài liệu trống
-- [ ] Đổi chuẩn của tài liệu đã có nội dung hiện cảnh báo và không tự sửa nội dung nếu người dùng không xác nhận
-- [ ] Khi không chắc (không có tiêu đề, có cả hai tiêu đề, tiêu đề sai chính tả hoặc bị ngắt dòng lạ) hiện hộp thoại "Văn bản này theo chuẩn nào?" với gợi ý và hai lựa chọn; có tuỳ chọn "Không hỏi lại cho tài liệu này"; không bao giờ tự đoán rồi áp dụng định dạng
+- [x] Đổi chuẩn thì toàn bộ tuỳ chọn nhanh, nhãn và giá trị mặc định đổi theo (kiểm tra trong trình duyệt giả lập: Giãn dòng 1,17 ↔ Exactly 20 pt); các ô lề riêng của bảng thiết lập trang đã bỏ để không còn hai nơi chỉnh
+- [ ] Chuẩn của tài liệu được nhớ qua lần mở sau (ghi vào thuộc tính tuỳ chỉnh `nd30.standard` khi người dùng chọn; **chờ bạn thử: lưu, đóng, mở lại trong Word**); tài liệu chưa có chuẩn thì nhận diện hoặc hỏi (xong, có test)
+- [ ] Nhận diện đúng với tài liệu chuẩn Chính quyền, chuẩn Đảng và tài liệu trống: có test với dòng tiêu đề dựng sẵn; **chưa thử trên file mẫu thật** (T2A chưa làm) và chưa có văn bản mẫu chuẩn Đảng thật
+- [x] Đổi chuẩn của tài liệu đã có nội dung hiện cảnh báo và chỉ đổi khi người dùng bấm "Đổi chuẩn"; add-in không bao giờ tự sửa nội dung khi đổi chuẩn
+- [x] Khi không chắc (không có tiêu đề, có cả hai tiêu đề, tiêu đề sai chính tả) hiện hộp thoại (tiêu đề ngắt dòng lạ thì vẫn nhận ra được, không phải hỏi)  "Văn bản này theo chuẩn nào?" với gợi ý và hai lựa chọn; có tuỳ chọn "Không hỏi lại cho tài liệu này"; không bao giờ tự đoán rồi áp dụng định dạng
 **Kiểm chứng:**
-- [ ] `npm test`: hàm nhận diện chuẩn với các ca có/không có tiêu đề, tiêu đề lẫn lộn, tài liệu trống
+- [x] `npm test`: 393 test; nhận diện chuẩn với các ca có/không có tiêu đề, lẫn lộn, sai chính tả, ngắt dòng, cụm từ giữa câu, tài liệu trống; quyết định dùng/hỏi; chuẩn mặc định cho tài liệu mới
 - [ ] Thủ công: mở file mẫu công văn, mở văn bản thử chuẩn Đảng, đổi qua lại và xem tuỳ chọn đổi theo
 **Phụ thuộc:** T2B, T6A
-**File dự kiến:** `src/ui/StandardSwitcher.ts`, `src/standards/detectStandard.ts`, `src/office/documentProperties.ts`, `src/standards/detectStandard.test.ts`
+**Trạng thái:** mã, giao diện (công tắc ở đầu task pane) và test xong; `typecheck`, `lint`, `build` sạch; đã chạy trong trình duyệt giả lập Office với 7 kịch bản (trống, chính quyền, Đảng, không tiêu đề, cả hai tiêu đề, sai chính tả, đã ghi chuẩn); **chưa thử trong Word**. Quy tắc: tiêu đề phải là cả một dòng (hoặc tối đa 3 đoạn liền nhau ghép lại) sau khi bỏ dấu và dấu câu, nên cụm "Đảng Cộng sản Việt Nam" nằm giữa câu không bị coi là tiêu đề; chỉ xét 30 đoạn có chữ đầu tiên. Chuẩn đã ghi trong tài liệu được ưu tiên hơn tiêu đề (không cảnh báo nếu hai bên khác nhau). Tiêu đề rõ ràng thì dùng ngay nhưng **không ghi vào tài liệu** (tránh sửa tài liệu chỉ vì mở); chỉ ghi khi người dùng chọn hoặc trả lời hộp thoại. Chuẩn người dùng chọn gần nhất lưu làm mặc định cho tài liệu mới (localStorage). Có thêm nút "Để sau" trong hộp thoại. Bảng thiết lập trang chỉ còn nút "Thiết lập trang" (lấy lề từ Tuỳ chọn nhanh) và "Cài bộ style"; hàm `planPageSetup` (T4) không còn được giao diện gọi nhưng vẫn giữ cùng test.
+**File thực tế:** `src/standards/detectStandard.ts`, `src/settings/defaultStandard.ts`, `src/office/documentStandard.ts`, `src/ui/StandardSwitcher.ts` (+ test), sửa `src/ui/PageSetupPanel.ts`, `src/taskpane/taskpane.{ts,html}`
 **Kích cỡ:** S
 
 ### T6C: Nút "Chỉnh toàn bộ"

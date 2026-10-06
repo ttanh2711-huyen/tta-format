@@ -1,7 +1,10 @@
 import { insertSampleParagraph } from "../office/insertSample";
+import { isDocumentStandardSupported, readDocumentSnapshot, writeDocumentNoAsk, writeDocumentStandard } from "../office/documentStandard";
+import { browserStore } from "../settings/storage";
 import { mountFormatPanel } from "../ui/FormatPanel";
-import { mountQuickOptions } from "../ui/QuickOptions";
 import { mountPageSetupPanel } from "../ui/PageSetupPanel";
+import { mountQuickOptions } from "../ui/QuickOptions";
+import { mountStandardSwitcher } from "../ui/StandardSwitcher";
 
 function setStatus(message: string): void {
   const status = document.getElementById("status");
@@ -31,19 +34,28 @@ Office.onReady((info) => {
   document.getElementById("btn-sample")?.addEventListener("click", () => {
     void onInsertSample();
   });
-  const panel = document.getElementById("page-setup-panel");
-  const formatPanel = document.getElementById("format-panel");
-  if (panel) {
-    const pageSetup = mountPageSetupPanel(panel);
-    const quickPanel = document.getElementById("quick-options");
-    if (quickPanel) {
-      const quick = mountQuickOptions(quickPanel, { currentStandard: pageSetup.currentStandard });
-      pageSetup.onStandardChange(() => quick.refresh());
-      pageSetup.setStyleSpecsProvider(quick.styleSpecs);
-      if (formatPanel) {
-        mountFormatPanel(formatPanel, { currentStandard: pageSetup.currentStandard, behavior: quick.behavior, styleSpecs: quick.styleSpecs });
-      }
-    }
+
+  const switcherEl = document.getElementById("standard-switcher");
+  const quickEl = document.getElementById("quick-options");
+  const pageEl = document.getElementById("page-setup-panel");
+  const formatEl = document.getElementById("format-panel");
+  if (!switcherEl || !quickEl || !pageEl || !formatEl) {
+    setStatus("Thiếu vùng hiển thị trong trang; hãy tải lại add-in.");
+    return;
   }
+
+  const store = browserStore();
+  const documentSupported = isDocumentStandardSupported();
+  const switcher = mountStandardSwitcher(switcherEl, {
+    store,
+    readSnapshot: documentSupported ? readDocumentSnapshot : undefined,
+    writeStandard: documentSupported ? writeDocumentStandard : undefined,
+    writeNoAsk: documentSupported ? writeDocumentNoAsk : undefined,
+  });
+  const quick = mountQuickOptions(quickEl, { currentStandard: switcher.currentStandard, store });
+  switcher.onChange(() => quick.refresh());
+  mountPageSetupPanel(pageEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs });
+  mountFormatPanel(formatEl, { currentStandard: switcher.currentStandard, behavior: quick.behavior, styleSpecs: quick.styleSpecs });
   setStatus("Sẵn sàng.");
+  void switcher.start();
 });

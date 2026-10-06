@@ -31,6 +31,33 @@
         border-top: 1px solid #ccc;
         padding-top: 8px;
       }
+      #standard-switcher fieldset {
+        border: 1px solid #ccc;
+        margin: 0 0 6px;
+        padding: 4px 8px;
+      }
+      #standard-switcher label {
+        display: block;
+        margin: 4px 0;
+      }
+      #standard-switcher .ss-box {
+        background: #fff4d6;
+        border: 1px solid #d9a400;
+        padding: 4px 8px;
+        margin: 4px 0;
+      }
+      #standard-switcher .ss-box button {
+        margin: 2px 4px 2px 0;
+      }
+      #ss-message.ok {
+        color: #1a6b1a;
+      }
+      #ss-message.warning {
+        color: #8a5a00;
+      }
+      #ss-message.error {
+        color: #a00000;
+      }
       #quick-options {
         margin-top: 16px;
         border-top: 1px solid #ccc;
@@ -155,7 +182,8 @@
     </style>
   </head>
   <body>
-    <h1>Định dạng văn bản theo NĐ 30</h1>
+    <h1>Định dạng văn bản</h1>
+    <section id="standard-switcher"></section>
     <button id="btn-sample" type="button">Chèn văn bản thử nghiệm</button>
     <p><a href="spike.html">Kiểm tra khả thi Office.js (T3)</a></p>
     <p id="status" role="status" aria-live="polite">Đang khởi động…</p>
