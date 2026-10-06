@@ -1,0 +1,187 @@
+{
+  "generatedAt": "2026-10-06T07:30:40.511Z",
+  "environment": {
+    "host": "Word",
+    "platform": "PC",
+    "version": "16.0.20527.20016",
+    "sets": {
+      "WordApi 1.1": true,
+      "WordApi 1.2": true,
+      "WordApi 1.3": true,
+      "WordApi 1.4": true,
+      "WordApi 1.5": true,
+      "WordApi 1.6": true,
+      "WordApi 1.7": true,
+      "WordApi 1.8": true,
+      "WordApi 1.9": true,
+      "WordApiDesktop 1.1": true,
+      "WordApiDesktop 1.2": true,
+      "WordApiDesktop 1.3": true,
+      "WordApiDesktop 1.4": true,
+      "WordApiDesktop 1.5": true
+    }
+  },
+  "results": [
+    {
+      "id": "p02",
+      "title": "Đặt A4 và lề theo mm bằng Word.PageSetup, đọc lại",
+      "group": "chung",
+      "critical": true,
+      "status": "pass",
+      "detail": "rộng 210.03 mm; cao 297.02 mm; lề trên 20 mm; lề dưới 20 mm; lề trái 30 mm; lề phải 20 mm.",
+      "durationMs": 615
+    },
+    {
+      "id": "p03",
+      "title": "Lề riêng từng phần (section): đổi phần 2, phần 1 giữ nguyên",
+      "group": "chung",
+      "critical": false,
+      "status": "pass",
+      "detail": "lề trái phần 1 30 mm; lề trái phần 2 14.99 mm.",
+      "durationMs": 132
+    },
+    {
+      "id": "p04",
+      "title": "Chuẩn Đảng: lề đối xứng khi in hai mặt (mirrorMargins)",
+      "group": "hd05",
+      "critical": false,
+      "status": "pass",
+      "detail": "lề trong (leftMargin) 30 mm; lề ngoài (rightMargin) 14.99 mm. Khi bật, lề trái là lề trong; mặt sau tự đảo thành trái 15, phải 30 (cần xem Print Preview để xác nhận bằng mắt).",
+      "durationMs": 81
+    },
+    {
+      "id": "p05",
+      "title": "Khoảng cách header 10 mm và \"trang đầu khác biệt\"",
+      "group": "hd05",
+      "critical": false,
+      "status": "pass",
+      "detail": "khoảng cách header 10 mm.",
+      "durationMs": 105
+    },
+    {
+      "id": "p06",
+      "title": "Số trang canh giữa ở header (insertField hoặc OOXML), trang đầu header trống",
+      "group": "chung",
+      "critical": true,
+      "status": "pass",
+      "detail": "insertField: đạt; insertOoxml: đạt; header trang đầu trống.",
+      "durationMs": 255
+    },
+    {
+      "id": "p07",
+      "title": "Đường kẻ ngắn bằng viền dưới của đoạn rỗng có thụt hai bên",
+      "group": "chung",
+      "critical": false,
+      "status": "fail",
+      "detail": "không thấy viền dưới trong OOXML của thân văn bản; không thấy thụt trái và phải 1701 twips. Cần xem bằng mắt: đường kẻ phải ngắn hơn dòng chữ phía trên và nằm giữa.",
+      "durationMs": 93
+    },
+    {
+      "id": "p08",
+      "title": "Bảng đầu văn bản 3 hàng x 2 cột không viền bằng insertOoxml, vừa vùng chữ",
+      "group": "chung",
+      "critical": true,
+      "status": "pass",
+      "detail": "bề rộng bảng vừa vùng chữ 453.55 pt; bảng 3 hàng, thụt 0 twips, 6 cạnh không viền; bảng rộng như file mẫu cũ: rộng 520 pt, thụt -800 twips (mong đợi -800). Cần xem bằng mắt khi chạy riêng: hai bảng không có đường viền nào.",
+      "durationMs": 245
+    },
+    {
+      "id": "p09",
+      "title": "Bảng tạo bằng API insertTable rồi bỏ viền (phương án thay thế cho OOXML)",
+      "group": "chung",
+      "critical": false,
+      "status": "pass",
+      "detail": "bảng 3 hàng, viền \"None\".",
+      "durationMs": 64
+    },
+    {
+      "id": "p10",
+      "title": "Cài và cập nhật style: importStylesFromJson (Overwrite) hoặc insertOoxml",
+      "group": "chung",
+      "critical": true,
+      "status": "pass",
+      "detail": "importStylesFromJson lần 1: đạt (cỡ 14, giãn dòng 20 pt); importStylesFromJson Overwrite cập nhật style cũ: đạt (cỡ 13, giãn dòng 22 pt); insertOoxml lần 1: không đạt ({\"exists\":false,\"font\":\"\",\"size\":0,\"lineSpacing\":0,\"spaceAfter\":0}).",
+      "data": {
+        "importedOk": true,
+        "overwriteOk": true,
+        "ooxmlOk": false,
+        "ooxmlUpdates": false
+      },
+      "durationMs": 96
+    },
+    {
+      "id": "p11",
+      "title": "Chuẩn Đảng: giãn dòng Exactly 18-22 pt (style OOXML và API lineSpacing)",
+      "group": "hd05",
+      "critical": false,
+      "status": "fail",
+      "detail": "OOXML của đoạn không còn giãn dòng Exactly 400 twips (20 pt) trong style.",
+      "data": {
+        "exactInStyle": false,
+        "apiExact": false,
+        "apiRule": "auto"
+      },
+      "durationMs": 156
+    },
+    {
+      "id": "p12",
+      "title": "Phụ lục đánh số trang riêng: ngắt phần có pgNumType start=1 qua insertOoxml",
+      "group": "chung",
+      "critical": false,
+      "status": "fail",
+      "detail": "pgNumType start đọc lại là không có, mong đợi 1. Cần xem bằng mắt: trang đầu của phụ lục phải hiện số 1 ở phần có đánh số.",
+      "durationMs": 120
+    },
+    {
+      "id": "p13",
+      "title": "\"Chỉnh toàn bộ\": chụp bản trước khi chỉnh và khôi phục (thân, bảng, header, lề)",
+      "group": "chung",
+      "critical": false,
+      "status": "pass",
+      "detail": "lề trái sau khôi phục 30 mm; số đoạn trước 8, sau 8 (chênh lệch do đoạn rỗng cuối là bình thường).",
+      "durationMs": 435
+    },
+    {
+      "id": "p14",
+      "title": "Hoàn tác: 3 thay đổi trong MỘT Word.run, bấm Ctrl+Z bao nhiêu lần?",
+      "group": "chung",
+      "critical": false,
+      "status": "manual",
+      "detail": "Đã tô đỏ và in đậm 3 đoạn trong MỘT lần Word.run. Bấm Ctrl+Z trong Word: ghi lại cần bấm mấy lần để cả 3 đoạn trở lại bình thường (mong đợi 1).",
+      "durationMs": 57
+    },
+    {
+      "id": "p15",
+      "title": "Hoàn tác: 3 thay đổi trong BA lần Word.run, bấm Ctrl+Z bao nhiêu lần?",
+      "group": "chung",
+      "critical": false,
+      "status": "manual",
+      "detail": "Đã tô đỏ và in đậm 3 đoạn trong BA lần Word.run riêng. Bấm Ctrl+Z: ghi lại cần bấm mấy lần (để so với phép thử p14).",
+      "durationMs": 129
+    },
+    {
+      "id": "p16",
+      "title": "Hiệu năng: 600 đoạn, đặt phông, cỡ, căn đều, giãn dòng trong một lượt",
+      "group": "chung",
+      "critical": false,
+      "status": "pass",
+      "detail": "600 đoạn: chèn 121202 ms, tải danh sách 875 ms, định dạng 542 ms (khoảng 3 giây cho 3000 đoạn nếu tuyến tính).",
+      "data": {
+        "count": 600,
+        "insertMs": 121202,
+        "loadMs": 875,
+        "formatMs": 542
+      },
+      "durationMs": 122949
+    },
+    {
+      "id": "p17",
+      "title": "Tab stop (WordApiDesktop 1.4)",
+      "group": "chung",
+      "critical": false,
+      "status": "skipped",
+      "detail": "Bỏ qua có chủ đích: các khối đầu và cuối văn bản dựng bằng bảng, không dùng tab stop. Không ảnh hưởng quyết định công nghệ.",
+      "durationMs": 0
+    }
+  ]
+}

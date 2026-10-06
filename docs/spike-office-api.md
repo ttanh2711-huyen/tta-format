@@ -1,6 +1,6 @@
 # Spike T3: khả thi Office.js trên Word 365
 
-Trạng thái: **mã kiểm tra đã xong, chờ chạy trong Word 365** (xem "Cách chạy"). Phần "Kết quả" bên dưới chỉ điền sau khi có `docs/spike-results.json`.
+Trạng thái: **đã chạy lần 1; đang chạy lần 2** cho bốn mục fail do cách chèn OOXML (xem "Kết quả lần 1"). Báo cáo đầy đủ lần 1 ở `docs/spike-results-lan-1.md`; lần 2 ghi vào `docs/spike-results.md`.
 
 ## Mục đích
 
@@ -66,6 +66,31 @@ Mục có dấu * là bắt buộc cho quyết định go/no-go.
 
 Quy ước kết luận: mục bắt buộc không đạt hoặc không hỗ trợ thì **no-go**; chỉ mục khác không đạt thì **go-with-fallback** kèm phương án thay thế; còn lại là **go**.
 
-## Kết quả
+## Kết quả lần 1 (06/10/2026)
 
-*Chưa có. Điền sau khi chạy: bảng tính năng × môi trường, ghi chú từng mục không đạt và phương án thay thế, kết luận go/no-go, ảnh chụp.*
+Môi trường: Word cho Windows, Microsoft 365, phiên bản 16.0.20527.20016. Hỗ trợ đủ WordApi 1.1 đến 1.9 và WordApiDesktop 1.1 đến 1.5, tức là thừa điều kiện bản 2507 cần cho page setup.
+
+Kết quả máy: pass 10, fail 3, thủ công 2, bỏ qua 1. **Cả 4 mục bắt buộc đều đạt** (p02, p06, p08, p10), nên theo quy ước là go-with-fallback.
+
+| Hạng mục | Kết quả lần 1 | Kết luận tạm |
+|---|---|---|
+| Khổ A4 và lề theo mm bằng `Word.PageSetup` (p02) | Đạt, sai số dưới 0,03 mm | Dùng API này cho T4 |
+| Lề riêng từng phần (p03) | Đạt | Dùng được cho phụ lục, văn bản nhiều phần |
+| Lề đối xứng (`mirrorMargins`, p04) và header 10 mm (p05) | Đạt | Chuẩn Đảng in hai mặt làm được bằng API; cần xem Print Preview |
+| Số trang canh giữa ở header, header trang đầu trống (p06) | Đạt cả `insertField` lẫn `insertOoxml` | Dùng `insertField` (API chính thức), OOXML dự phòng |
+| Bảng đầu văn bản 3x2 không viền bằng `insertOoxml` (p08) | Đạt; rộng 453,55 pt đúng vùng chữ 160 mm; bảng rộng thụt -800 twips đọc lại đúng | Dựng bảng bằng OOXML, như kế hoạch |
+| Bảng bằng API `insertTable` rồi bỏ viền (p09) | Đạt | Phương án dự phòng cho p08 |
+| Cài và cập nhật style (p10) | `importStylesFromJson` đạt cả lần đầu lẫn `Overwrite` (cập nhật cỡ chữ, giãn dòng); `insertOoxml` kèm style **không cài được** | **Dùng `importStylesFromJson` với `Overwrite` cho T5** |
+| Chụp bản trước khi chỉnh và khôi phục (p13) | Đạt: văn bản, định dạng đoạn, bảng, header, lề đều về đúng | "Chỉnh toàn bộ" (T6C) khôi phục được bằng `getOoxml` và `insertOoxml(Replace)` |
+| Hiệu năng định dạng hàng loạt (p16) | 600 đoạn trong 542 ms (khoảng 3 giây cho 3000 đoạn). **Nhưng chèn 600 đoạn bằng vòng `insertParagraph` mất 121 giây** (khoảng 200 ms mỗi đoạn) | Định dạng văn bản có sẵn rất nhanh. Khi **tạo** văn bản phải chèn hàng loạt bằng một lệnh `insertText` hoặc một gói OOXML, không chèn từng đoạn |
+| Giãn dòng Exactly cho chuẩn Đảng (p11) | API `lineSpacing = 20` cho ra quy tắc **auto** (bội số), **không phải Exactly**. OOXML: không giữ được ở lần thử đầu | Xác nhận API không đặt được Exactly, bắt buộc qua OOXML. Cách chèn OOXML đang thử lại |
+| Đường kẻ bằng viền đoạn (p07), phụ lục đánh số riêng (p12) | Fail ở lần thử đầu | Nghi ngờ chung nguyên nhân với p10 và p11 (xem dưới), đang thử lại |
+| Hoàn tác một lượt hay nhiều lượt (p14, p15) | Chưa ghi số lần Ctrl+Z | Chờ người chạy báo |
+
+### Nguyên nhân nghi ngờ của các mục fail
+
+Bốn mục fail (p07, p10 phần OOXML, p11, p12) cùng một mẫu: gói OOXML **chỉ có một đoạn** cần giữ thuộc tính riêng (viền, style, thụt dòng, ngắt phần). Hai mục chèn bảng (p08) và `importStylesFromJson` thì đạt. Giả thuyết: Word bỏ thuộc tính của đoạn cuối cùng trong gói vì dấu kết đoạn cuối không được chèn kèm. Lần chạy 2 thử ba cách chèn cho từng mục: đoạn đơn (như lần 1), kèm một đoạn rỗng phía sau, và `Paragraph.insertOoxml` với `Replace`. Giả thuyết đúng khi hai cách sau đạt còn cách đầu fail.
+
+## Kết quả lần 2
+
+*Chưa có.*

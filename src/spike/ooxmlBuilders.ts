@@ -166,3 +166,25 @@ export function pageNumberParagraphBody(fontPt: number): string {
 export function sectionBreakRestartBody(): string {
   return `<w:p><w:pPr><w:sectPr><w:type w:val="nextPage"/><w:pgNumType w:start="1"/></w:sectPr></w:pPr></w:p>`;
 }
+
+/**
+ * Thêm một đoạn rỗng phía sau. Khi chèn OOXML chỉ có một đoạn, Word có thể bỏ thuộc tính của
+ * đoạn cuối trong gói (kể cả style, viền, thụt dòng, ngắt phần); đoạn rỗng thêm vào để đoạn
+ * trước giữ nguyên thuộc tính.
+ */
+export function withTrailingParagraph(bodyXml: string): string {
+  return `${bodyXml}<w:p/>`;
+}
+
+/** Đoạn dùng một style theo mã (w:styleId). */
+export function styledParagraphBody(styleId: string, text: string): string {
+  return `<w:p><w:pPr><w:pStyle w:val="${styleId}"/></w:pPr><w:r><w:t xml:space="preserve">${text}</w:t></w:r></w:p>`;
+}
+
+/** Đoạn có giãn dòng Exactly đặt trực tiếp trên đoạn (không qua style). */
+export function exactParagraphBody(text: string, exactPt: number): string {
+  return (
+    `<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="${exactPt * 20}" w:lineRule="exact"/></w:pPr>` +
+    `<w:r><w:rPr>${FONT}${sizeXml(14)}</w:rPr><w:t xml:space="preserve">${text}</w:t></w:r></w:p>`
+  );
+}

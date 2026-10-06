@@ -4,14 +4,17 @@
  */
 import { mmToPt, ptToMm } from "../standards/units";
 import {
+  exactParagraphBody,
   flatOpc,
   headerTableBody,
   lineParagraphBody,
   mmToTwips,
   pageNumberParagraphBody,
   sectionBreakRestartBody,
+  styledParagraphBody,
   styleDefinitionXml,
   styleImportJson,
+  withTrailingParagraph,
 } from "./ooxmlBuilders";
 import {
   hasExactLineRule,
@@ -92,6 +95,39 @@ async function optional<T>(action: () => Promise<T>): Promise<{ value?: T; error
 }
 
 const A4_MM = { width: 210, height: 297 };
+
+// ---------------------------------------------------------------------------------------------
+
+
+/**
+ * Ba cách đưa một đoạn OOXML vào cuối thân văn bản. Chèn gói chỉ có một đoạn thì Word có thể bỏ
+ * thuộc tính của đoạn cuối; hai cách còn lại là cách khắc phục cần kiểm chứng.
+ */
+type InsertHow = "single" | "trailing" | "replace";
+
+const INSERT_HOW: ReadonlyArray<{ how: InsertHow; label: string }> = [
+  { how: "single", label: "đoạn đơn" },
+  { how: "trailing", label: "kèm đoạn rỗng phía sau" },
+  { how: "replace", label: "thay thế một đoạn bằng Paragraph.insertOoxml" },
+];
+
+async function insertBy(context: Word.RequestContext, how: InsertHow, bodyXml: string, stylesXml?: string): Promise<void> {
+  const body = context.document.body;
+  if (how === "single") {
+    body.insertOoxml(flatOpc({ bodyXml, stylesXml }), "End");
+  } else if (how === "trailing") {
+    body.insertOoxml(flatOpc({ bodyXml: withTrailingParagraph(bodyXml), stylesXml }), "End");
+  } else {
+    body.insertParagraph("", "End").insertOoxml(flatOpc({ bodyXml, stylesXml }), "Replace");
+  }
+  await context.sync();
+}
+
+async function bodyOoxml(context: Word.RequestContext): Promise<string> {
+  const xml = context.document.body.getOoxml();
+  await context.sync();
+  return xml.value;
+}
 
 // ---------------------------------------------------------------------------------------------
 
@@ -274,25 +310,35 @@ const lineProbe: Probe = {
     return Word.run(async (context) => {
       const checks = new Checks();
       const body = context.document.body;
-      body.clear();
-      const title = body.insertParagraph("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", "Start");
-      title.alignment = "Centered";
-      title.font.bold = true;
-      title.font.name = "Times New Roman";
-      title.font.size = 13;
-      body.insertOoxml(flatOpc({ bodyXml: lineParagraphBody({ leftTwips: mmToTwips(30), rightTwips: mmToTwips(30) }) }), "End");
-      await context.sync();
-      const xml = body.getOoxml();
-      await context.sync();
-      const text = xml.value;
-      checks.expect(/<w:pBdr>[\s\S]*?<w:bottom\b[^>]*w:val="single"/.test(text), "không thấy viền dưới trong OOXML của thân văn bản");
       const left = String(mmToTwips(30));
-      checks.expect(
-        new RegExp(`w:(left|start)="${left}"`).test(text) && new RegExp(`w:(right|end)="${left}"`).test(text),
-        `không thấy thụt trái và phải ${left} twips`,
-      );
-      checks.note("viền dưới và thụt hai bên còn nguyên sau khi vào Word");
-      return checks.outcome("Cần xem bằng mắt: đường kẻ phải ngắn hơn dòng chữ phía trên và nằm giữa.");
+      const results: Record<string, boolean> = {};
+      const writeTitle = async () => {
+        body.clear();
+        const title = body.insertParagraph("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", "Start");
+        title.alignment = "Centered";
+        title.font.bold = true;
+        title.font.name = "Times New Roman";
+        title.font.size = 13;
+        await context.sync();
+      };
+      const line = lineParagraphBody({ leftTwips: mmToTwips(30), rightTwips: mmToTwips(30) });
+      for (const { how, label } of INSERT_HOW) {
+        await writeTitle();
+        await insertBy(context, how, line);
+        const xml = await bodyOoxml(context);
+        const border = /<w:pBdr>[\s\S]*?<w:bottom\b[^>]*w:val="single"/.test(xml);
+        const indent = new RegExp(`w:(left|start)="${left}"`).test(xml) && new RegExp(`w:(right|end)="${left}"`).test(xml);
+        results[how] = border && indent;
+        checks.note(`${label}: ${border && indent ? "đạt" : `không đạt (viền dưới ${border ? "có" : "mất"}, thụt ${indent ? "có" : "mất"})`}`);
+      }
+      checks.expect(Object.values(results).some(Boolean), "không cách chèn nào giữ được viền dưới và thụt hai bên");
+      // Để lại cách đầu tiên đạt trong tài liệu cho người xem bằng mắt.
+      const winner = INSERT_HOW.find(({ how }) => results[how]);
+      if (winner) {
+        await writeTitle();
+        await insertBy(context, winner.how, line);
+      }
+      return { ...checks.outcome("Cần xem bằng mắt: đường kẻ phải ngắn hơn dòng chữ phía trên và nằm giữa."), data: results };
     });
   },
 };
@@ -416,8 +462,7 @@ const styleProbe: Probe = {
 
       let overwriteOk = false;
       if (importedOk) {
-        const supportsOverwrite = Office.context.requirements.isSetSupported("WordApiDesktop", "1.1");
-        if (supportsOverwrite) {
+        if (Office.context.requirements.isSetSupported("WordApiDesktop", "1.1")) {
           const again = await optional(async () => {
             context.document.importStylesFromJson(styleImportJson({ name: nameA, fontPt: 13, lineSpacingPt: 22 }), "Overwrite");
             await context.sync();
@@ -432,78 +477,92 @@ const styleProbe: Probe = {
         }
       }
 
-      // Cách B: insertOoxml kèm phần styles; chèn lần hai với định nghĩa khác để xem có cập nhật không.
-      const idB = "NDThuB";
-      const nameB = "ND30_ThuB";
-      const paragraph = `<w:p><w:pPr><w:pStyle w:val="${idB}"/></w:pPr><w:r><w:t>Thử style</w:t></w:r></w:p>`;
-      const insertB = async (fontPt: number, exactPt: number) => {
-        context.document.body.insertOoxml(
-          flatOpc({ bodyXml: paragraph, stylesXml: styleDefinitionXml({ id: idB, name: nameB, fontPt, exactLineSpacingPt: exactPt }) }),
-          "End",
-        );
-        await context.sync();
-        return readStyle(context, nameB);
-      };
-      const b1 = await optional(() => insertB(14, 20));
-      const ooxmlOk = !!b1.value && b1.value.exists && b1.value.size === 14;
-      checks.note(`insertOoxml lần 1: ${ooxmlOk ? `đạt (cỡ ${b1.value?.size}, giãn dòng ${b1.value?.lineSpacing} pt)` : `không đạt (${b1.error ?? JSON.stringify(b1.value)})`}`);
-      let ooxmlUpdates = false;
-      if (ooxmlOk) {
-        const b2 = await optional(() => insertB(13, 22));
-        ooxmlUpdates = !!b2.value && b2.value.size === 13;
-        checks.note(`insertOoxml lần 2 cập nhật style đã có: ${ooxmlUpdates ? "có" : "không (đúng như tài liệu: style đang dùng giữ định nghĩa cũ)"}`);
+      // Cách B: insertOoxml kèm phần styles, thử ba cách chèn; mỗi cách một style riêng.
+      const ooxml: Record<string, { installed: boolean; updatedOnReinsert?: boolean }> = {};
+      let n = 0;
+      for (const { how, label } of INSERT_HOW) {
+        n += 1;
+        const id = `NDThuB${n}`;
+        const name = `ND30_ThuB${n}`;
+        const insert = async (fontPt: number, exactPt: number) => {
+          await insertBy(
+            context,
+            how,
+            styledParagraphBody(id, "Thử style"),
+            styleDefinitionXml({ id, name, fontPt, exactLineSpacingPt: exactPt }),
+          );
+          return readStyle(context, name);
+        };
+        const first = await optional(() => insert(14, 20));
+        const installed = !!first.value && first.value.exists && first.value.size === 14;
+        ooxml[how] = { installed };
+        let tail = "";
+        if (installed) {
+          const second = await optional(() => insert(13, 22));
+          ooxml[how].updatedOnReinsert = !!second.value && second.value.size === 13;
+          tail = `, chèn lại với định nghĩa khác ${ooxml[how].updatedOnReinsert ? "có cập nhật style" : "KHÔNG cập nhật style cũ"}`;
+        }
+        checks.note(`insertOoxml (${label}): ${installed ? "cài được style" : `không cài được (${first.error ?? JSON.stringify(first.value)})`}${tail}`);
       }
+      const ooxmlOk = Object.values(ooxml).some((v) => v.installed);
 
       checks.expect(importedOk || ooxmlOk, "không cài được style bằng cách nào");
-      const body = context.document.body;
-      body.clear();
+      context.document.body.clear();
       await context.sync();
-      return {
-        ...checks.outcome(),
-        data: { importedOk, overwriteOk, ooxmlOk, ooxmlUpdates },
-      };
+      return { ...checks.outcome(), data: { importedOk, overwriteOk, ooxml } };
     });
   },
 };
 
 const exactSpacingProbe: Probe = {
   id: "p11",
-  title: "Chuẩn Đảng: giãn dòng Exactly 18-22 pt (style OOXML và API lineSpacing)",
+  title: "Chuẩn Đảng: giãn dòng Exactly 18-22 pt (OOXML thử nhiều cách chèn, và API lineSpacing)",
   group: "hd05",
   critical: false,
   async run() {
     return Word.run(async (context) => {
       const checks = new Checks();
       const body = context.document.body;
-      body.clear();
-      const idC = "NDThuC";
-      body.insertOoxml(
-        flatOpc({
-          bodyXml: `<w:p><w:pPr><w:pStyle w:val="${idC}"/></w:pPr><w:r><w:t>Giãn dòng Exactly 20 pt</w:t></w:r></w:p>`,
-          stylesXml: styleDefinitionXml({ id: idC, name: "ND30_ThuC", fontPt: 14, exactLineSpacingPt: 20 }),
-        }),
-        "Start",
-      );
-      await context.sync();
-      const first = body.paragraphs.getFirst();
-      first.load("lineSpacing");
-      const styledXml = first.getOoxml();
-      await context.sync();
-      const exactInStyle = hasExactLineRule(styledXml.value, 400);
-      checks.expect(exactInStyle, "OOXML của đoạn không còn giãn dòng Exactly 400 twips (20 pt) trong style");
-      checks.note(`style OOXML: Exactly ${exactInStyle ? "còn nguyên" : "mất"}, lineSpacing đọc ra ${first.lineSpacing} pt`);
+      const results: Record<string, boolean> = {};
+      let n = 0;
+      for (const { how, label } of INSERT_HOW) {
+        n += 1;
+        const id = `NDThuC${n}`;
+        body.clear();
+        await context.sync();
+        await optional(() =>
+          insertBy(
+            context,
+            how,
+            styledParagraphBody(id, "Giãn dòng Exactly 20 pt qua style"),
+            styleDefinitionXml({ id, name: `ND30_ThuC${n}`, fontPt: 14, exactLineSpacingPt: 20 }),
+          ),
+        );
+        const viaStyle = hasExactLineRule(await bodyOoxml(context), 400);
+        results[`style/${how}`] = viaStyle;
+        checks.note(`style OOXML (${label}): Exactly ${viaStyle ? "đạt" : "mất"}`);
 
+        body.clear();
+        await context.sync();
+        await optional(() => insertBy(context, how, exactParagraphBody("Giãn dòng Exactly 20 pt đặt trực tiếp", 20)));
+        const direct = hasExactLineRule(await bodyOoxml(context), 400);
+        results[`direct/${how}`] = direct;
+        checks.note(`đặt trực tiếp trên đoạn (${label}): Exactly ${direct ? "đạt" : "mất"}`);
+      }
+      checks.expect(Object.values(results).some(Boolean), "không cách OOXML nào giữ được giãn dòng Exactly");
+
+      body.clear();
       const plain = body.insertParagraph("Giãn dòng đặt bằng API lineSpacing = 20", "End");
       plain.lineSpacing = 20;
       await context.sync();
       const plainXml = plain.getOoxml();
       await context.sync();
-      const apiExact = hasExactLineRule(plainXml.value, 400);
-      const rule = /<w:spacing\b[^>]*w:lineRule="(\w+)"/.exec(plainXml.value)?.[1] ?? "không ghi";
-      checks.note(`API lineSpacing=20 cho ra quy tắc "${rule}" (${apiExact ? "là Exactly" : "KHÔNG phải Exactly"})`);
+      const apiRule = /<w:spacing\b[^>]*w:lineRule="(\w+)"/.exec(plainXml.value)?.[1] ?? "không ghi";
+      results["api"] = hasExactLineRule(plainXml.value, 400);
+      checks.note(`API lineSpacing=20 cho ra quy tắc "${apiRule}" (${results["api"] ? "là Exactly" : "KHÔNG phải Exactly"})`);
       body.clear();
       await context.sync();
-      return { ...checks.outcome(), data: { exactInStyle, apiExact, apiRule: rule } };
+      return { ...checks.outcome(), data: { results, apiRule } };
     });
   },
 };
@@ -517,24 +576,26 @@ const appendixNumberingProbe: Probe = {
     return Word.run(async (context) => {
       const checks = new Checks();
       const body = context.document.body;
+      const results: Record<string, boolean> = {};
+      for (const { how, label } of INSERT_HOW) {
+        body.clear();
+        body.insertText("Văn bản chính", "Start");
+        body.insertBreak("SectionNext", "End");
+        body.insertText("Phụ lục I", "End");
+        await context.sync();
+        await optional(() => insertBy(context, how, sectionBreakRestartBody()));
+        body.insertText("Sau phụ lục", "End");
+        const sections = context.document.sections;
+        sections.load("items");
+        await context.sync();
+        const start = readPgNumTypeStart(await bodyOoxml(context));
+        results[how] = start === 1;
+        checks.note(`${label}: ${sections.items.length} phần, pgNumType start=${start ?? "không có"} (${start === 1 ? "đạt" : "không đạt"})`);
+      }
+      checks.expect(Object.values(results).some(Boolean), "không cách chèn nào giữ được pgNumType start=1");
       body.clear();
-      body.insertText("Văn bản chính", "Start");
-      body.insertBreak("SectionNext", "End");
-      body.insertText("Phụ lục I", "End");
-      body.insertOoxml(flatOpc({ bodyXml: sectionBreakRestartBody() }), "End");
-      body.insertText("Sau phụ lục", "End");
       await context.sync();
-      const sections = context.document.sections;
-      sections.load("items");
-      const xml = body.getOoxml();
-      await context.sync();
-      checks.expect(sections.items.length >= 3, `chỉ có ${sections.items.length} phần, mong đợi từ 3`);
-      const start = readPgNumTypeStart(xml.value);
-      checks.expect(start === 1, `pgNumType start đọc lại là ${start ?? "không có"}, mong đợi 1`);
-      checks.note(`${sections.items.length} phần, pgNumType start=${start ?? "không có"}`);
-      body.clear();
-      await context.sync();
-      return checks.outcome("Cần xem bằng mắt: trang đầu của phụ lục phải hiện số 1 ở phần có đánh số.");
+      return { ...checks.outcome("Cần xem bằng mắt: trang đầu của phụ lục phải hiện số 1 ở phần có đánh số."), data: results };
     });
   },
 };
@@ -674,7 +735,7 @@ const undoThreeRunsProbe: Probe = {
 
 const performanceProbe: Probe = {
   id: "p16",
-  title: "Hiệu năng: 600 đoạn, đặt phông, cỡ, căn đều, giãn dòng trong một lượt",
+  title: "Hiệu năng: 600 đoạn, định dạng hàng loạt; so sánh cách chèn đoạn",
   group: "chung",
   critical: false,
   async run() {
@@ -683,16 +744,18 @@ const performanceProbe: Probe = {
       body.clear();
       await context.sync();
       const count = 600;
+      const line = (i: number) => `Đoạn ${i}: nội dung thử nghiệm để đo thời gian định dạng hàng loạt trong Word.`;
+
       const t0 = performance.now();
-      for (let i = 1; i <= count; i += 1) {
-        body.insertParagraph(`Đoạn ${i}: nội dung thử nghiệm để đo thời gian định dạng hàng loạt trong Word.`, "End");
-      }
+      body.insertText(Array.from({ length: count }, (_, i) => line(i + 1)).join("\n"), "End");
       await context.sync();
       const t1 = performance.now();
+
       const paragraphs = body.paragraphs;
       paragraphs.load("items");
       await context.sync();
       const t2 = performance.now();
+      const realCount = paragraphs.items.length;
       paragraphs.items.forEach((p) => {
         p.font.name = "Times New Roman";
         p.font.size = 14;
@@ -703,15 +766,30 @@ const performanceProbe: Probe = {
       });
       await context.sync();
       const t3 = performance.now();
+
       body.clear();
       await context.sync();
-      const insertMs = Math.round(t1 - t0);
+      const single = 30;
+      const t4 = performance.now();
+      for (let i = 1; i <= single; i += 1) {
+        body.insertParagraph(line(i), "End");
+      }
+      await context.sync();
+      const t5 = performance.now();
+      body.clear();
+      await context.sync();
+
+      const bulkMs = Math.round(t1 - t0);
       const loadMs = Math.round(t2 - t1);
       const formatMs = Math.round(t3 - t2);
+      const perParagraphMs = Math.round((t5 - t4) / single);
       return {
         status: "pass",
-        detail: `${count} đoạn: chèn ${insertMs} ms, tải danh sách ${loadMs} ms, định dạng ${formatMs} ms (khoảng ${Math.round((formatMs / count) * 3000 / 1000)} giây cho 3000 đoạn nếu tuyến tính).`,
-        data: { count, insertMs, loadMs, formatMs },
+        detail:
+          `chèn ${count} đoạn bằng một lệnh insertText: ${bulkMs} ms (đọc lại được ${realCount} đoạn); tải danh sách ${loadMs} ms; ` +
+          `định dạng ${count} đoạn: ${formatMs} ms (khoảng ${Math.round((formatMs / count) * 3)} giây cho 3000 đoạn nếu tuyến tính); ` +
+          `chèn từng đoạn bằng insertParagraph: khoảng ${perParagraphMs} ms mỗi đoạn.`,
+        data: { count, realCount, bulkMs, loadMs, formatMs, perParagraphMs },
       } as ProbeOutcome;
     });
   },

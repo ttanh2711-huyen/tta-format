@@ -1,12 +1,15 @@
 import {
+  exactParagraphBody,
   flatOpc,
   headerTableBody,
   lineParagraphBody,
   mmToTwips,
   pageNumberParagraphBody,
   sectionBreakRestartBody,
+  styledParagraphBody,
   styleDefinitionXml,
   styleImportJson,
+  withTrailingParagraph,
 } from "./ooxmlBuilders";
 import {
   hasBottomBorder,
@@ -150,6 +153,33 @@ describe("flatOpc", () => {
     expect(xml).toContain('pkg:name="/word/styles.xml"');
     expect(xml).toContain("relationships/styles");
     expect(xml).toContain('w:styleId="ND30Spike"');
+    expect(isBalanced(xml)).toBe(true);
+  });
+});
+
+describe("withTrailingParagraph", () => {
+  it("thêm một đoạn rỗng phía sau để đoạn trước giữ được thuộc tính khi chèn", () => {
+    const body = lineParagraphBody({ leftTwips: 100, rightTwips: 100 });
+    const wrapped = withTrailingParagraph(body);
+    expect(wrapped.startsWith(body)).toBe(true);
+    expect(wrapped.slice(body.length)).toBe("<w:p/>");
+    expect(isBalanced(wrapped)).toBe(true);
+  });
+});
+
+describe("styledParagraphBody", () => {
+  it("đoạn dùng style theo mã và giữ chữ tiếng Việt", () => {
+    const xml = styledParagraphBody("NDThuB", "Thử style tiếng Việt");
+    expect(xml).toContain('<w:pStyle w:val="NDThuB"/>');
+    expect(xml).toContain("Thử style tiếng Việt");
+    expect(isBalanced(xml)).toBe(true);
+  });
+});
+
+describe("exactParagraphBody", () => {
+  it("đoạn có giãn dòng Exactly đặt trực tiếp, 20 pt = 400 twips", () => {
+    const xml = exactParagraphBody("Giãn dòng Exactly", 20);
+    expect(hasExactLineRule(xml, 400)).toBe(true);
     expect(isBalanced(xml)).toBe(true);
   });
 });
