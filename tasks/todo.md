@@ -295,15 +295,16 @@ Preset đặt tên ("Công văn thường", "Báo cáo dài"...): lưu, đổi t
 ### T11: Đánh số trang
 **Mô tả:** Đánh số trang ở lề trên (header mặc định, trường PAGE), canh giữa, chữ số Ả Rập, đứng, cỡ 14 như mẫu; bật "trang đầu khác biệt" để trang 1 không hiển thị số. Tuỳ chọn ở nhóm Số trang (T6A). Nhận `StandardProfile`: chuẩn Đảng đặt khoảng cách header 10 mm (số trang cách mép trên 10 mm) và đánh số riêng cho từng phụ lục (T3 xác nhận khả thi).
 **Tiêu chí nghiệm thu:**
-- [ ] Từ trang 2 có số trang đúng cỡ và vị trí; trang 1 không có
-- [ ] Chạy lại không tạo trùng trường số trang
-- [ ] Hoạt động với tài liệu một section và nhiều section
-- [ ] Đăng ký thành bước "Đánh số trang" của "Chỉnh toàn bộ" (T6C), idempotent
+- [ ] Từ trang 2 có số trang đúng cỡ (theo Tuỳ chọn nhanh) và vị trí; trang 1 không có: mã xong; vị trí theo khoảng cách header của bước thiết lập trang (12,5 mm mẫu, 10 mm chuẩn Đảng). **Chờ bạn xem bản in thử 3 trang**
+- [x] Chạy lại không tạo trùng trường số trang: mỗi phần chỉ bị ghi khi header chưa có PAGE căn giữa đúng cỡ (có test kế hoạch idempotent)
+- [ ] Hoạt động với tài liệu một section và nhiều section: kế hoạch theo từng phần (chỉ phần đầu ẩn số ở trang đầu, các phần sau luôn hiện số) có test; **chưa thử nhiều phần trong Word**, chưa biết header "liên kết với phần trước" xử lý ra sao khi ghi
+- [x] Đăng ký thành bước 5 "Đánh số trang" của "Chỉnh toàn bộ" (idempotent, có xem trước); bản chụp để khôi phục nay gồm cả header mặc định, header trang đầu và cờ "trang đầu khác biệt"
 **Kiểm chứng:**
-- [ ] `npm test`: bộ dựng OOXML header
+- [x] `npm test`: 582 test; bộ dựng OOXML, đọc trạng thái số trang (kể cả trường PAGE phức hợp, loại NUMPAGES), kế hoạch từng phần, câu chữ xem trước
 - [ ] Thủ công: tài liệu 3 trang, in preview
 **Phụ thuộc:** T3, T4
-**File dự kiến:** `src/office/pageNumber.ts`, `src/ooxml/pageNumberHeader.ts`, `src/ooxml/pageNumberHeader.test.ts`
+**Trạng thái:** mã, nút "Đánh số trang" (cạnh nút Thiết lập trang) và bước trong "Chỉnh toàn bộ" xong; `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Ghi số trang bằng `insertOoxml(..., "Replace")` vào header mặc định (cách dự phòng của spike p06; đoạn căn giữa, Times New Roman, trường PAGE), đặt "trang đầu khác biệt" qua `PageSetup`, đọc lại và báo chỗ chưa đúng. Chưa kiểm chứng: header sau khi ghi có thêm đoạn trống không (làm lệch vị trí số trang), tài liệu có header liên kết giữa các phần. **Chưa làm**: đánh số phụ lục riêng của chuẩn Đảng (T21, TD8). Header cũ có nội dung khác (tên cơ quan...) sẽ bị thay bằng số trang.
+**File thực tế:** `src/ooxml/pageNumberHeader.ts` (+ test), `src/office/pageNumber.ts`, mở rộng `src/pipeline/{steps,planText}.ts`, `src/office/snapshot.ts`, `src/ui/PageSetupPanel.ts`
 **Kích cỡ:** S
 
 ### T12: Wizard "Tạo công văn mới" (chuẩn Chính quyền)

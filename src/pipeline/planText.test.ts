@@ -1,4 +1,4 @@
-import { bodyPlan, pagePlan, stylePlan, tablePlan } from "./planText";
+import { bodyPlan, pageNumberPlan, pagePlan, stylePlan, tablePlan } from "./planText";
 
 const noSkips = { empty: 0, table: 0, standardStyle: 0, list: 0, heading: 0 };
 
@@ -65,5 +65,22 @@ describe("tablePlan", () => {
     const plan = tablePlan({ data: 2, layout: 1, nested: 1, paragraphsToStyle: 14, styleMissing: false }, "ND30_BangDuLieu");
     expect(plan.willRun).toBe(true);
     expect(plan.lines).toEqual(["Áp style ND30_BangDuLieu cho 14 đoạn trong 2 bảng có viền.", "Giữ nguyên 1 bảng không viền và 1 bảng lồng nhau."]);
+  });
+});
+
+describe("pageNumberPlan", () => {
+  const none = { setDifferentFirst: undefined, writePrimary: false, clearFirst: false };
+
+  it("đã đúng thì bỏ qua", () => {
+    expect(pageNumberPlan([none], { sizePt: 14, hideFirst: true })).toEqual({ willRun: false, lines: [], skipReason: "số trang đã đúng (giữa trang, 14 pt, trang 1 không hiện số)." });
+    expect(pageNumberPlan([none], { sizePt: 14, hideFirst: false }).skipReason).toBe("số trang đã đúng (giữa trang, 14 pt).");
+  });
+
+  it("nêu từng việc cần làm", () => {
+    const plan = pageNumberPlan([{ setDifferentFirst: true, writePrimary: true, clearFirst: true }, { setDifferentFirst: undefined, writePrimary: true, clearFirst: false }], { sizePt: 14, hideFirst: true });
+    expect(plan).toEqual({
+      willRun: true,
+      lines: ['Ghi số trang (căn giữa, 14 pt) vào header của 2 phần.', 'Đặt lại "trang đầu khác biệt" cho 1 phần.', "Xoá số trang đang nằm ở header trang đầu (trang 1 không hiện số)."],
+    });
   });
 });

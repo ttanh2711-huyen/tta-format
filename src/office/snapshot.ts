@@ -2,8 +2,8 @@
  * Bản chụp tài liệu trước khi "Chỉnh toàn bộ" để khôi phục (kết quả spike T3, phép thử p13: `getOoxml` rồi
  * `insertOoxml(..., "Replace")` đưa thân văn bản, định dạng đoạn, bảng và lề về đúng).
  *
- * Phạm vi: thân văn bản và thiết lập trang của từng phần. Chưa gồm header, footer và định nghĩa style:
- * các bước hiện có không sửa header/footer; các style bắt đầu bằng ND30_ hoặc HD05_ do add-in tạo giữ giá trị mới sau khi khôi
+ * Phạm vi: thân văn bản, thiết lập trang và hai header (mặc định, trang đầu) của từng phần. Chưa gồm footer và
+ * định nghĩa style: các bước hiện có không sửa footer; các style bắt đầu bằng ND30_ hoặc HD05_ do add-in tạo giữ giá trị mới sau khi khôi
  * phục (insertOoxml không cập nhật style đã có). Task nào sửa header/footer phải mở rộng bản chụp.
  * Bản chụp nằm trong bộ nhớ của task pane: đóng task pane là mất.
  */
@@ -18,6 +18,10 @@ export interface SectionSnapshot {
   headerDistance: number;
   footerDistance: number;
   mirrorMargins: boolean;
+  differentFirst: boolean;
+  /** OOXML của header mặc định và header trang đầu (bước Đánh số trang sửa hai header này). */
+  primaryHeaderOoxml: string;
+  firstHeaderOoxml: string;
 }
 
 export interface DocumentSnapshot {
@@ -27,7 +31,7 @@ export interface DocumentSnapshot {
   sections: SectionSnapshot[];
 }
 
-const PAGE_PROPS = "pageWidth,pageHeight,topMargin,bottomMargin,leftMargin,rightMargin,headerDistance,footerDistance,mirrorMargins";
+const PAGE_PROPS = "pageWidth,pageHeight,topMargin,bottomMargin,leftMargin,rightMargin,headerDistance,footerDistance,mirrorMargins,differentFirstPageHeaderFooter";
 
 export async function takeSnapshot(): Promise<DocumentSnapshot> {
   return Word.run(async (context) => {
@@ -38,12 +42,13 @@ export async function takeSnapshot(): Promise<DocumentSnapshot> {
     sections.load("items");
     await context.sync();
     for (const section of sections.items) section.pageSetup.load(PAGE_PROPS);
+    const headers = sections.items.map((section) => ({ primary: section.getHeader("Primary").getOoxml(), first: section.getHeader("FirstPage").getOoxml() }));
     await context.sync();
     return {
       takenAt: new Date(),
       bodyOoxml: ooxml.value,
       bodyText: body.text,
-      sections: sections.items.map((section) => {
+      sections: sections.items.map((section, index) => {
         const ps = section.pageSetup;
         return {
           pageWidth: ps.pageWidth,
@@ -55,6 +60,9 @@ export async function takeSnapshot(): Promise<DocumentSnapshot> {
           headerDistance: ps.headerDistance,
           footerDistance: ps.footerDistance,
           mirrorMargins: ps.mirrorMargins,
+          differentFirst: ps.differentFirstPageHeaderFooter,
+          primaryHeaderOoxml: headers[index].primary.value,
+          firstHeaderOoxml: headers[index].first.value,
         };
       }),
     };
@@ -87,7 +95,10 @@ export async function restoreSnapshot(snapshot: DocumentSnapshot): Promise<Resto
         headerDistance: saved.headerDistance,
         footerDistance: saved.footerDistance,
         mirrorMargins: saved.mirrorMargins,
+        differentFirstPageHeaderFooter: saved.differentFirst,
       });
+      sections.items[index].getHeader("Primary").insertOoxml(saved.primaryHeaderOoxml, "Replace");
+      sections.items[index].getHeader("FirstPage").insertOoxml(saved.firstHeaderOoxml, "Replace");
     }
     await context.sync();
     if (sections.items.length !== snapshot.sections.length) {

@@ -1,4 +1,5 @@
 import { formatBody, isFormatBodySupported, previewFormatBody } from "../office/formatBody";
+import { applyPageNumbers, isPageNumberSupported, planPageNumberDocument } from "../office/pageNumber";
 import { formatTables, surveyTables } from "../office/formatTables";
 import { installStyles, isStyleInstallSupported, planStyleInstall } from "../office/installStyles";
 import { applyPageSetup, checkPageSetup, isPageSetupSupported } from "../office/pageSetup";
@@ -7,7 +8,7 @@ import { summarizeInstall } from "../office/styleVerify";
 import type { StyleSpec } from "../ooxml/styleSpecs";
 import { toPageSetupSettings, type FormatValues } from "../settings/formatOptions";
 import type { StandardProfile } from "../standards/types";
-import { bodyPlan, pagePlan, stylePlan, tablePlan } from "./planText";
+import { bodyPlan, pageNumberPlan, pagePlan, stylePlan, tablePlan } from "./planText";
 import { StepRegistry, type PipelineStep } from "./runner";
 
 /** Mọi thứ các bước cần biết, lấy từ chuẩn đang chọn và Tuỳ chọn nhanh tại lúc bấm nút. */
@@ -97,12 +98,36 @@ const tableStep: PipelineStep<FixAllContext> = {
   },
 };
 
+function pageNumberOptions(ctx: FixAllContext): { sizePt: number; hideFirst: boolean } {
+  return {
+    sizePt: typeof ctx.values.pageNumberSize === "number" ? ctx.values.pageNumberSize : 14,
+    hideFirst: ctx.values.pageNumberHideFirst !== false,
+  };
+}
+
+const pageNumberStep: PipelineStep<FixAllContext> = {
+  id: "pageNumber",
+  label: "5. Đánh số trang",
+  order: 50,
+  async plan(ctx) {
+    if (!isPageNumberSupported()) return unsupported("Word chưa hỗ trợ đánh số trang (cần Microsoft 365 bản 2507 trở lên).");
+    const options = pageNumberOptions(ctx);
+    return pageNumberPlan(await planPageNumberDocument(options), options);
+  },
+  async run(ctx) {
+    const result = await applyPageNumbers(pageNumberOptions(ctx));
+    return result.problems.length === 0
+      ? { status: "done", kind: "ok", text: `Đã đánh số trang cho ${result.changed} phần.` }
+      : { status: "done", kind: "warning", text: `Đã ghi nhưng đọc lại chưa đúng: ${result.problems.join("; ")}.` };
+  },
+};
+
 /**
  * Khung bước của "Chỉnh toàn bộ". Task sau thêm bước (số trang, khối đầu, khối cuối, sửa lỗi còn lại) bằng
  * `registry.register(...)` với `order` phù hợp; không phải sửa khung chạy hay giao diện.
  */
 export function createFixAllRegistry(): StepRegistry<FixAllContext> {
   const registry = new StepRegistry<FixAllContext>();
-  for (const step of [pageStep, styleStep, bodyStep, tableStep]) registry.register(step);
+  for (const step of [pageStep, styleStep, bodyStep, tableStep, pageNumberStep]) registry.register(step);
   return registry;
 }

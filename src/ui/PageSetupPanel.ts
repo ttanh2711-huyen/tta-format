@@ -1,4 +1,5 @@
 import { installStyles, isStyleInstallSupported } from "../office/installStyles";
+import { applyPageNumbers, isPageNumberSupported } from "../office/pageNumber";
 import { applyPageSetup, isPageSetupSupported } from "../office/pageSetup";
 import { summarizeApply } from "../office/pageSetupPlan";
 import { summarizeInstall } from "../office/styleVerify";
@@ -34,6 +35,9 @@ export function mountPageSetupPanel(container: HTMLElement, deps: PageSetupDeps)
   const apply = create("button", { id: "ps-apply", type: "button", textContent: "Thiết lập trang" });
   const message = create("p", { id: "ps-message" });
   message.setAttribute("role", "status");
+  const numberButton = create("button", { id: "ps-page-number", type: "button", textContent: "Đánh số trang" });
+  const numberMessage = create("p", { id: "ps-number-message" });
+  numberMessage.setAttribute("role", "status");
   const styleButton = create("button", { id: "ps-install-styles", type: "button", textContent: "Cài bộ style" });
   const styleMessage = create("p", { id: "ps-style-message" });
   styleMessage.setAttribute("role", "status");
@@ -44,6 +48,9 @@ export function mountPageSetupPanel(container: HTMLElement, deps: PageSetupDeps)
     create("label", {}, font, " Đặt phông mặc định theo chuẩn"),
     apply,
     message,
+    create("p", { className: "note", textContent: "Số trang ở giữa lề trên (header), cỡ và việc ẩn số ở trang 1 theo Tuỳ chọn nhanh, nhóm Số trang. Chạy lại không tạo trùng." }),
+    numberButton,
+    numberMessage,
     create("h2", { textContent: "Bộ style" }),
     create("p", { className: "note", textContent: "Cài hoặc cập nhật các style của chuẩn đang chọn (ND30_*, HD05_*) theo Tuỳ chọn nhanh. Chạy lại thì cập nhật tại chỗ, không tạo bản sao; style Normal và Heading không bị đổi." }),
     styleButton,
@@ -80,6 +87,35 @@ export function mountPageSetupPanel(container: HTMLElement, deps: PageSetupDeps)
   } else {
     styleButton.disabled = true;
     showStyle("error", "Cài style cần Microsoft 365 bản 2308 trở lên (WordApi 1.6). Hãy cập nhật Word rồi mở lại.");
+  }
+
+  async function onPageNumber(): Promise<void> {
+    const values = deps.values();
+    const options = { sizePt: typeof values.pageNumberSize === "number" ? values.pageNumberSize : 14, hideFirst: values.pageNumberHideFirst !== false };
+    numberButton.disabled = true;
+    try {
+      const result = await applyPageNumbers(options);
+      const ok = result.problems.length === 0;
+      numberMessage.className = ok ? "ok" : "warning";
+      numberMessage.textContent = ok
+        ? result.changed === 0 ? "Số trang đã đúng, không có gì thay đổi." : `Đã đánh số trang cho ${result.changed} phần.`
+        : `Đã ghi nhưng đọc lại chưa đúng: ${result.problems.join("; ")}.`;
+    } catch (error) {
+      numberMessage.className = "error";
+      numberMessage.textContent = `Không đánh số trang được: ${error instanceof Error ? error.message : String(error)}`;
+    } finally {
+      numberButton.disabled = false;
+    }
+  }
+
+  if (isPageNumberSupported()) {
+    numberButton.addEventListener("click", () => {
+      void onPageNumber();
+    });
+  } else {
+    numberButton.disabled = true;
+    numberMessage.className = "error";
+    numberMessage.textContent = "Đánh số trang cần Microsoft 365 bản 2507 trở lên (WordApiDesktop 1.3).";
   }
 
   if (!isPageSetupSupported()) {

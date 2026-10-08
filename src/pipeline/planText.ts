@@ -2,6 +2,7 @@ import type { StyleInstallPlan } from "../office/installStyles";
 import type { FormatBodyPreview } from "../office/formatBody";
 import type { TableSurvey } from "../office/formatTables";
 import { describeSkipped } from "../office/paragraphClassifier";
+import { isPlanEmpty, type PageNumberOptions, type SectionPlan } from "../ooxml/pageNumberHeader";
 import type { StepPlan } from "./runner";
 
 /** Câu chữ của hộp xem trước cho từng bước, tách khỏi mã gọi Word để test được. */
@@ -57,5 +58,19 @@ export function tablePlan(survey: TableSurvey, styleName: string): StepPlan {
   }
   const lines = [`Áp style ${styleName} cho ${survey.paragraphsToStyle} đoạn trong ${survey.data} bảng có viền.`];
   if (kept) lines.push(`Giữ nguyên ${kept}.`);
+  return { willRun: true, lines };
+}
+
+export function pageNumberPlan(plan: readonly SectionPlan[], options: PageNumberOptions): StepPlan {
+  if (isPlanEmpty(plan)) {
+    const first = options.hideFirst ? ", trang 1 không hiện số" : "";
+    return { willRun: false, lines: [], skipReason: `số trang đã đúng (giữa trang, ${options.sizePt} pt${first}).` };
+  }
+  const lines: string[] = [];
+  const write = plan.filter((item) => item.writePrimary).length;
+  if (write > 0) lines.push(`Ghi số trang (căn giữa, ${options.sizePt} pt) vào header của ${write} phần.`);
+  const toggled = plan.filter((item) => item.setDifferentFirst !== undefined).length;
+  if (toggled > 0) lines.push(`Đặt lại "trang đầu khác biệt" cho ${toggled} phần.`);
+  if (plan.some((item) => item.clearFirst)) lines.push("Xoá số trang đang nằm ở header trang đầu (trang 1 không hiện số).");
   return { willRun: true, lines };
 }
