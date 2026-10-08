@@ -1,0 +1,496 @@
+{
+  "page": {
+    "widthMm": 210,
+    "heightMm": 297,
+    "marginsMm": {
+      "top": 20,
+      "bottom": 20,
+      "left": 30,
+      "right": 20
+    },
+    "headerDistanceMm": 12.5,
+    "footerDistanceMm": 5.3,
+    "titlePg": true,
+    "pageNumberInHeader": true
+  },
+  "blocks": [
+    {
+      "kind": "table",
+      "columnsMm": [
+        82.9,
+        100.5
+      ],
+      "bordersNone": true,
+      "rows": [
+        [
+          [
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "align": "center",
+              "fontName": "Times New Roman",
+              "sizePt": 13
+            },
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "align": "center",
+              "fontName": "Times New Roman",
+              "sizePt": 13
+            },
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "align": "center",
+              "floatingLinesMm": [
+                17.5
+              ],
+              "fontName": "Times New Roman",
+              "sizePt": 13,
+              "bold": true
+            }
+          ],
+          [
+            {
+              "kind": "paragraph",
+              "text": "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM",
+              "align": "center",
+              "fontName": "Times New Roman",
+              "sizePt": 13,
+              "bold": true
+            },
+            {
+              "kind": "paragraph",
+              "text": "Độc lập - Tự do - Hạnh phúc",
+              "align": "center",
+              "floatingLinesMm": [
+                59
+              ],
+              "fontName": "Times New Roman",
+              "sizePt": 14,
+              "bold": true
+            }
+          ]
+        ],
+        [
+          [
+            {
+              "kind": "paragraph",
+              "text": "Số: […]",
+              "align": "center",
+              "spaceBeforePt": 6,
+              "fontName": "Times New Roman",
+              "sizePt": 13
+            }
+          ],
+          [
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "align": "center",
+              "spaceBeforePt": 6,
+              "fontName": "Times New Roman",
+              "sizePt": 13,
+              "italic": true
+            }
+          ]
+        ],
+        [
+          [
+            {
+              "kind": "paragraph",
+              "text": "V/v […]",
+              "align": "center",
+              "spaceBeforePt": 6,
+              "fontName": "Times New Roman",
+              "sizePt": 13
+            }
+          ],
+          [
+            {
+              "kind": "paragraph",
+              "text": "",
+              "sizePt": 12
+            }
+          ]
+        ]
+      ],
+      "widthMm": 183.4,
+      "indentMm": -14.1
+    },
+    {
+      "kind": "paragraph",
+      "text": "",
+      "align": "both",
+      "spaceAfterPt": 0,
+      "lineMultiple": 1,
+      "fontName": "Times New Roman",
+      "sizePt": 14
+    },
+    {
+      "kind": "paragraph",
+      "text": "Kính gửi: […]",
+      "align": "center",
+      "spaceBeforePt": 12,
+      "spaceAfterPt": 12,
+      "lineMultiple": 1.17,
+      "fontName": "Times New Roman",
+      "sizePt": 14
+    },
+    {
+      "kind": "paragraph",
+      "text": "[…]",
+      "align": "both",
+      "spaceBeforePt": 6,
+      "spaceAfterPt": 6,
+      "lineMultiple": 1.17,
+      "firstLineIndentMm": 12.7,
+      "fontName": "Times New Roman",
+      "sizePt": 14
+    },
+    {
+      "kind": "paragraph",
+      "text": "[…]",
+      "align": "both",
+      "spaceBeforePt": 6,
+      "spaceAfterPt": 12,
+      "lineMultiple": 1.17,
+      "firstLineIndentMm": 12.7,
+      "fontName": "Times New Roman",
+      "sizePt": 14
+    },
+    {
+      "kind": "table",
+      "columnsMm": [
+        13.9,
+        43.6,
+        25.5,
+        32,
+        55
+      ],
+      "bordersNone": false,
+      "rows": [
+        [
+          [
+            {
+              "kind": "paragraph",
+              "text": "STT",
+              "align": "center",
+              "spaceBeforePt": 3,
+              "spaceAfterPt": 3,
+              "fontName": "Times New Roman",
+              "sizePt": 14,
+              "bold": true
+            }
+          ],
+          [
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "align": "center",
+              "spaceBeforePt": 3,
+              "spaceAfterPt": 3,
+              "fontName": "Times New Roman",
+              "sizePt": 14,
+              "bold": true
+            }
+          ],
+          [
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "align": "center",
+              "spaceBeforePt": 3,
+              "spaceAfterPt": 3,
+              "fontName": "Times New Roman",
+              "sizePt": 14,
+              "bold": true
+            }
+          ],
+          [
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "align": "center",
+              "spaceBeforePt": 3,
+              "spaceAfterPt": 3,
+              "fontName": "Times New Roman",
+              "sizePt": 14,
+              "bold": true
+            }
+          ],
+          [
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "align": "center",
+              "spaceBeforePt": 3,
+              "spaceAfterPt": 3,
+              "fontName": "Times New Roman",
+              "sizePt": 14,
+              "bold": true
+            }
+          ]
+        ],
+        [
+          [
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "align": "center",
+              "spaceBeforePt": 3,
+              "spaceAfterPt": 3,
+              "fontName": "Times New Roman",
+              "sizePt": 14
+            }
+          ],
+          [
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "spaceBeforePt": 3,
+              "spaceAfterPt": 3,
+              "fontName": "Times New Roman",
+              "sizePt": 14
+            }
+          ],
+          [
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "spaceBeforePt": 3,
+              "spaceAfterPt": 3,
+              "fontName": "Times New Roman",
+              "sizePt": 14
+            }
+          ],
+          [
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "align": "center",
+              "spaceBeforePt": 3,
+              "spaceAfterPt": 3,
+              "fontName": "Times New Roman",
+              "sizePt": 14
+            }
+          ],
+          [
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "spaceBeforePt": 3,
+              "spaceAfterPt": 3,
+              "fontName": "Times New Roman",
+              "sizePt": 14
+            }
+          ]
+        ],
+        [
+          [
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "align": "center",
+              "spaceBeforePt": 3,
+              "spaceAfterPt": 3,
+              "fontName": "Times New Roman",
+              "sizePt": 14
+            }
+          ],
+          [
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "spaceBeforePt": 3,
+              "spaceAfterPt": 3,
+              "fontName": "Times New Roman",
+              "sizePt": 14
+            }
+          ],
+          [
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "spaceBeforePt": 3,
+              "spaceAfterPt": 3,
+              "fontName": "Times New Roman",
+              "sizePt": 14
+            }
+          ],
+          [
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "align": "center",
+              "spaceBeforePt": 3,
+              "spaceAfterPt": 3,
+              "fontName": "Times New Roman",
+              "sizePt": 14
+            }
+          ],
+          [
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "spaceBeforePt": 3,
+              "spaceAfterPt": 3,
+              "fontName": "Times New Roman",
+              "sizePt": 14
+            }
+          ]
+        ]
+      ],
+      "widthMm": 170
+    },
+    {
+      "kind": "paragraph",
+      "text": "[…]",
+      "align": "both",
+      "spaceBeforePt": 12,
+      "spaceAfterPt": 6,
+      "lineMultiple": 1.17,
+      "firstLineIndentMm": 12.7,
+      "fontName": "Times New Roman",
+      "sizePt": 14
+    },
+    {
+      "kind": "paragraph",
+      "text": "[…]",
+      "align": "both",
+      "spaceBeforePt": 6,
+      "spaceAfterPt": 6,
+      "lineMultiple": 1.17,
+      "firstLineIndentMm": 12.7,
+      "fontName": "Times New Roman",
+      "sizePt": 14
+    },
+    {
+      "kind": "table",
+      "columnsMm": [
+        82.2,
+        77.6
+      ],
+      "bordersNone": true,
+      "rows": [
+        [
+          [
+            {
+              "kind": "paragraph",
+              "text": "Nơi nhận:",
+              "align": "both",
+              "fontName": "Times New Roman",
+              "sizePt": 12,
+              "bold": true,
+              "italic": true
+            },
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "fontName": "Times New Roman"
+            },
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "fontName": "Times New Roman"
+            },
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "fontName": "Times New Roman"
+            },
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "fontName": "Times New Roman"
+            }
+          ],
+          [
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "align": "center",
+              "fontName": "Times New Roman",
+              "sizePt": 14,
+              "bold": true
+            },
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "align": "center",
+              "fontName": "Times New Roman",
+              "sizePt": 14,
+              "bold": true
+            },
+            {
+              "kind": "paragraph",
+              "text": "",
+              "align": "center",
+              "fontName": "Times New Roman",
+              "sizePt": 14,
+              "bold": true
+            },
+            {
+              "kind": "paragraph",
+              "text": "",
+              "align": "center",
+              "fontName": "Times New Roman",
+              "sizePt": 14,
+              "bold": true
+            },
+            {
+              "kind": "paragraph",
+              "text": "",
+              "align": "center",
+              "fontName": "Times New Roman",
+              "sizePt": 14,
+              "bold": true
+            },
+            {
+              "kind": "paragraph",
+              "text": "",
+              "align": "center",
+              "fontName": "Times New Roman",
+              "sizePt": 14,
+              "bold": true
+            },
+            {
+              "kind": "paragraph",
+              "text": "",
+              "align": "center",
+              "fontName": "Times New Roman",
+              "sizePt": 14,
+              "bold": true
+            },
+            {
+              "kind": "paragraph",
+              "text": "",
+              "align": "center",
+              "fontName": "Times New Roman",
+              "sizePt": 14,
+              "bold": true
+            },
+            {
+              "kind": "paragraph",
+              "text": "[…]",
+              "align": "center",
+              "fontName": "Times New Roman",
+              "sizePt": 14,
+              "bold": true
+            }
+          ]
+        ]
+      ],
+      "widthMm": 159.8
+    },
+    {
+      "kind": "paragraph",
+      "text": "",
+      "align": "both",
+      "spaceAfterPt": 0,
+      "lineMultiple": 1,
+      "fontName": "Times New Roman",
+      "sizePt": 1
+    }
+  ]
+}

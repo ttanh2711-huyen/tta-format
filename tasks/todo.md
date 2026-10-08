@@ -44,14 +44,15 @@ Kích cỡ: XS 1 file, S 1–2, M 3–5. Không task nào quá 5 file.
 ### T2A: Trích file mẫu thành fixture ẩn danh (đáp án chuẩn)
 **Mô tả:** Viết script đọc file mẫu công văn của bạn (`Congvan_  Dang ky tap huan kiem soat TTHC.docx`, nằm ngoài repo) và xuất ra `fixtures/congvan-mau.json`: thuộc tính định dạng từng đoạn/ô/bảng (phông, cỡ, đậm/nghiêng, căn lề, thụt, giãn, độ rộng cột, lề trang, header/footer) và cấu trúc khối. **Ẩn danh toàn bộ nội dung cá nhân** (họ tên, số điện thoại, email, số hiệu văn bản thật) bằng chuỗi giả; không sao chép file `.docx` gốc vào repo.
 **Tiêu chí nghiệm thu:**
-- [ ] `fixtures/congvan-mau.json` phản ánh đúng các giá trị ở mục 6A của `plan.md`
-- [ ] Không còn họ tên, số điện thoại, email thật trong repo (kiểm tra bằng tìm kiếm)
-- [ ] Có hàm `compareToFixture(docModel, fixture)` trả về danh sách khác biệt, dùng lại cho golden test ở T7–T12
+- [x] `fixtures/congvan-mau.json` phản ánh đúng các giá trị ở mục 6A của `plan.md` (test `src/rules/fixture.test.ts` đối chiếu từng giá trị với mặc định của chuẩn Chính quyền: lề, header/footer, nội dung, Kính gửi, bảng dữ liệu, bảng đầu văn bản, cỡ chữ khối đầu, nơi nhận, chữ ký)
+- [x] Không còn họ tên, số điện thoại, email thật trong repo: chỉ giữ chữ thể thức công khai (quốc hiệu, tiêu ngữ, "Nơi nhận:", "STT") và nhãn đầu dòng ("Kính gửi:", "Số:", "V/v"…), mọi chữ khác thành "[…]"; có test quét số điện thoại, email, tên và cơ quan cụ thể
+- [x] Có hàm `compareToFixture(docModel, fixture, {ignore})` trả về danh sách khác biệt (chỉ so thuộc tính fixture khai báo, dung sai 0,06), dùng lại cho golden test ở T7–T12
 **Kiểm chứng:**
-- [ ] `npm test`: script chạy trên file mẫu; so sánh chéo hai lần chạy cho cùng kết quả
-- [ ] Thủ công: bạn đọc fixture và xác nhận không lộ thông tin cá nhân
+- [x] `npm test`: 458 test; script chạy trên docx dựng sẵn (không dùng file thật vì nằm ngoài repo), hai lần chạy cho cùng kết quả
+- [ ] Thủ công: **chờ bạn đọc `fixtures/congvan-mau.json` và xác nhận không lộ thông tin cá nhân**
 **Phụ thuộc:** T1
-**File dự kiến:** `tools/extract-sample.ts`, `fixtures/congvan-mau.json`, `src/rules/compareToFixture.ts`, `src/rules/compareToFixture.test.ts`
+**Trạng thái:** xong; `typecheck`, `lint`, `build` sạch. Chạy lại bằng `node tools/extract-sample.js "<file .docx>" fixtures/congvan-mau.json`. Mô hình `DocModel` (`src/rules/docModel.ts`) đọc định dạng trực tiếp từ OOXML (không giải style) và sẽ được bộ kiểm tra T13 dùng lại; bỏ qua khối `w:sdt`. Thêm devDependency `adm-zip` (đã có sẵn như phụ thuộc gián tiếp). Fixture ghi lại đúng điều kế hoạch đã nêu: bảng đầu văn bản rộng 183,4 mm thụt âm 14,1 mm (T7 dựng vừa vùng chữ nên phải bỏ qua cột/độ rộng khi so), đường kẻ dưới cơ quan và tiêu ngữ là hình nổi dài 17,5 mm và 59 mm.
+**File thực tế:** `tools/extract-sample.js` (+ test), `fixtures/congvan-mau.json`, `src/rules/{docModel,compareToFixture}.ts` (+ test), `src/rules/fixture.test.ts`
 **Kích cỡ:** M
 
 ### T2B: Mã hoá Hướng dẫn 05-HD/VPTW và thể loại văn bản Đảng, dựng khung `StandardProfile`
