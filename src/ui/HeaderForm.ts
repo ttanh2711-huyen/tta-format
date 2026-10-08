@@ -1,5 +1,6 @@
 import { insertHeaderBlock, isInsertHeaderSupported, startsWithTable } from "../office/insertHeader";
 import { QUOC_HIEU, buildHeaderBlock, headerInputFromOptions, MAX_PARENT_LINES, validateHeaderInput } from "../ooxml/headerBlock";
+import { placeDateText, soText } from "../rules/validators";
 import { listAgencies, removeAgency, saveAgency } from "../settings/agencies";
 import type { FormatValues } from "../settings/formatOptions";
 import type { KeyValueStore } from "../settings/storage";
@@ -22,6 +23,12 @@ function create<K extends keyof HTMLElementTagNameMap>(
   return element;
 }
 
+/** Ô số để trống nghĩa là chưa có (null); chữ không phải số thì giữ NaN để bị từ chối. */
+function toInt(text: string): number | null {
+  const trimmed = text.trim();
+  return trimmed === "" ? null : Number(trimmed);
+}
+
 function button(text: string, onClick: () => void, props: Partial<HTMLButtonElement> = {}): HTMLButtonElement {
   const element = create("button", { type: "button", textContent: text, ...props });
   element.addEventListener("click", onClick);
@@ -34,6 +41,10 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
   let parentLines = [""];
   let issuer = "";
   let confirmInsert = false;
+  let withNumberRow = true;
+  const number = { so: "", typeAbbr: "", agencyAbbrs: "", day: "", month: "", year: "" };
+  const PLACE_KEY = "nd30.place";
+  let place = deps.store.get(PLACE_KEY) ?? "";
 
   const body = create("div");
   const message = create("p", { id: "hf-message" });
@@ -47,7 +58,18 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
 
   async function insert(force: boolean): Promise<void> {
     const profile = deps.currentStandard();
-    const input = headerInputFromOptions(profile, deps.values(), { parentLines: hasParent ? parentLines : [], issuer });
+    let numberRow: { so: string; placeDate: string } | undefined;
+    if (withNumberRow) {
+      const so = soText(profile, { so: toInt(number.so), typeAbbr: number.typeAbbr.trim() === "" ? null : number.typeAbbr.trim(), agencyAbbrs: number.agencyAbbrs.split("-").map((part) => part.trim()).filter((part) => part !== "") });
+      const date = placeDateText({ place, day: toInt(number.day), month: toInt(number.month), year: toInt(number.year) });
+      if (!so.ok || !date.ok) {
+        show("error", [so.ok ? "" : so.error, date.ok ? "" : date.error].filter(Boolean).join(" "));
+        return;
+      }
+      numberRow = { so: so.text, placeDate: date.text };
+      deps.store.set(PLACE_KEY, place.trim());
+    }
+    const input = headerInputFromOptions(profile, deps.values(), { parentLines: hasParent ? parentLines : [], issuer, numberRow });
     const problems = validateHeaderInput(input);
     if (problems.length > 0) {
       show("error", problems.join(" "));
@@ -129,6 +151,42 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
     return section;
   }
 
+  function numberSection(): HTMLElement {
+    const toggle = create("input", { type: "checkbox", id: "hf-with-number", checked: withNumberRow });
+    toggle.addEventListener("change", () => {
+      withNumberRow = toggle.checked;
+      render();
+    });
+    const section = create("div", {}, create("label", {}, toggle, " Thêm hàng số, ký hiệu và ngày tháng"));
+    if (!withNumberRow) return section;
+    const field = (id: string, label: string, value: string, onInput: (v: string) => void, width = 60): HTMLElement => {
+      const input = create("input", { type: "text", id, value, inputMode: "text" });
+      input.style.width = `${width}px`;
+      input.addEventListener("input", () => onInput(input.value));
+      return create("label", { className: "hf-field" }, `${label} `, input);
+    };
+    section.append(
+      create("div", { className: "note", textContent: "Để trống số hoặc ngày nếu chưa vào sổ, chưa ký; add-in chừa chỗ trống." }),
+      field("hf-so", "Số", number.so, (v) => (number.so = v), 50),
+      field("hf-type", "Viết tắt loại", number.typeAbbr, (v) => (number.typeAbbr = v), 60),
+      field("hf-agency", "Viết tắt cơ quan (nối bằng -)", number.agencyAbbrs, (v) => (number.agencyAbbrs = v), 110),
+      create("div", {}, field("hf-place", "Địa danh", place, (v) => (place = v), 130)),
+      create("div", {},
+        field("hf-day", "Ngày", number.day, (v) => (number.day = v), 36),
+        field("hf-month", "tháng", number.month, (v) => (number.month = v), 36),
+        field("hf-year", "năm", number.year, (v) => (number.year = v), 50),
+        button("Hôm nay", () => {
+          const now = new Date();
+          number.day = String(now.getDate());
+          number.month = String(now.getMonth() + 1);
+          number.year = String(now.getFullYear());
+          render();
+        }, { id: "hf-today" }),
+      ),
+    );
+    return section;
+  }
+
   function render(): void {
     const profile = deps.currentStandard();
     body.replaceChildren();
@@ -140,6 +198,7 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       create("p", { className: "note", textContent: "Chèn bảng cơ quan, quốc hiệu và tiêu ngữ ở đầu tài liệu. Cỡ chữ, độ dài đường kẻ và lề lấy từ Tuỳ chọn nhanh." }),
       parentSection(),
       issuerSection(profile),
+      numberSection(),
     );
     if (confirmInsert) {
       const box = create("div", { className: "hf-box", id: "hf-confirm" });

@@ -14,7 +14,7 @@ const fixtureHead = fixture.blocks[0] as TableModel;
 const base: HeaderBlockInput = {
   parentLines: ["Sở Nông nghiệp và Môi trường", "Thành phố Cần Thơ"],
   issuer: "Chi cục Thủy lợi",
-  sizes: { parent: 13, issuer: 13, quocHieu: 13, tieuNgu: 14 },
+  sizes: { parent: 13, issuer: 13, quocHieu: 13, tieuNgu: 14, so: 13, placeDate: 13 },
   agencyLineRatio: 1 / 2,
   textWidthMm: 160,
 };
@@ -153,7 +153,7 @@ describe("headerInputFromOptions", () => {
     expect(headerInputFromOptions(ND30, values, { parentLines: ["A"], issuer: "B" })).toEqual({
       parentLines: ["A"],
       issuer: "B",
-      sizes: { parent: 13, issuer: 13, quocHieu: 13, tieuNgu: 14 },
+      sizes: { parent: 13, issuer: 13, quocHieu: 13, tieuNgu: 14, so: 13, placeDate: 13 },
       agencyLineRatio: 1 / 2,
       textWidthMm: 160,
     });
@@ -162,5 +162,30 @@ describe("headerInputFromOptions", () => {
   it("đổi lề thì vùng chữ và bảng đổi theo", () => {
     const wide = headerInputFromOptions(ND30, { ...values, marginRight: 15 }, { parentLines: [], issuer: "B" });
     expect(wide.textWidthMm).toBe(165);
+  });
+});
+
+describe("buildHeaderBlock: hàng số và địa danh (T8)", () => {
+  const withRow: HeaderBlockInput = { ...base, numberRow: { so: "Số:        /CCTL-ĐĐPCTT", placeDate: "Cần Thơ, ngày      tháng 10 năm 2026" } };
+
+  it("thêm hàng thứ hai: số bên trái, địa danh và ngày bên phải", () => {
+    const t = table(withRow);
+    expect(t.rows).toHaveLength(2);
+    expect(t.rows[1][0].map((p) => p.text)).toEqual(["Số:        /CCTL-ĐĐPCTT"]);
+    expect(t.rows[1][1].map((p) => p.text)).toEqual(["Cần Thơ, ngày      tháng 10 năm 2026"]);
+  });
+
+  it("không truyền numberRow thì chỉ có một hàng", () => {
+    expect(table(base).rows).toHaveLength(1);
+  });
+
+  it("khớp fixture: số căn giữa 13 pt giãn trước 6 pt; địa danh nghiêng 13 pt", () => {
+    const t = table(withRow);
+    expect(compareToFixture(asDoc(t.rows[1][0][0]), asDoc(fixtureHead.rows[1][0][0]), { ignore: [/\.text$/] })).toEqual([]);
+    expect(compareToFixture(asDoc(t.rows[1][1][0]), asDoc(fixtureHead.rows[1][1][0]), { ignore: [/\.text$/] })).toEqual([]);
+  });
+
+  it("giữ nguyên khoảng trắng trong chỗ trống chờ điền", () => {
+    expect(buildHeaderBlock(withRow)).toContain('xml:space="preserve">Số:        /CCTL-ĐĐPCTT<');
   });
 });

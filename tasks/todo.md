@@ -243,14 +243,15 @@ Preset đặt tên ("Công văn thường", "Báo cáo dài"...): lưu, đổi t
 ### T8: Số, ký hiệu, địa danh, ngày tháng
 **Mô tả:** Thêm hàng thứ hai của bảng đầu văn bản: "Số: …/KÝ-HIỆU" (trái, cỡ 13, giãn trước 6 pt) và "Địa danh, ngày … tháng … năm …" (phải, nghiêng, cỡ 13). Có kiểm tra định dạng số/ký hiệu và ngày tháng; cho phép để trống số và ngày như file mẫu ("Số:      /CCTL-ĐĐPCTT").
 **Tiêu chí nghiệm thu:**
-- [ ] Số < 10 tự thêm số 0; ký hiệu đúng quy cách ("/" giữa số và ký hiệu, "-" giữa nhóm viết tắt, không cách chữ)
-- [ ] Ngày < 10 và tháng 1–2 thêm số 0; ngày không hợp lệ (31/2) bị từ chối
-- [ ] Cho phép để trống số/ký hiệu (chưa vào sổ), hiển thị chỗ trống đúng chỗ
+- [x] Số < 10 tự thêm số 0; ký hiệu đúng quy cách ("/" giữa số và ký hiệu, "-" giữa nhóm viết tắt, không cách chữ): dùng `formatSoKyHieu` của chuẩn nên chuẩn Đảng cũng đúng ("Số 05-HD/VPTW")
+- [x] Ngày < 10 và tháng 1–2 thêm số 0; ngày không hợp lệ (31/2, 29/2 năm không nhuận) bị từ chối
+- [x] Cho phép để trống số và từng phần của ngày (chưa vào sổ, chưa ký): chừa 6 khoảng trắng đúng vị trí, giữ nguyên trong tài liệu (`xml:space="preserve"`)
 **Kiểm chứng:**
-- [ ] `npm test`: bảng test biên cho định dạng số, ký hiệu, ngày
+- [x] `npm test`: 516 test; bảng biên cho số, ký hiệu, ngày, và hàng thứ hai khớp fixture
 - [ ] Thủ công: kiểm tra bố cục với công văn mẫu
 **Phụ thuộc:** T7
-**File dự kiến:** `src/ooxml/soNgayBlock.ts`, `src/rules/validators.ts`, `src/ui/HeaderForm.ts`, `src/rules/validators.test.ts`
+**Trạng thái:** mã, giao diện (mục "Thêm hàng số, ký hiệu và ngày tháng" trong form khối đầu) và test xong; `typecheck`, `lint`, `build` sạch; đã chạy trong trình duyệt giả lập (đủ, để trống, ngày sai, ký hiệu sai); **chưa thử trong Word**. Hàng thứ hai nằm trong cùng bảng của T7 (số căn giữa 13 pt, giãn trước 6 pt; địa danh nghiêng 13 pt). Ký hiệu nhập ở hai ô: "viết tắt loại" (để trống cho công văn) và "viết tắt cơ quan" nối bằng "-". Địa danh được nhớ cho lần sau (localStorage). Công văn chuẩn Chính quyền không có chữ viết tắt loại; việc chọn loại văn bản và tự điền ký hiệu thuộc wizard T12.
+**File thực tế:** `src/rules/validators.ts` (+ test), mở rộng `src/ooxml/headerBlock.ts` (`numberRow`), `src/ui/HeaderForm.ts`
 **Kích cỡ:** M
 
 ### T9: Tên loại văn bản, trích yếu, "Kính gửi"

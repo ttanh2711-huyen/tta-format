@@ -21,7 +21,9 @@ export interface HeaderBlockInput {
   /** Cơ quan chủ quản, từ 0 đến 3 dòng; dòng trống bị bỏ. */
   parentLines: readonly string[];
   issuer: string;
-  sizes: { parent: number; issuer: number; quocHieu: number; tieuNgu: number };
+  sizes: { parent: number; issuer: number; quocHieu: number; tieuNgu: number; so: number; placeDate: number };
+  /** Hàng thứ hai: dòng số, ký hiệu (trái) và địa danh, ngày tháng (phải), đã dựng sẵn thành chữ (T8). */
+  numberRow?: { so: string; placeDate: string };
   /** Độ dài đường kẻ dưới tên cơ quan so với độ dài dòng chữ. */
   agencyLineRatio: number;
   /** Bề rộng vùng chữ (mm) mà bảng phải vừa. */
@@ -43,11 +45,12 @@ export function validateHeaderInput(input: HeaderBlockInput): string[] {
   return errors;
 }
 
-function textParagraph(text: string, sizePt: number, bold: boolean): string {
+function textParagraph(text: string, sizePt: number, style: { bold?: boolean; italic?: boolean; beforePt?: number } = {}): string {
   const half = sizePt * 2;
+  const before = (style.beforePt ?? 0) * 20;
   return (
-    `<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:jc w:val="center"/></w:pPr>` +
-    `<w:r><w:rPr>${FONT}${bold ? "<w:b/>" : ""}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr><w:t xml:space="preserve">${escapeXml(text)}</w:t></w:r></w:p>`
+    `<w:p><w:pPr><w:spacing w:before="${before}" w:after="0" w:line="240" w:lineRule="auto"/><w:jc w:val="center"/></w:pPr>` +
+    `<w:r><w:rPr>${FONT}${style.bold ? "<w:b/>" : ""}${style.italic ? "<w:i/>" : ""}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr><w:t xml:space="preserve">${escapeXml(text)}</w:t></w:r></w:p>`
   );
 }
 
@@ -83,17 +86,23 @@ export function buildHeaderBlock(input: HeaderBlockInput): string {
   const tieuNguLine = Math.min(textWidthMm(TIEU_NGU, input.sizes.tieuNgu, true), mm(rightWidth));
 
   const left = [
-    ...parents.map((line) => textParagraph(line, input.sizes.parent, false)),
-    textParagraph(issuer, input.sizes.issuer, true),
+    ...parents.map((line) => textParagraph(line, input.sizes.parent)),
+    textParagraph(issuer, input.sizes.issuer, { bold: true }),
     lineParagraph(issuerLine, leftWidth),
   ];
-  const right = [textParagraph(QUOC_HIEU, input.sizes.quocHieu, true), textParagraph(TIEU_NGU, input.sizes.tieuNgu, true), lineParagraph(tieuNguLine, rightWidth)];
+  const right = [textParagraph(QUOC_HIEU, input.sizes.quocHieu, { bold: true }), textParagraph(TIEU_NGU, input.sizes.tieuNgu, { bold: true }), lineParagraph(tieuNguLine, rightWidth)];
+
+  const numberRow = input.numberRow
+    ? `<w:tr>${cell(leftWidth, [textParagraph(input.numberRow.so, input.sizes.so, { beforePt: 6 })])}${cell(rightWidth, [
+        textParagraph(input.numberRow.placeDate, input.sizes.placeDate, { italic: true, beforePt: 6 }),
+      ])}</w:tr>`
+    : "";
 
   return (
     `<w:tbl><w:tblPr><w:tblW w:w="${total}" w:type="dxa"/><w:tblInd w:w="0" w:type="dxa"/><w:tblBorders>${NO_BORDERS}</w:tblBorders>` +
     `<w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPr>` +
     `<w:tblGrid><w:gridCol w:w="${leftWidth}"/><w:gridCol w:w="${rightWidth}"/></w:tblGrid>` +
-    `<w:tr>${cell(leftWidth, left)}${cell(rightWidth, right)}</w:tr></w:tbl>`
+    `<w:tr>${cell(leftWidth, left)}${cell(rightWidth, right)}</w:tr>${numberRow}</w:tbl>`
   );
 }
 
@@ -101,7 +110,7 @@ export function buildHeaderBlock(input: HeaderBlockInput): string {
 export function headerInputFromOptions(
   profile: StandardProfile,
   values: FormatValues,
-  text: { parentLines: readonly string[]; issuer: string },
+  text: { parentLines: readonly string[]; issuer: string; numberRow?: { so: string; placeDate: string } },
 ): HeaderBlockInput {
   const num = (id: string, fallback: number): number => (typeof values[id] === "number" ? (values[id] as number) : fallback);
   const { widthMm } = profile.page.paper;
@@ -113,6 +122,8 @@ export function headerInputFromOptions(
       issuer: num("size.tenCoQuanBanHanh", 13),
       quocHieu: num("size.quocHieu", 13),
       tieuNgu: num("size.tieuNgu", 14),
+      so: num("size.so", 13),
+      placeDate: num("size.diaDanhNgayThang", 13),
     },
     agencyLineRatio: num("agencyLineRatio", profile.agencyLineRatio?.max ?? 0.5),
     textWidthMm: widthMm - num("marginLeft", fixed.left) - num("marginRight", fixed.right),
