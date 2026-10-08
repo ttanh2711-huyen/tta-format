@@ -14,7 +14,7 @@ export const TIEU_NGU = "Độc lập - Tự do - Hạnh phúc";
 export const MAX_PARENT_LINES = 3;
 
 /** Tỉ lệ bề rộng cột trái của bảng đầu văn bản (theo file mẫu). */
-const LEFT_COLUMN_RATIO = 0.45;
+export const LEFT_COLUMN_RATIO = 0.45;
 const FONT = '<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>';
 
 export interface HeaderBlockInput {
@@ -36,7 +36,7 @@ function clean(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
-function escapeXml(text: string): string {
+export function escapeXml(text: string): string {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
@@ -47,7 +47,7 @@ export function validateHeaderInput(input: HeaderBlockInput): string[] {
   return errors;
 }
 
-function textParagraph(text: string, sizePt: number, style: { bold?: boolean; italic?: boolean; beforePt?: number } = {}): string {
+export function textParagraph(text: string, sizePt: number, style: { bold?: boolean; italic?: boolean; beforePt?: number } = {}): string {
   const half = sizePt * 2;
   const before = (style.beforePt ?? 0) * 20;
   return (
@@ -66,11 +66,20 @@ export function lineParagraph(lineMm: number, cellTwips: number): string {
   );
 }
 
-function cell(widthTwips: number, paragraphs: string[]): string {
+export function cell(widthTwips: number, paragraphs: string[]): string {
   return `<w:tc><w:tcPr><w:tcW w:w="${widthTwips}" w:type="dxa"/></w:tcPr>${paragraphs.join("")}</w:tc>`;
 }
 
 const NO_BORDERS = ["top", "left", "bottom", "right", "insideH", "insideV"].map((side) => `<w:${side} w:val="none" w:sz="0" w:space="0" w:color="auto"/>`).join("");
+
+/** Bảng 2 cột không viền, lề ô 0, bố cục cố định, rộng `total` twips; `rowsXml` là các hàng. */
+export function borderlessTable(total: number, leftWidth: number, rowsXml: string): string {
+  return (
+    `<w:tbl><w:tblPr><w:tblW w:w="${total}" w:type="dxa"/><w:tblInd w:w="0" w:type="dxa"/><w:tblBorders>${NO_BORDERS}</w:tblBorders>` +
+    `<w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPr>` +
+    `<w:tblGrid><w:gridCol w:w="${leftWidth}"/><w:gridCol w:w="${total - leftWidth}"/></w:tblGrid>${rowsXml}</w:tbl>`
+  );
+}
 
 /** XML thân văn bản (một bảng) của khối đầu; người gọi thêm một đoạn trống phía sau nếu cần. */
 export function buildHeaderBlock(input: HeaderBlockInput): string {
@@ -104,13 +113,9 @@ export function buildHeaderBlock(input: HeaderBlockInput): string {
     ? `<w:tr>${cell(leftWidth, [textParagraph(input.subjectRow.text, input.sizes.subject ?? 13, { beforePt: 6 })])}${cell(rightWidth, [textParagraph("", 12)])}</w:tr>`
     : "";
 
-  return (
-    `<w:tbl><w:tblPr><w:tblW w:w="${total}" w:type="dxa"/><w:tblInd w:w="0" w:type="dxa"/><w:tblBorders>${NO_BORDERS}</w:tblBorders>` +
-    `<w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPr>` +
-    `<w:tblGrid><w:gridCol w:w="${leftWidth}"/><w:gridCol w:w="${rightWidth}"/></w:tblGrid>` +
-    `<w:tr>${cell(leftWidth, left)}${cell(rightWidth, right)}</w:tr>${numberRow}${subjectRow}</w:tbl>`
-  );
+  return borderlessTable(total, leftWidth, `<w:tr>${cell(leftWidth, left)}${cell(rightWidth, right)}</w:tr>${numberRow}${subjectRow}`);
 }
+
 
 /** Dựng thông số khối đầu từ Tuỳ chọn nhanh: cỡ chữ, tỉ lệ đường kẻ và bề rộng vùng chữ theo lề đang chọn. */
 export function headerInputFromOptions(

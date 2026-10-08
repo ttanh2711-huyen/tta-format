@@ -335,14 +335,15 @@ Dùng lại bảng quy tắc ở mục 6B của `plan.md`, bộ style `HD05_*` (
 ### TD1: Tiêu đề "ĐẢNG CỘNG SẢN VIỆT NAM", cơ quan cấp trên, cơ quan ban hành, dấu `*`
 **Mô tả:** Chèn bảng 2 cột không viền vừa vùng chữ: **phải** là tiêu đề "ĐẢNG CỘNG SẢN VIỆT NAM" (in hoa, 15 pt, đậm, đường kẻ ngang nét liền dưới dài bằng tiêu đề); **trái** là cơ quan cấp trên trực tiếp (in hoa 14 pt, không đậm, tuỳ chọn 0–2 dòng), cơ quan ban hành (in hoa 14 pt, đậm, nhiều dòng được; liên cơ quan nối bằng dấu gạch nối), và dòng dấu `*` căn giữa dưới tên cơ quan. Ô chọn cơ quan lấy từ danh sách đã lưu như T7.
 **Tiêu chí nghiệm thu:**
-- [ ] Tiêu đề, cơ quan cấp trên, cơ quan ban hành đúng cỡ, kiểu, in hoa theo mục 6B; tên cơ quan tự chuyển in hoa
-- [ ] Cơ quan cấp trên bật/tắt, 0 đến 2 dòng đều sinh khối đúng; tên cơ quan dài xuống dòng không vỡ bảng; dấu `*` luôn nằm ngay dưới tên cơ quan ban hành, căn giữa
-- [ ] Đường kẻ dưới tiêu đề bằng độ dài dòng chữ, đi theo văn bản khi đổi nội dung (viền đoạn, không dùng hình nổi)
+- [x] Tiêu đề 15 pt đậm, cơ quan cấp trên 14 pt không đậm, cơ quan ban hành 14 pt đậm, đều in hoa tự động (cỡ lấy từ Tuỳ chọn nhanh)
+- [x] Cơ quan cấp trên bật/tắt, 0 đến 2 dòng đều sinh khối đúng; cơ quan ban hành 1 đến 3 dòng (nhập mỗi dòng một cơ quan); dấu `*` luôn nằm ngay dưới dòng cuối của cơ quan ban hành, căn giữa; tên dài xuống dòng trong ô
+- [ ] Đường kẻ dưới tiêu đề bằng độ dài dòng chữ (viền đoạn riêng, không hình nổi); độ dài tính bằng ước lượng bề rộng chữ như T7; **chờ bạn xem bản in thử**
 **Kiểm chứng:**
-- [ ] `npm test`: golden OOXML cho các ca 0/1/2 dòng cơ quan cấp trên, cơ quan nhiều dòng, liên cơ quan
+- [x] `npm test`: 609 test; golden `party-header-block.xml`, `party-header-block-multi.xml`; ca 0/1/2 dòng cấp trên, nhiều dòng cơ quan, liên cơ quan
 - [ ] Thủ công: in PDF, đối chiếu ô 1–2 của Phụ lục 1 và ví dụ ở Phụ lục 2
 **Phụ thuộc:** T2B, T5, T6A, T6B
-**File dự kiến:** `src/standards/hd05/headerBlock.ts`, `src/office/insertHeader.ts`, `src/ui/HeaderForm.ts`, `src/standards/hd05/headerBlock.test.ts`
+**Trạng thái:** mã, giao diện (form Khối đầu đổi theo chuẩn: chuẩn Đảng có ô cơ quan cấp trên 0–2 dòng và ô cơ quan ban hành nhiều dòng) và test xong; `typecheck`, `lint`, `build` sạch; đã thử form trong trình duyệt giả lập; **chưa thử trong Word**. Dùng lại bảng 2 cột 45%/55% của T7 (tách các hàm dùng chung `borderlessTable`, `textParagraph`, `cell` ra khỏi `ooxml/headerBlock.ts`; golden T7 không đổi). Hàng số, ký hiệu, ngày tháng (TD2) và thể loại, trích yếu (TD3) chưa có. "Liên cơ quan" hiện hiểu là nhiều dòng cơ quan ban hành, người dùng tự gõ dấu gạch nối nếu muốn một dòng.
+**File thực tế:** `src/standards/hd05/headerBlock.ts` (+ test, 2 golden), `src/ooxml/headerBlock.ts`, `src/ui/HeaderForm.ts` (kết quả `collect()` có thêm `kind`), `src/ui/NewDocWizard.ts` (từ chối chuẩn Đảng tới TD5)
 **Kích cỡ:** M
 
 ### TD2: Số và ký hiệu, địa danh, ngày tháng (chuẩn Đảng)

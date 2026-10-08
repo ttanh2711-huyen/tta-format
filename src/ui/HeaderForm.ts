@@ -1,6 +1,7 @@
 import { insertHeaderBlock, isInsertHeaderSupported, startsWithTable } from "../office/insertHeader";
 import { buildTitleBody, subjectLine, titleInputFromOptions, validateTitleInput, type TitleBlockInput } from "../ooxml/titleBlock";
 import { QUOC_HIEU, buildHeaderBlock, headerInputFromOptions, MAX_PARENT_LINES, validateHeaderInput, type HeaderBlockInput } from "../ooxml/headerBlock";
+import { buildPartyHeaderBlock, MAX_PARENT_LINES as MAX_PARTY_PARENT_LINES, partyHeaderFromOptions, validatePartyHeader, type PartyHeaderInput } from "../standards/hd05/headerBlock";
 import { placeDateText, soText } from "../rules/validators";
 import { listAgencies, removeAgency, saveAgency } from "../settings/agencies";
 import type { FormatValues } from "../settings/formatOptions";
@@ -37,7 +38,10 @@ function button(text: string, onClick: () => void, props: Partial<HTMLButtonElem
 }
 
 /** Form "Khối đầu văn bản" (T7): cơ quan chủ quản 0 đến 3 dòng, cơ quan ban hành, chèn bảng quốc hiệu và tiêu ngữ. */
-export type HeaderCollect = { ok: true; input: HeaderBlockInput; titleInput: TitleBlockInput | undefined } | { ok: false; error: string };
+export type HeaderCollect =
+  | { ok: true; kind: "quocHieu"; input: HeaderBlockInput; titleInput: TitleBlockInput | undefined }
+  | { ok: true; kind: "dang"; input: PartyHeaderInput }
+  | { ok: false; error: string };
 
 export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): { refresh: () => void; collect: () => HeaderCollect } {
   let hasParent = false;
@@ -65,6 +69,11 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
   /** Đọc và kiểm tra các ô đang nhập; dùng chung cho nút "Chèn khối đầu" và trình tạo công văn. */
   function collect(): HeaderCollect {
     const profile = deps.currentStandard();
+    if (profile.headerKind === "dang") {
+      const partyInput = partyHeaderFromOptions(profile, deps.values(), { parentLines: hasParent ? parentLines : [], issuerLines: issuer.split(/\r?\n/) });
+      const partyProblems = validatePartyHeader(partyInput);
+      return partyProblems.length > 0 ? { ok: false, error: partyProblems.join(" ") } : { ok: true, kind: "dang", input: partyInput };
+    }
     let numberRow: { so: string; placeDate: string } | undefined;
     if (withNumberRow) {
       const so = soText(profile, { so: toInt(number.so), typeAbbr: number.typeAbbr.trim() === "" ? null : number.typeAbbr.trim(), agencyAbbrs: number.agencyAbbrs.split("-").map((part) => part.trim()).filter((part) => part !== "") });
@@ -89,7 +98,7 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
     const problems = validateHeaderInput(input);
     if (problems.length > 0) return { ok: false, error: problems.join(" ") };
     if (numberRow) deps.store.set(PLACE_KEY, place.trim());
-    return { ok: true, input, titleInput };
+    return { ok: true, kind: "quocHieu", input, titleInput };
   }
 
   async function insert(force: boolean): Promise<void> {
@@ -98,8 +107,9 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       show("error", collected.error);
       return;
     }
-    const { input, titleInput } = collected;
-    const titleXml = titleInput ? buildTitleBody(titleInput) : "";
+    const profile = deps.currentStandard();
+    const xml = collected.kind === "dang" ? buildPartyHeaderBlock(collected.input) : buildHeaderBlock(collected.input) + (collected.titleInput ? buildTitleBody(collected.titleInput) : "");
+    const expected = collected.kind === "dang" ? profile.identifyingTitle : QUOC_HIEU;
     try {
       if (!force && (await startsWithTable())) {
         confirmInsert = true;
@@ -107,9 +117,9 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
         return;
       }
       confirmInsert = false;
-      const result = await insertHeaderBlock(buildHeaderBlock(input) + titleXml, QUOC_HIEU);
+      const result = await insertHeaderBlock(xml, expected);
       render();
-      show(result.verified ? "ok" : "warning", result.verified ? "Đã chèn khối đầu văn bản ở đầu tài liệu." : "Đã chèn nhưng đọc lại không thấy quốc hiệu trong bảng đầu tiên; hãy kiểm tra tài liệu.");
+      show(result.verified ? "ok" : "warning", result.verified ? "Đã chèn khối đầu văn bản ở đầu tài liệu." : "Đã chèn nhưng đọc lại không thấy tiêu đề trong bảng đầu tiên; hãy kiểm tra tài liệu.");
     } catch (error) {
       show("error", `Không chèn được khối đầu: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -121,10 +131,13 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       hasParent = toggle.checked;
       render();
     });
-    const section = create("div", {}, create("label", {}, toggle, " Có cơ quan chủ quản"));
+    const party = deps.currentStandard().headerKind === "dang";
+    const maxLines = party ? MAX_PARTY_PARENT_LINES : MAX_PARENT_LINES;
+    const noun = party ? "cơ quan cấp trên" : "cơ quan chủ quản";
+    const section = create("div", {}, create("label", {}, toggle, ` Có ${noun}`));
     if (!hasParent) return section;
-    parentLines.forEach((line, index) => {
-      const input = create("input", { type: "text", id: `hf-parent-${index}`, value: line, placeholder: `Cơ quan chủ quản, dòng ${index + 1}` });
+    parentLines.slice(0, maxLines).forEach((line, index) => {
+      const input = create("input", { type: "text", id: `hf-parent-${index}`, value: line, placeholder: `${noun[0].toUpperCase()}${noun.slice(1)}, dòng ${index + 1}` });
       input.addEventListener("input", () => {
         parentLines[index] = input.value;
       });
@@ -132,9 +145,9 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
     });
     section.append(
       button("Thêm dòng", () => {
-        if (parentLines.length < MAX_PARENT_LINES) parentLines = [...parentLines, ""];
+        if (parentLines.length < maxLines) parentLines = [...parentLines, ""];
         render();
-      }, { id: "hf-add-line", disabled: parentLines.length >= MAX_PARENT_LINES }),
+      }, { id: "hf-add-line", disabled: parentLines.length >= maxLines }),
       button("Bớt dòng", () => {
         if (parentLines.length > 1) parentLines = parentLines.slice(0, -1);
         render();
@@ -144,7 +157,10 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
   }
 
   function issuerSection(profile: StandardProfile): HTMLElement {
-    const input = create("input", { type: "text", id: "hf-issuer", value: issuer, placeholder: "Cơ quan ban hành" });
+    const input: HTMLInputElement | HTMLTextAreaElement =
+      profile.headerKind === "dang"
+        ? create("textarea", { id: "hf-issuer", rows: 2, value: issuer, placeholder: "Cơ quan ban hành (liên cơ quan: mỗi cơ quan một dòng)" })
+        : create("input", { type: "text", id: "hf-issuer", value: issuer, placeholder: "Cơ quan ban hành" });
     input.addEventListener("input", () => {
       issuer = input.value;
     });
@@ -255,17 +271,21 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
   function render(): void {
     const profile = deps.currentStandard();
     body.replaceChildren();
-    if (profile.headerKind !== "quocHieu") {
-      body.append(create("p", { className: "note", textContent: `Khối đầu của chuẩn ${profile.name} (tiêu đề Đảng, cơ quan cấp trên) sẽ có ở bước TD1.` }));
-      return;
+    if (profile.headerKind === "dang") {
+      body.append(
+        create("p", { className: "note", textContent: "Chèn bảng cơ quan cấp trên, cơ quan ban hành (dấu *) và tiêu đề ĐẢNG CỘNG SẢN VIỆT NAM ở đầu tài liệu. Số, ký hiệu, ngày tháng, thể loại và trích yếu sẽ có ở các bước TD2, TD3." }),
+        parentSection(),
+        issuerSection(profile),
+      );
+    } else {
+      body.append(
+        create("p", { className: "note", textContent: "Chèn bảng cơ quan, quốc hiệu và tiêu ngữ ở đầu tài liệu. Cỡ chữ, độ dài đường kẻ và lề lấy từ Tuỳ chọn nhanh." }),
+        parentSection(),
+        issuerSection(profile),
+        numberSection(),
+        titleSection(),
+      );
     }
-    body.append(
-      create("p", { className: "note", textContent: "Chèn bảng cơ quan, quốc hiệu và tiêu ngữ ở đầu tài liệu. Cỡ chữ, độ dài đường kẻ và lề lấy từ Tuỳ chọn nhanh." }),
-      parentSection(),
-      issuerSection(profile),
-      numberSection(),
-      titleSection(),
-    );
     if (confirmInsert) {
       const box = create("div", { className: "hf-box", id: "hf-confirm" });
       box.setAttribute("role", "alert");
