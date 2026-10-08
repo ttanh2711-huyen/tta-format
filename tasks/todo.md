@@ -281,14 +281,15 @@ Preset đặt tên ("Công văn thường", "Báo cáo dài"...): lưu, đổi t
 ### T10: Chữ ký và nơi nhận
 **Mô tả:** Chèn bảng 2 cột không viền (như mẫu): trái là "Nơi nhận:" (nghiêng, đậm, cỡ 12) và danh sách (cỡ 11, gạch đầu dòng, kết thúc "Lưu: VT, …"); phải là quyền hạn (TM./KT./TL./TUQ.), chức vụ (in hoa, đậm, 14 pt), số dòng trống chỗ ký (mặc định 6, đổi ở T6A), họ tên (đậm, không học hàm/học vị). Hỗ trợ chức vụ hai dòng như mẫu ("KT. CHI CỤC TRƯỞNG" / "PHÓ CHI CỤC TRƯỞNG").
 **Tiêu chí nghiệm thu:**
-- [ ] Các biến thể quyền hạn hoạt động; chức vụ tự in hoa
-- [ ] Danh sách nơi nhận: gạch đầu dòng, `;` cuối mục, dấu chấm cuối mục cuối
-- [ ] Nhập họ tên có tiền tố "TS.", "ThS." thì cảnh báo
+- [x] Các biến thể quyền hạn (TM., Q., KT., TL., TUQ., hoặc không) đứng trước dòng chức vụ đầu; chức vụ tự in hoa, một hoặc hai dòng
+- [x] Danh sách nơi nhận: gạch đầu dòng, `;` cuối mục, dấu chấm cuối mục cuối (mục "Lưu: VT, …" luôn ở cuối); chuẩn hoá dấu người dùng đã gõ
+- [x] Nhập họ tên có tiền tố "TS.", "ThS."... thì hiện cảnh báo và hỏi "Vẫn chèn / Sửa lại"
 **Kiểm chứng:**
-- [ ] `npm test`: golden OOXML; hàm phát hiện học hàm/học vị
+- [x] `npm test`: 567 test; golden `footer-block.xml`, khớp fixture (nơi nhận, chức vụ, họ tên), hàm phát hiện học hàm, học vị
 - [ ] Thủ công: so mẫu Phụ lục III
 **Phụ thuộc:** T5
-**File dự kiến:** `src/ooxml/footerBlock.ts`, `src/office/insertFooter.ts`, `src/ui/FooterForm.ts`, `src/ooxml/footerBlock.test.ts`
+**Trạng thái:** mã, giao diện (form "Khối cuối văn bản") và test xong; `typecheck`, `lint`, `build` sạch; đã chạy trong trình duyệt giả lập (thiếu dữ liệu, học hàm, chèn đủ); **chưa thử trong Word**. Bảng 2 cột không viền vừa vùng chữ, cột trái 51,4% như mẫu (4660/9060); "Nơi nhận:" 12 pt đậm nghiêng, danh sách 11 pt; quyền hạn và chức vụ 14 pt đậm in hoa căn giữa, số dòng trống lấy từ tuỳ chọn `signGap` (mặc định 6), họ tên đậm 14 pt; có đoạn đệm cao 1 pt sau bảng như mẫu. Chèn vào **cuối** thân văn bản bằng `insertOoxml(..., "End")` rồi đọc lại bảng cuối để kiểm tra; **chưa biết Word đặt bảng thế nào so với đoạn trống cuối tài liệu** (có thể còn một đoạn trống phía trên hoặc dưới). Không có nơi nhận thì ô trái để trống. "Nơi nhận" căn trái (mẫu đặt dàn đều hai bên, không khác khi một dòng).
+**File thực tế:** `src/ooxml/footerBlock.ts` (+ test, golden), `src/office/insertFooter.ts`, `src/ui/FooterForm.ts`
 **Kích cỡ:** M
 
 ### T11: Đánh số trang
