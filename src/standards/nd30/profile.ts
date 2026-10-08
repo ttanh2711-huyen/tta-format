@@ -29,6 +29,7 @@ export const ND30: StandardProfile = {
   },
   headerKind: "quocHieu",
   agencyLineRatio: LINE_RULES.tenCoQuanBanHanh.lengthRatio,
+  titleLineRatio: LINE_RULES.trichYeu.lengthRatio,
   defaultPresetName: "Theo mẫu công văn của tôi",
   styles: STYLE_PLAN,
   font: FONT,

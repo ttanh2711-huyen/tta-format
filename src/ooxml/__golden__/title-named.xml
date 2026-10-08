@@ -1,0 +1,40 @@
+<w:p>
+<w:pPr>
+<w:spacing w:before="240" w:after="0" w:line="240" w:lineRule="auto"/>
+<w:jc w:val="center"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>
+<w:b/>
+<w:sz w:val="28"/>
+<w:szCs w:val="28"/>
+</w:rPr>
+<w:t xml:space="preserve">QUYẾT ĐỊNH</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+<w:jc w:val="center"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>
+<w:b/>
+<w:sz w:val="28"/>
+<w:szCs w:val="28"/>
+</w:rPr>
+<w:t xml:space="preserve">Về việc ban hành Quy chế làm việc</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:pBdr>
+<w:bottom w:val="single" w:sz="6" w:space="1" w:color="auto"/>
+</w:pBdr>
+<w:spacing w:before="0" w:after="0" w:line="120" w:lineRule="exact"/>
+<w:ind w:left="3492" w:right="3492"/>
+<w:jc w:val="center"/>
+</w:pPr>
+</w:p>

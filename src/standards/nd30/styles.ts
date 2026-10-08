@@ -35,6 +35,8 @@ export const STYLE_PLAN: StylePlan = {
     { elementId: "so", group: "header", defaultPt: 13 },
     { elementId: "diaDanhNgayThang", group: "header", defaultPt: 13 },
     { elementId: "trichYeuCongVan", group: "header", defaultPt: 13 },
+    { elementId: "tenLoai", group: "header", defaultPt: 14 },
+    { elementId: "trichYeu", group: "header", defaultPt: 14 },
     { elementId: "quyenHanChucVu", group: "footer", defaultPt: 14 },
     { elementId: "hoTenNguoiKy", group: "footer", defaultPt: 14 },
     { elementId: "noiNhanTieuDe", group: "footer", defaultPt: 12 },

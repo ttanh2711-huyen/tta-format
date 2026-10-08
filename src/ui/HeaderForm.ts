@@ -1,4 +1,5 @@
 import { insertHeaderBlock, isInsertHeaderSupported, startsWithTable } from "../office/insertHeader";
+import { buildTitleBody, subjectLine, titleInputFromOptions, validateTitleInput } from "../ooxml/titleBlock";
 import { QUOC_HIEU, buildHeaderBlock, headerInputFromOptions, MAX_PARENT_LINES, validateHeaderInput } from "../ooxml/headerBlock";
 import { placeDateText, soText } from "../rules/validators";
 import { listAgencies, removeAgency, saveAgency } from "../settings/agencies";
@@ -42,6 +43,9 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
   let issuer = "";
   let confirmInsert = false;
   let withNumberRow = true;
+  let withTitle = true;
+  let variant: "letter" | "named" = "letter";
+  const title = { typeName: "", subject: "", recipients: "" };
   const number = { so: "", typeAbbr: "", agencyAbbrs: "", day: "", month: "", year: "" };
   const PLACE_KEY = "nd30.place";
   let place = deps.store.get(PLACE_KEY) ?? "";
@@ -69,7 +73,24 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       numberRow = { so: so.text, placeDate: date.text };
       deps.store.set(PLACE_KEY, place.trim());
     }
-    const input = headerInputFromOptions(profile, deps.values(), { parentLines: hasParent ? parentLines : [], issuer, numberRow });
+    let subjectRow: { text: string } | undefined;
+    let titleXml = "";
+    if (withTitle) {
+      const titleInput = titleInputFromOptions(profile, deps.values(), {
+        variant,
+        typeName: title.typeName,
+        subject: title.subject,
+        recipients: title.recipients.split(/\r?\n/),
+      });
+      const titleProblems = validateTitleInput(titleInput);
+      if (titleProblems.length > 0) {
+        show("error", titleProblems.join(" "));
+        return;
+      }
+      titleXml = buildTitleBody(titleInput);
+      if (variant === "letter") subjectRow = { text: subjectLine(title.subject) };
+    }
+    const input = headerInputFromOptions(profile, deps.values(), { parentLines: hasParent ? parentLines : [], issuer, numberRow, subjectRow });
     const problems = validateHeaderInput(input);
     if (problems.length > 0) {
       show("error", problems.join(" "));
@@ -82,7 +103,7 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
         return;
       }
       confirmInsert = false;
-      const result = await insertHeaderBlock(buildHeaderBlock(input), QUOC_HIEU);
+      const result = await insertHeaderBlock(buildHeaderBlock(input) + titleXml, QUOC_HIEU);
       render();
       show(result.verified ? "ok" : "warning", result.verified ? "Đã chèn khối đầu văn bản ở đầu tài liệu." : "Đã chèn nhưng đọc lại không thấy quốc hiệu trong bảng đầu tiên; hãy kiểm tra tài liệu.");
     } catch (error) {
@@ -187,6 +208,46 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
     return section;
   }
 
+  function titleSection(): HTMLElement {
+    const toggle = create("input", { type: "checkbox", id: "hf-with-title", checked: withTitle });
+    toggle.addEventListener("change", () => {
+      withTitle = toggle.checked;
+      render();
+    });
+    const section = create("div", {}, create("label", {}, toggle, " Thêm tên loại, trích yếu, Kính gửi"));
+    if (!withTitle) return section;
+    const radio = (value: "letter" | "named", label: string): HTMLElement => {
+      const input = create("input", { type: "radio", name: "hf-variant", id: `hf-variant-${value}`, value, checked: variant === value });
+      input.addEventListener("change", () => {
+        variant = value;
+        render();
+      });
+      return create("label", {}, input, ` ${label}`);
+    };
+    const text = (id: string, placeholder: string, value: string, onInput: (v: string) => void): HTMLInputElement => {
+      const input = create("input", { type: "text", id, value, placeholder });
+      input.addEventListener("input", () => onInput(input.value));
+      return input;
+    };
+    section.append(radio("letter", "Công văn (V/v và Kính gửi)"), radio("named", "Văn bản có tên loại (quyết định, tờ trình...)"));
+    if (variant === "named") {
+      section.append(
+        create("div", {}, text("hf-type-name", "Tên loại, ví dụ Quyết định", title.typeName, (v) => (title.typeName = v))),
+        create("div", {}, text("hf-subject", "Trích yếu nội dung", title.subject, (v) => (title.subject = v))),
+      );
+    } else {
+      const recipients = create("textarea", { id: "hf-recipients", rows: 3, placeholder: "Nơi nhận Kính gửi, mỗi nơi một dòng", value: title.recipients });
+      recipients.addEventListener("input", () => {
+        title.recipients = recipients.value;
+      });
+      section.append(
+        create("div", {}, text("hf-subject", "Trích yếu (sau V/v)", title.subject, (v) => (title.subject = v))),
+        create("div", {}, recipients),
+      );
+    }
+    return section;
+  }
+
   function render(): void {
     const profile = deps.currentStandard();
     body.replaceChildren();
@@ -199,6 +260,7 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       parentSection(),
       issuerSection(profile),
       numberSection(),
+      titleSection(),
     );
     if (confirmInsert) {
       const box = create("div", { className: "hf-box", id: "hf-confirm" });

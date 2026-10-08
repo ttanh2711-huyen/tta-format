@@ -257,14 +257,15 @@ Preset đặt tên ("Công văn thường", "Báo cáo dài"...): lưu, đổi t
 ### T9: Tên loại văn bản, trích yếu, "Kính gửi"
 **Mô tả:** Chèn tên loại (in hoa, đậm) và trích yếu (đậm, đường kẻ dưới) cho các loại có tên (quyết định, tờ trình...); công văn dùng dòng "V/v ..." (cỡ 13, không đậm, căn giữa ô bên trái như mẫu) và dòng "Kính gửi: ..." (14 pt, căn giữa, giãn trước và sau 12 pt), cho nhập nhiều nơi nhận ("Kính gửi" nhiều dòng).
 **Tiêu chí nghiệm thu:**
-- [ ] Hai biến thể (có tên loại / công văn "V/v" + "Kính gửi") đúng cỡ, kiểu, căn giữa/căn trái đúng quy tắc và khớp fixture
-- [ ] Đường kẻ dưới trích yếu đúng độ dài tỷ lệ
-- [ ] Trích yếu nhiều dòng vẫn đúng
+- [x] Hai biến thể (có tên loại / công văn "V/v" + "Kính gửi") đúng cỡ, kiểu, căn giữa/căn trái và khớp fixture (V/v ở hàng ba của bảng đầu văn bản; Kính gửi 14 pt, giãn 12/12 pt, giãn dòng 1,17). Còn **chưa so được với mẫu Phụ lục III** vì chưa có bản mẫu trong repo
+- [x] Đường kẻ dưới trích yếu đúng độ dài tỷ lệ (1/3 hoặc 1/2, tính bằng ước lượng bề rộng chữ như T7)
+- [x] Trích yếu nhiều dòng vẫn đúng: là một đoạn tự xuống dòng; đường kẻ tính theo dòng chữ nhưng không vượt vùng chữ (chưa giới hạn bề rộng đoạn trích yếu, chờ bạn xem bằng mắt)
 **Kiểm chứng:**
-- [ ] `npm test`: golden OOXML cho hai biến thể
+- [x] `npm test`: 531 test; golden OOXML `title-named.xml`, `title-letter.xml`, `title-letter-multi.xml`
 - [ ] Thủ công: so với mẫu Phụ lục III
 **Phụ thuộc:** T8
-**File dự kiến:** `src/ooxml/titleBlock.ts`, `src/office/insertHeader.ts`, `src/ooxml/titleBlock.test.ts`
+**Trạng thái:** mã, giao diện (mục "Thêm tên loại, trích yếu, Kính gửi" trong form khối đầu) và test xong; `typecheck`, `lint`, `build` sạch; đã chạy trong trình duyệt giả lập (công văn một và nhiều nơi nhận, có tên loại, thiếu dữ liệu, tắt mục); **chưa thử trong Word**. **Giả định cần bạn xác nhận**: nhiều nơi nhận thì in "Kính gửi:" căn giữa rồi mỗi nơi một dòng "- Tên;" (dòng cuối ".") căn trái, thụt vào ngang chữ "Kính gửi:" với thụt treo 4 mm, theo cách nhớ quy tắc NĐ 30 II.9.d, chưa đối chiếu với văn bản gốc. Tên loại 14 pt đậm in hoa, trích yếu 14 pt đậm (thêm hai cỡ này vào nhóm Đầu văn bản và tuỳ chọn `titleLineRatio`). Chọn loại văn bản từ danh sách và tự điền ký hiệu thuộc wizard T12; ở đây gõ tay tên loại.
+**File thực tế:** `src/ooxml/titleBlock.ts` (+ test, 3 golden), mở rộng `headerBlock.ts` (`subjectRow`, xuất `lineParagraph`), `HeaderForm.ts`, `styles.ts` của chuẩn Chính quyền, `formatOptions.ts`
 **Kích cỡ:** S
 
 ### Checkpoint 2 – Đầu văn bản

@@ -248,20 +248,24 @@ export function buildRegistry(profile: StandardProfile): FormatRegistry {
         };
       });
   options.push(...sizeOptions("header"));
-  if (profile.agencyLineRatio) {
-    const { min, max } = profile.agencyLineRatio;
-    const label = (ratio: number) => (Math.abs(ratio - 1 / 3) < 1e-6 ? "1/3" : Math.abs(ratio - 1 / 2) < 1e-6 ? "1/2" : vn(Math.round(ratio * 100) / 100));
+  const ratioLabel = (ratio: number) => (Math.abs(ratio - 1 / 3) < 1e-6 ? "1/3" : Math.abs(ratio - 1 / 2) < 1e-6 ? "1/2" : vn(Math.round(ratio * 100) / 100));
+  for (const [id, range, what] of [
+    ["agencyLineRatio", profile.agencyLineRatio, "tên cơ quan"],
+    ["titleLineRatio", profile.titleLineRatio, "trích yếu"],
+  ] as const) {
+    if (!range) continue;
+    const { min, max } = range;
     options.push({
-      id: "agencyLineRatio",
+      id,
       group: "header",
-      label: "Độ dài đường kẻ dưới tên cơ quan (so với dòng chữ)",
+      label: `Độ dài đường kẻ dưới ${what} (so với dòng chữ)`,
       kind: "number",
       effect: "onCreate",
-      choices: unique([min, max]).map((value) => ({ value, label: label(value) })),
+      choices: unique([min, max]).map((value) => ({ value, label: ratioLabel(value) })),
       default: max,
       custom: true,
       hard: { min: 0.1, max: 1 },
-      rule: (value) => (value >= min - 1e-6 && value <= max + 1e-6 ? null : `Đường kẻ dài ${vn(Math.round(value * 100) / 100)} dòng chữ ngoài quy định: chuẩn ${profile.name} cho phép từ ${label(min)} đến ${label(max)}.`),
+      rule: (value) => (value >= min - 1e-6 && value <= max + 1e-6 ? null : `Đường kẻ dài ${vn(Math.round(value * 100) / 100)} dòng chữ ngoài quy định: chuẩn ${profile.name} cho phép từ ${ratioLabel(min)} đến ${ratioLabel(max)}.`),
     });
   }
   options.push(...sizeOptions("footer"));

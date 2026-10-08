@@ -180,6 +180,8 @@ export interface StandardProfile {
   headerKind: "quocHieu" | "dang";
   /** Độ dài đường kẻ dưới tên cơ quan so với độ dài dòng chữ; chuẩn không dùng đường kẻ thì bỏ trống. */
   agencyLineRatio?: Range;
+  /** Độ dài đường kẻ dưới trích yếu so với độ dài dòng chữ; chuẩn không dùng đường kẻ thì bỏ trống. */
+  titleLineRatio?: Range;
   /** Tên preset có sẵn của chuẩn, gồm các giá trị mặc định (T6A). */
   defaultPresetName: string;
   styles: StylePlan;

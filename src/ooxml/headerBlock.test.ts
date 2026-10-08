@@ -153,7 +153,7 @@ describe("headerInputFromOptions", () => {
     expect(headerInputFromOptions(ND30, values, { parentLines: ["A"], issuer: "B" })).toEqual({
       parentLines: ["A"],
       issuer: "B",
-      sizes: { parent: 13, issuer: 13, quocHieu: 13, tieuNgu: 14, so: 13, placeDate: 13 },
+      sizes: { parent: 13, issuer: 13, quocHieu: 13, tieuNgu: 14, so: 13, placeDate: 13, subject: 13 },
       agencyLineRatio: 1 / 2,
       textWidthMm: 160,
     });

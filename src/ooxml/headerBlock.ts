@@ -21,9 +21,11 @@ export interface HeaderBlockInput {
   /** Cơ quan chủ quản, từ 0 đến 3 dòng; dòng trống bị bỏ. */
   parentLines: readonly string[];
   issuer: string;
-  sizes: { parent: number; issuer: number; quocHieu: number; tieuNgu: number; so: number; placeDate: number };
+  sizes: { parent: number; issuer: number; quocHieu: number; tieuNgu: number; so: number; placeDate: number; subject?: number };
   /** Hàng thứ hai: dòng số, ký hiệu (trái) và địa danh, ngày tháng (phải), đã dựng sẵn thành chữ (T8). */
   numberRow?: { so: string; placeDate: string };
+  /** Hàng thứ ba của công văn: dòng "V/v ..." ở ô trái, ô phải để trống (T9). */
+  subjectRow?: { text: string };
   /** Độ dài đường kẻ dưới tên cơ quan so với độ dài dòng chữ. */
   agencyLineRatio: number;
   /** Bề rộng vùng chữ (mm) mà bảng phải vừa. */
@@ -55,7 +57,7 @@ function textParagraph(text: string, sizePt: number, style: { bold?: boolean; it
 }
 
 /** Đoạn rỗng cao 6 pt có viền dưới, thụt hai bên để đường kẻ dài `lineMm` và nằm giữa ô rộng `cellTwips`. */
-function lineParagraph(lineMm: number, cellTwips: number): string {
+export function lineParagraph(lineMm: number, cellTwips: number): string {
   const inset = Math.max(0, Math.round((cellTwips - mmToTwips(lineMm)) / 2));
   return (
     `<w:p><w:pPr><w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="auto"/></w:pBdr>` +
@@ -98,11 +100,15 @@ export function buildHeaderBlock(input: HeaderBlockInput): string {
       ])}</w:tr>`
     : "";
 
+  const subjectRow = input.subjectRow
+    ? `<w:tr>${cell(leftWidth, [textParagraph(input.subjectRow.text, input.sizes.subject ?? 13, { beforePt: 6 })])}${cell(rightWidth, [textParagraph("", 12)])}</w:tr>`
+    : "";
+
   return (
     `<w:tbl><w:tblPr><w:tblW w:w="${total}" w:type="dxa"/><w:tblInd w:w="0" w:type="dxa"/><w:tblBorders>${NO_BORDERS}</w:tblBorders>` +
     `<w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPr>` +
     `<w:tblGrid><w:gridCol w:w="${leftWidth}"/><w:gridCol w:w="${rightWidth}"/></w:tblGrid>` +
-    `<w:tr>${cell(leftWidth, left)}${cell(rightWidth, right)}</w:tr>${numberRow}</w:tbl>`
+    `<w:tr>${cell(leftWidth, left)}${cell(rightWidth, right)}</w:tr>${numberRow}${subjectRow}</w:tbl>`
   );
 }
 
@@ -110,7 +116,7 @@ export function buildHeaderBlock(input: HeaderBlockInput): string {
 export function headerInputFromOptions(
   profile: StandardProfile,
   values: FormatValues,
-  text: { parentLines: readonly string[]; issuer: string; numberRow?: { so: string; placeDate: string } },
+  text: { parentLines: readonly string[]; issuer: string; numberRow?: { so: string; placeDate: string }; subjectRow?: { text: string } },
 ): HeaderBlockInput {
   const num = (id: string, fallback: number): number => (typeof values[id] === "number" ? (values[id] as number) : fallback);
   const { widthMm } = profile.page.paper;
@@ -124,6 +130,7 @@ export function headerInputFromOptions(
       tieuNgu: num("size.tieuNgu", 14),
       so: num("size.so", 13),
       placeDate: num("size.diaDanhNgayThang", 13),
+      subject: num("size.trichYeuCongVan", 13),
     },
     agencyLineRatio: num("agencyLineRatio", profile.agencyLineRatio?.max ?? 0.5),
     textWidthMm: widthMm - num("marginLeft", fixed.left) - num("marginRight", fixed.right),
