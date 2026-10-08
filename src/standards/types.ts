@@ -176,6 +176,10 @@ export interface StandardProfile {
   identifyingTitle: string;
   page: PageRules;
   pageDefaults: PageDefaults;
+  /** Kiểu khối đầu văn bản: quốc hiệu và tiêu ngữ (Chính quyền) hay tiêu đề Đảng. */
+  headerKind: "quocHieu" | "dang";
+  /** Độ dài đường kẻ dưới tên cơ quan so với độ dài dòng chữ; chuẩn không dùng đường kẻ thì bỏ trống. */
+  agencyLineRatio?: Range;
   /** Tên preset có sẵn của chuẩn, gồm các giá trị mặc định (T6A). */
   defaultPresetName: string;
   styles: StylePlan;

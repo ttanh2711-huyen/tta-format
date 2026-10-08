@@ -228,15 +228,16 @@ Preset đặt tên ("Công văn thường", "Báo cáo dài"...): lưu, đổi t
 - **Cơ quan chủ quản (tuỳ chọn):** công tắc "Có cơ quan chủ quản"; khi bật nhập 1–3 dòng (nút "Thêm dòng"), mỗi dòng tự in hoa, không đậm, cỡ 13 (như mẫu có hai dòng: Sở... / Thành phố...). Tắt thì khối co lại, cơ quan ban hành lên đầu.
 - **Cơ quan ban hành:** ô chọn từ danh sách cơ quan đã lưu hoặc nhập mới, có nút "Lưu vào danh sách" (lưu bằng kho cục bộ của T6A; T22 bổ sung màn hình quản lý, xuất/nhập); tự in hoa, đậm, cỡ 13.
 **Tiêu chí nghiệm thu:**
-- [ ] Quốc hiệu/tiêu ngữ đúng chữ, cỡ, kiểu, in hoa/thường theo quy tắc và theo `fixtures/congvan-mau.json`
-- [ ] Cơ quan chủ quản bật/tắt, 1 đến 3 dòng đều sinh khối đúng; cơ quan ban hành chọn được từ danh sách hoặc nhập mới
-- [ ] Đường kẻ có độ dài đúng tỷ lệ cho phép, đi theo văn bản khi đổi nội dung (không dùng hình nổi)
-- [ ] Tên cơ quan dài tự xuống dòng không làm vỡ bảng
+- [x] Quốc hiệu/tiêu ngữ đúng chữ, cỡ, kiểu, in hoa/thường theo quy tắc và theo `fixtures/congvan-mau.json` (test dùng `compareToFixture` với các đoạn của hàng đầu trong fixture)
+- [x] Cơ quan chủ quản bật/tắt, 0 đến 3 dòng đều sinh khối đúng (có test); cơ quan ban hành chọn từ danh sách đã lưu hoặc nhập mới (đã thử trong trình duyệt giả lập)
+- [ ] Đường kẻ có độ dài đúng tỷ lệ cho phép, đi theo văn bản (viền dưới của một đoạn riêng, không hình nổi): độ dài tính bằng **ước lượng bề rộng chữ** (bảng độ rộng Times New Roman, lệch vài %, đã đối chiếu với file mẫu: tiêu ngữ 59 mm trong ±6%); **chờ bạn xem bản in thử**
+- [x] Tên cơ quan dài tự xuống dòng không làm vỡ bảng (bảng bố cục cố định, tên không thụt; đường kẻ tính theo bề rộng ô); **xem bằng mắt chờ bạn**
 **Kiểm chứng:**
-- [ ] `npm test`: bộ dựng OOXML khớp golden file; `compareToFixture` (T2A) không khác biệt; các trường hợp 0/1/2/3 dòng chủ quản
+- [x] `npm test`: 491 test; bộ dựng OOXML khớp golden file (`__golden__/header-block.xml`); `compareToFixture` không khác biệt; 0/1/2/3 dòng chủ quản
 - [ ] Thủ công: in PDF, so với file mẫu của bạn và Phụ lục III
 **Phụ thuộc:** T2A, T5, T6A
-**File dự kiến:** `src/ooxml/headerBlock.ts`, `src/office/insertHeader.ts`, `src/ui/HeaderForm.ts`, `src/ooxml/headerBlock.test.ts`
+**Trạng thái:** mã, giao diện (form "Khối đầu văn bản" trên Tuỳ chọn nhanh) và test xong; `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Bảng 1 hàng 2 cột 45%/55%, không viền, lề ô 0, vừa vùng chữ (theo lề trong Tuỳ chọn nhanh), thụt 0; cơ quan chủ quản không đậm, cơ quan ban hành đậm, quốc hiệu 13 đậm, tiêu ngữ 14 đậm, đều in hoa trừ tiêu ngữ. Hàng số/ký hiệu, địa danh và V/v thêm ở T8, T9 (cần mở rộng `buildHeaderBlock`). Chèn vào đầu thân bằng `insertOoxml(..., "Start")` kèm một đoạn trống, đọc lại bảng đầu để kiểm tra; tài liệu đã bắt đầu bằng bảng thì hỏi trước khi chèn thêm; tài liệu trống sẽ có hai đoạn trống sau bảng. Thêm tuỳ chọn `agencyLineRatio` (1/3 hoặc 1/2, mặc định 1/2) và hai trường `headerKind`, `agencyLineRatio` cho chuẩn; chuẩn Đảng hiện chỉ hiện ghi chú "TD1". `flatOpc` chuyển từ spike sang `src/ooxml/flatOpc.ts`. Danh sách cơ quan lưu theo chuẩn trong localStorage (T22 bổ sung xuất/nhập).
+**File thực tế:** `src/ooxml/{headerBlock,textWidth,flatOpc}.ts` (+ test, golden), `src/office/insertHeader.ts`, `src/ui/HeaderForm.ts`, `src/settings/agencies.ts` (+ test)
 **Kích cỡ:** M
 
 ### T8: Số, ký hiệu, địa danh, ngày tháng

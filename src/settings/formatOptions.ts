@@ -248,6 +248,22 @@ export function buildRegistry(profile: StandardProfile): FormatRegistry {
         };
       });
   options.push(...sizeOptions("header"));
+  if (profile.agencyLineRatio) {
+    const { min, max } = profile.agencyLineRatio;
+    const label = (ratio: number) => (Math.abs(ratio - 1 / 3) < 1e-6 ? "1/3" : Math.abs(ratio - 1 / 2) < 1e-6 ? "1/2" : vn(Math.round(ratio * 100) / 100));
+    options.push({
+      id: "agencyLineRatio",
+      group: "header",
+      label: "Độ dài đường kẻ dưới tên cơ quan (so với dòng chữ)",
+      kind: "number",
+      effect: "onCreate",
+      choices: unique([min, max]).map((value) => ({ value, label: label(value) })),
+      default: max,
+      custom: true,
+      hard: { min: 0.1, max: 1 },
+      rule: (value) => (value >= min - 1e-6 && value <= max + 1e-6 ? null : `Đường kẻ dài ${vn(Math.round(value * 100) / 100)} dòng chữ ngoài quy định: chuẩn ${profile.name} cho phép từ ${label(min)} đến ${label(max)}.`),
+    });
+  }
   options.push(...sizeOptions("footer"));
   options.push({ id: "signGap", group: "footer", label: "Số dòng trống chỗ ký", kind: "number", unit: "dòng", effect: "onCreate", choices: numberChoices([4, 5, 6, 7], "dòng"), default: 6, custom: true, hard: { min: 1, max: 12 } });
 
