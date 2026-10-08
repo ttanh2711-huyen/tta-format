@@ -55,6 +55,28 @@ export async function applyPageNumbers(options: PageNumberOptions): Promise<Page
     });
     await context.sync();
 
+    // insertOoxml có thể làm mất thuộc tính của đoạn (căn giữa, giãn đoạn; quy tắc đoạn đơn của spike T3) và
+    // giữ lại đoạn trống cũ: đặt lại bằng API và bỏ đoạn trống thừa.
+    const written = plan.flatMap((item, index) => (item.writePrimary ? [sections[index].getHeader("Primary")] : []));
+    const lists = written.map((header) => {
+      header.paragraphs.load("items/text");
+      return header.paragraphs;
+    });
+    await context.sync();
+    lists.forEach((list) => {
+      const withText = list.items.filter((paragraph) => paragraph.text.trim() !== "");
+      const keep = withText.length > 0 ? withText : list.items.slice(0, 1);
+      for (const paragraph of list.items) {
+        if (!keep.includes(paragraph) && list.items.length > 1) paragraph.delete();
+      }
+      for (const paragraph of keep) {
+        paragraph.alignment = "Centered";
+        paragraph.spaceBefore = 0;
+        paragraph.spaceAfter = 0;
+      }
+    });
+    await context.sync();
+
     const afterStates = (await readStates(context)).states;
     const after = planPageNumbers(afterStates, options);
     const problems = after.flatMap((item, index) => {
