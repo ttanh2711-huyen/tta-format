@@ -1,5 +1,5 @@
 import { flatOpc } from "../ooxml/flatOpc";
-import { isPlanEmpty, pageNumberParagraph, planPageNumbers, readPageNumberState, type PageNumberOptions, type SectionPlan, type SectionState } from "../ooxml/pageNumberHeader";
+import { describePageNumberState, isPlanEmpty, pageNumberParagraph, planPageNumbers, readPageNumberState, type PageNumberOptions, type SectionPlan, type SectionState } from "../ooxml/pageNumberHeader";
 
 /** Đánh số trang cần WordApiDesktop 1.3 (đặt "trang đầu khác biệt" qua PageSetup). */
 export function isPageNumberSupported(): boolean {
@@ -18,7 +18,7 @@ async function readStates(context: Word.RequestContext): Promise<{ sections: Wor
     return { primary: section.getHeader("Primary").getOoxml(), first, firstXml: first.getOoxml() };
   });
   await context.sync();
-  const states = sections.map((section, index) => {
+  const states: SectionState[] = sections.map((section, index) => {
     const read = reads[index];
     return {
       differentFirst: section.pageSetup.differentFirstPageHeaderFooter,
@@ -55,11 +55,12 @@ export async function applyPageNumbers(options: PageNumberOptions): Promise<Page
     });
     await context.sync();
 
-    const after = planPageNumbers((await readStates(context)).states, options);
+    const afterStates = (await readStates(context)).states;
+    const after = planPageNumbers(afterStates, options);
     const problems = after.flatMap((item, index) => {
       const where = sections.length > 1 ? `Phần ${index + 1}: ` : "";
       const found: string[] = [];
-      if (item.writePrimary) found.push(`${where}header chưa có số trang đúng (căn giữa, ${options.sizePt} pt)`);
+      if (item.writePrimary) found.push(`${where}header chưa có số trang đúng (cần căn giữa, ${options.sizePt} pt; đọc lại: ${describePageNumberState(afterStates[index].primary)})`);
       if (item.setDifferentFirst !== undefined) found.push(`${where}chưa đặt được "trang đầu khác biệt"`);
       if (item.clearFirst) found.push(`${where}header trang đầu vẫn còn số trang`);
       return found;

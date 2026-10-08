@@ -19,8 +19,21 @@ describe("pageNumberParagraph", () => {
 });
 
 describe("readPageNumberState: đọc header Word trả về", () => {
+  const pkg = (body: string) =>
+    `<pkg:package><pkg:part pkg:name="/word/styles.xml"><pkg:xmlData><w:styles><w:docDefaults><w:rPrDefault><w:rPr><w:sz w:val="22"/></w:rPr></w:rPrDefault></w:docDefaults><w:style w:styleId="X"><w:pPr><w:jc w:val="left"/></w:pPr></w:style></w:styles></pkg:xmlData></pkg:part>` +
+    `<pkg:part pkg:name="/word/document.xml"><pkg:xmlData><w:document><w:body>${body}</w:body></w:document></pkg:xmlData></pkg:part></pkg:package>`;
+
+  it("chỉ đọc phần thân của gói, không đọc nhầm cỡ chữ và căn lề của phần styles đứng trước", () => {
+    expect(readPageNumberState(pkg(pageNumberParagraph(14)))).toEqual({ hasPage: true, centered: true, sizePt: 14 });
+  });
+
   it("nhận ra header đã có số trang đúng cỡ và căn giữa", () => {
     expect(readPageNumberState(`<w:hdr>${pageNumberParagraph(14)}</w:hdr>`)).toEqual({ hasPage: true, centered: true, sizePt: 14 });
+  });
+
+  it("đánh giá đúng đoạn chứa PAGE dù có đoạn trống khác cỡ, khác căn lề đứng trước hoặc sau", () => {
+    const empty = '<w:p><w:pPr><w:jc w:val="left"/><w:rPr><w:sz w:val="22"/></w:rPr></w:pPr></w:p>';
+    expect(readPageNumberState(`<w:hdr>${empty}${pageNumberParagraph(14)}${empty}</w:hdr>`)).toEqual({ hasPage: true, centered: true, sizePt: 14 });
   });
 
   it("nhận ra trường PAGE dạng phức hợp do Word tự tạo", () => {

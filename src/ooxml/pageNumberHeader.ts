@@ -1,4 +1,4 @@
-import { hasPageField, readJustification } from "./facts";
+import { bodyPart, hasPageField, readJustification } from "./facts";
 
 /**
  * Đánh số trang (T11): trường PAGE canh giữa ở header mặc định, trang đầu khác biệt để trang 1 không hiện số.
@@ -22,14 +22,27 @@ export interface PageNumberState {
   sizePt: number | undefined;
 }
 
-/** Đọc trạng thái số trang từ OOXML của một header. */
+/**
+ * Đọc trạng thái số trang từ OOXML của một header. Chỉ đọc phần thân của gói (nội dung header); gói Word trả
+ * về còn kèm phần styles, nếu quét cả gói sẽ đọc nhầm cỡ chữ và căn lề của style.
+ */
 export function readPageNumberState(headerXml: string): PageNumberState {
-  const size = /<w:sz\s+w:val="(\d+)"/.exec(headerXml)?.[1];
+  const xml = bodyPart(headerXml) || headerXml;
+  // Đánh giá đúng đoạn chứa trường PAGE, để đoạn trống đứng trước hoặc sau không làm sai cỡ chữ và căn lề.
+  const paragraphs = xml.match(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g) ?? [];
+  const holder = paragraphs.find((paragraph) => hasPageField(paragraph));
+  const scope = holder ?? xml;
+  const size = /<w:sz\s+w:val="(\d+)"/.exec(scope)?.[1];
   return {
-    hasPage: hasPageField(headerXml),
-    centered: readJustification(headerXml) === "center",
+    hasPage: holder !== undefined || hasPageField(xml),
+    centered: readJustification(scope) === "center",
     sizePt: size === undefined ? undefined : Number(size) / 2,
   };
+}
+
+/** Mô tả ngắn trạng thái đọc được, dùng trong thông báo khi đọc lại chưa đúng. */
+export function describePageNumberState(state: PageNumberState): string {
+  return `có trường PAGE: ${state.hasPage ? "có" : "không"}, căn giữa: ${state.centered ? "có" : "không"}, cỡ: ${state.sizePt ?? "không rõ"}`;
 }
 
 export interface SectionState {
