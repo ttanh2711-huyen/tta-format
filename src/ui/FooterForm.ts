@@ -1,5 +1,5 @@
 import { insertFooterBlock } from "../office/insertFooter";
-import { MAX_POSITION_LINES, buildFooterBlock, findAcademicTitle, footerInputFromOptions, validateFooterInput } from "../ooxml/footerBlock";
+import { MAX_POSITION_LINES, buildFooterBlock, findAcademicTitle, footerInputFromOptions, validateFooterInput, type FooterBlockInput } from "../ooxml/footerBlock";
 import type { FormatValues } from "../settings/formatOptions";
 import type { StandardProfile } from "../standards/types";
 
@@ -26,7 +26,9 @@ function button(text: string, onClick: () => void, props: Partial<HTMLButtonElem
 }
 
 /** Form "Khối cuối văn bản" (T10): nơi nhận, quyền hạn, chức vụ, họ tên; chèn bảng ở cuối tài liệu. */
-export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): { refresh: () => void } {
+export type FooterCollect = { ok: true; input: FooterBlockInput; academicTitle: string | null } | { ok: false; error: string };
+
+export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): { refresh: () => void; collect: () => FooterCollect } {
   let recipients = "Như trên";
   let luu = "VT";
   let authority = "";
@@ -44,17 +46,22 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
     message.textContent = text;
   }
 
-  async function insert(force: boolean): Promise<void> {
-    const profile = deps.currentStandard();
-    const input = footerInputFromOptions(profile, deps.values(), { recipients: recipients.split(/\r?\n/), luu, authority, positionLines, signerName });
+  /** Đọc và kiểm tra các ô đang nhập; dùng chung cho nút "Chèn khối cuối" và trình tạo công văn. */
+  function collect(): FooterCollect {
+    const input = footerInputFromOptions(deps.currentStandard(), deps.values(), { recipients: recipients.split(/\r?\n/), luu, authority, positionLines, signerName });
     const problems = validateFooterInput(input);
-    if (problems.length > 0) {
-      show("error", problems.join(" "));
+    return problems.length > 0 ? { ok: false, error: problems.join(" ") } : { ok: true, input, academicTitle: findAcademicTitle(signerName) };
+  }
+
+  async function insert(force: boolean): Promise<void> {
+    const collected = collect();
+    if (!collected.ok) {
+      show("error", collected.error);
       return;
     }
-    const academic = findAcademicTitle(signerName);
-    if (!force && academic) {
-      confirmTitle = academic;
+    const { input } = collected;
+    if (!force && collected.academicTitle) {
+      confirmTitle = collected.academicTitle;
       render();
       return;
     }
@@ -142,5 +149,6 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
       show("", "");
       render();
     },
+    collect,
   };
 }

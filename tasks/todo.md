@@ -310,14 +310,15 @@ Preset đặt tên ("Công văn thường", "Báo cáo dài"...): lưu, đổi t
 ### T12: Wizard "Tạo công văn mới" (chuẩn Chính quyền)
 **Mô tả:** Luồng một màn hình/nhiều bước: chọn cơ quan chủ quản (tuỳ chọn) và cơ quan ban hành, nhập số, ngày, V/v, "Kính gửi", người ký, nơi nhận → tạo tài liệu mới có đủ khối đầu, thân (con trỏ ở nội dung), khối cuối, số trang, trang A4 và style theo tuỳ chọn T6A hiện hành. Là lát cắt dọc hoàn chỉnh đầu tiên.
 **Tiêu chí nghiệm thu:**
-- [ ] Từ tài liệu trống, một lần chạy cho ra công văn đủ thể thức, và khi nhập đúng nội dung của file mẫu thì `compareToFixture` không báo khác biệt về định dạng
-- [ ] Trường bắt buộc/tuỳ chọn rõ; lỗi nhập hiện tại chỗ, bằng tiếng Việt
-- [ ] Chạy trong tài liệu đã có nội dung thì hỏi xác nhận trước khi chèn
+- [ ] Từ tài liệu trống, một lần chạy cho ra công văn đủ thể thức: mã xong, **chờ bạn thử trong Word**. Khi nhập đúng nội dung của file mẫu, thân tài liệu dựng ra khớp fixture (khối đầu, Kính gửi, khối cuối) qua `compareToFixture`: đã có test
+- [x] Lỗi nhập hiện bằng tiếng Việt, gom lỗi Khối đầu và Khối cuối trong một thông báo (đã thử trong trình duyệt giả lập). Lỗi hiện ở thông báo chung chứ chưa tô đỏ từng ô
+- [x] Chạy trong tài liệu đã có nội dung (hoặc họ tên người ký có học hàm, học vị) thì hỏi xác nhận "Vẫn tạo / Huỷ" trước khi làm; có nút khôi phục bản trước khi tạo
 **Kiểm chứng:**
-- [ ] `npm test`: golden toàn tài liệu; `npm run build` thành công
+- [x] `npm test`: 593 test; golden toàn tài liệu `document-letter.xml`; `npm run build` thành công
 - [ ] Thủ công: tạo 3 công văn mẫu (tên dài, nhiều nơi nhận, ký thay) rồi in PDF
 **Phụ thuộc:** T6A, T7, T8, T9, T10, T11
-**File dự kiến:** `src/ui/NewDocWizard.ts`, `src/office/createDocument.ts`, `src/ooxml/documentAssembler.ts`, `src/ooxml/documentAssembler.test.ts`
+**Trạng thái:** mã, giao diện (nút xanh "Tạo công văn" trên đầu các form khối đầu, khối cuối) và test xong; `typecheck`, `lint`, `build` sạch; đã thử trong trình duyệt giả lập phần kiểm tra lỗi và hộp xác nhận; **chưa thử toàn bộ trong Word**. Khác dự kiến: không mở tài liệu mới (cửa sổ mới không có task pane, các API thiết lập chưa kiểm chứng) mà làm **trong tài liệu đang mở**: (1) thiết lập trang, (2) cài style, (3) thay toàn bộ thân bằng công văn dựng từ các ô của Khối đầu và Khối cuối (có chỗ đánh dấu nội dung, thay bằng đoạn trống style `ND30_NoiDung` và đặt con trỏ vào đó), (4) đánh số trang. Không chạy bước "định dạng thân" của Chỉnh toàn bộ vì nó sẽ áp lại style lên dòng Kính gửi. Dùng lại các bước của T6C, chụp bản gốc trước khi làm. Chưa kiểm chứng: thay toàn bộ thân bằng `insertOoxml(..., "Replace")` có để lại đoạn trống thừa cuối tài liệu hay không. Muốn tạo tài liệu mới thì hiện phải mở tài liệu trống trước.
+**File thực tế:** `src/ooxml/documentAssembler.ts` (+ test, golden), `src/office/createDocument.ts`, `src/ui/NewDocWizard.ts`; `HeaderForm` và `FooterForm` thêm hàm `collect()`
 **Kích cỡ:** M
 
 ### Checkpoint 3 – MVP chuẩn Chính quyền

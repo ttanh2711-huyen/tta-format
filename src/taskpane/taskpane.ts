@@ -6,6 +6,7 @@ import { mountHeaderForm } from "../ui/HeaderForm";
 import { mountFooterForm } from "../ui/FooterForm";
 import { mountFormatPanel } from "../ui/FormatPanel";
 import { mountPageSetupPanel } from "../ui/PageSetupPanel";
+import { mountNewDocWizard } from "../ui/NewDocWizard";
 import { mountQuickOptions } from "../ui/QuickOptions";
 import { mountStandardSwitcher } from "../ui/StandardSwitcher";
 
@@ -45,7 +46,8 @@ Office.onReady((info) => {
   const formatEl = document.getElementById("format-panel");
   const headerEl = document.getElementById("header-form");
   const footerEl = document.getElementById("footer-form");
-  if (!switcherEl || !fixAllEl || !quickEl || !pageEl || !formatEl || !headerEl || !footerEl) {
+  const wizardEl = document.getElementById("new-doc");
+  if (!switcherEl || !fixAllEl || !quickEl || !pageEl || !formatEl || !headerEl || !footerEl || !wizardEl) {
     setStatus("Thiếu vùng hiển thị trong trang; hãy tải lại add-in.");
     return;
   }
@@ -61,10 +63,19 @@ Office.onReady((info) => {
   const quick = mountQuickOptions(quickEl, { currentStandard: switcher.currentStandard, store });
   const header = mountHeaderForm(headerEl, { currentStandard: switcher.currentStandard, values: quick.values, store });
   const footer = mountFooterForm(footerEl, { currentStandard: switcher.currentStandard, values: quick.values });
+  const wizard = mountNewDocWizard(wizardEl, {
+    currentStandard: switcher.currentStandard,
+    values: quick.values,
+    styleSpecs: quick.styleSpecs,
+    behavior: quick.behavior,
+    collectHeader: header.collect,
+    collectFooter: footer.collect,
+  });
   switcher.onChange(() => {
     quick.refresh();
     header.refresh();
     footer.refresh();
+    wizard.refresh();
   });
   mountFixAllButton(fixAllEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs, behavior: quick.behavior });
   mountPageSetupPanel(pageEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs });

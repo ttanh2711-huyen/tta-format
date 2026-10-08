@@ -27,7 +27,7 @@ function unsupported(reason: string) {
   return { willRun: false, lines: [], skipReason: reason };
 }
 
-const pageStep: PipelineStep<FixAllContext> = {
+export const pageStep: PipelineStep<FixAllContext> = {
   id: "page",
   label: "1. Thiết lập trang",
   order: 10,
@@ -46,7 +46,7 @@ const pageStep: PipelineStep<FixAllContext> = {
   },
 };
 
-const styleStep: PipelineStep<FixAllContext> = {
+export const styleStep: PipelineStep<FixAllContext> = {
   id: "styles",
   label: "2. Cài bộ style",
   order: 20,
@@ -105,7 +105,7 @@ function pageNumberOptions(ctx: FixAllContext): { sizePt: number; hideFirst: boo
   };
 }
 
-const pageNumberStep: PipelineStep<FixAllContext> = {
+export const pageNumberStep: PipelineStep<FixAllContext> = {
   id: "pageNumber",
   label: "5. Đánh số trang",
   order: 50,

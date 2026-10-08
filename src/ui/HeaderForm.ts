@@ -1,6 +1,6 @@
 import { insertHeaderBlock, isInsertHeaderSupported, startsWithTable } from "../office/insertHeader";
-import { buildTitleBody, subjectLine, titleInputFromOptions, validateTitleInput } from "../ooxml/titleBlock";
-import { QUOC_HIEU, buildHeaderBlock, headerInputFromOptions, MAX_PARENT_LINES, validateHeaderInput } from "../ooxml/headerBlock";
+import { buildTitleBody, subjectLine, titleInputFromOptions, validateTitleInput, type TitleBlockInput } from "../ooxml/titleBlock";
+import { QUOC_HIEU, buildHeaderBlock, headerInputFromOptions, MAX_PARENT_LINES, validateHeaderInput, type HeaderBlockInput } from "../ooxml/headerBlock";
 import { placeDateText, soText } from "../rules/validators";
 import { listAgencies, removeAgency, saveAgency } from "../settings/agencies";
 import type { FormatValues } from "../settings/formatOptions";
@@ -37,7 +37,9 @@ function button(text: string, onClick: () => void, props: Partial<HTMLButtonElem
 }
 
 /** Form "Khối đầu văn bản" (T7): cơ quan chủ quản 0 đến 3 dòng, cơ quan ban hành, chèn bảng quốc hiệu và tiêu ngữ. */
-export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): { refresh: () => void } {
+export type HeaderCollect = { ok: true; input: HeaderBlockInput; titleInput: TitleBlockInput | undefined } | { ok: false; error: string };
+
+export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): { refresh: () => void; collect: () => HeaderCollect } {
   let hasParent = false;
   let parentLines = [""];
   let issuer = "";
@@ -60,42 +62,44 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
     message.textContent = text;
   }
 
-  async function insert(force: boolean): Promise<void> {
+  /** Đọc và kiểm tra các ô đang nhập; dùng chung cho nút "Chèn khối đầu" và trình tạo công văn. */
+  function collect(): HeaderCollect {
     const profile = deps.currentStandard();
     let numberRow: { so: string; placeDate: string } | undefined;
     if (withNumberRow) {
       const so = soText(profile, { so: toInt(number.so), typeAbbr: number.typeAbbr.trim() === "" ? null : number.typeAbbr.trim(), agencyAbbrs: number.agencyAbbrs.split("-").map((part) => part.trim()).filter((part) => part !== "") });
       const date = placeDateText({ place, day: toInt(number.day), month: toInt(number.month), year: toInt(number.year) });
-      if (!so.ok || !date.ok) {
-        show("error", [so.ok ? "" : so.error, date.ok ? "" : date.error].filter(Boolean).join(" "));
-        return;
-      }
+      if (!so.ok || !date.ok) return { ok: false, error: [so.ok ? "" : so.error, date.ok ? "" : date.error].filter(Boolean).join(" ") };
       numberRow = { so: so.text, placeDate: date.text };
-      deps.store.set(PLACE_KEY, place.trim());
     }
     let subjectRow: { text: string } | undefined;
-    let titleXml = "";
+    let titleInput: TitleBlockInput | undefined;
     if (withTitle) {
-      const titleInput = titleInputFromOptions(profile, deps.values(), {
+      titleInput = titleInputFromOptions(profile, deps.values(), {
         variant,
         typeName: title.typeName,
         subject: title.subject,
         recipients: title.recipients.split(/\r?\n/),
       });
       const titleProblems = validateTitleInput(titleInput);
-      if (titleProblems.length > 0) {
-        show("error", titleProblems.join(" "));
-        return;
-      }
-      titleXml = buildTitleBody(titleInput);
+      if (titleProblems.length > 0) return { ok: false, error: titleProblems.join(" ") };
       if (variant === "letter") subjectRow = { text: subjectLine(title.subject) };
     }
     const input = headerInputFromOptions(profile, deps.values(), { parentLines: hasParent ? parentLines : [], issuer, numberRow, subjectRow });
     const problems = validateHeaderInput(input);
-    if (problems.length > 0) {
-      show("error", problems.join(" "));
+    if (problems.length > 0) return { ok: false, error: problems.join(" ") };
+    if (numberRow) deps.store.set(PLACE_KEY, place.trim());
+    return { ok: true, input, titleInput };
+  }
+
+  async function insert(force: boolean): Promise<void> {
+    const collected = collect();
+    if (!collected.ok) {
+      show("error", collected.error);
       return;
     }
+    const { input, titleInput } = collected;
+    const titleXml = titleInput ? buildTitleBody(titleInput) : "";
     try {
       if (!force && (await startsWithTable())) {
         confirmInsert = true;
@@ -289,5 +293,6 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       show("", "");
       render();
     },
+    collect,
   };
 }
