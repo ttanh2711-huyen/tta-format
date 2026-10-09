@@ -7,6 +7,9 @@ import type { StyleSpec } from "../ooxml/styleSpecs";
 import { assembleDocumentBody } from "../ooxml/documentAssembler";
 import { QUOC_HIEU } from "../ooxml/headerBlock";
 import { findTemplate, templatesFor, type TemplateEntry } from "../templates/registry";
+import { multiSignFromOptions, parseSignLines, validateMultiSign } from "../ooxml/multiSignBlock";
+import { assembleMinutesBody, defaultMinutesParties } from "../templates/bienBan";
+import { agreementNumberingXml, assembleAgreementBody, defaultAgreementParties, MAX_ARTICLES as MAX_AGREEMENT_ARTICLES, validateAgreement } from "../templates/hopDong";
 import { assembleRegulationBody, MAX_ARTICLES_PER_CHAPTER, MAX_CHAPTERS, regulationInputFromOptions, regulationNumberingXml, validateRegulation } from "../templates/quyChe";
 import { assembleDecisionBody, decisionInputFromOptions, decisionKindInfo, decisionNumberingXml, MAX_ARTICLES, validateDecision } from "../templates/quyetDinh";
 import { assemblePartyDocumentBody } from "../standards/hd05/assembleDocument";
@@ -62,6 +65,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
   let entryKey = "cong-van";
   const decision = { authority: "", basis: "", articles: "3" };
   const regulation = { chapters: "3", articles: "2", sections: false, attached: "" };
+  const signed = { lines: "", recipients: "", articles: "5" };
   const note = create("p", { className: "note" });
   const formBox = create("div", { id: "nw-form" });
   const create_ = button("Tạo công văn", () => void onCreate(false), { id: "nw-create" });
@@ -119,6 +123,20 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
         el.addEventListener("input", () => onInput(el.value));
         return create("div", {}, el);
       };
+    if (entry?.family === "minutes" || entry?.family === "agreement") {
+      if (signed.lines.trim() === "") signed.lines = (entry.family === "minutes" ? defaultMinutesParties() : defaultAgreementParties(2)).map((p) => `${p.title} | |`).join("\n");
+      const lines = create("textarea", { id: "nw-sign-lines", rows: 4, value: signed.lines, placeholder: "Mỗi bên một dòng: Tên bên | Chức vụ | Họ tên (2 đến 4 bên)" });
+      const recipients = create("textarea", { id: "nw-sign-recipients", rows: 3, value: signed.recipients, placeholder: "Nơi nhận, mỗi nơi một dòng (bỏ trống nếu không cần)" });
+      formBox.append(
+        create("p", { className: "note", textContent: entry.family === "minutes" ? 'Khối đầu đã chuyển sang "Văn bản có tên loại"; nhập trích yếu (ví dụ "Về việc ..."). Add-in dựng các mục Thời gian, Địa điểm, Thành phần, Chủ trì, Thư ký, Nội dung và khối ký nhiều bên.' : 'Khối đầu đã chuyển sang "Văn bản có tên loại"; nhập trích yếu. Phụ lục III không có mẫu cho loại này: add-in dùng bố cục đề xuất (các bên, các Điều, khối ký nhiều bên, không có "Nơi nhận" cố định); hãy đối chiếu trước khi dùng.' }),
+        field(lines, (v) => (signed.lines = v)),
+        field(recipients, (v) => (signed.recipients = v)),
+      );
+      if (entry.family === "agreement") {
+        formBox.append(field(create("input", { type: "text", id: "nw-agreement-articles", value: signed.articles, placeholder: `Số Điều (1 đến ${MAX_AGREEMENT_ARTICLES})`, inputMode: "numeric" }), (v) => (signed.articles = v)));
+      }
+      return;
+    }
     if (entry?.family === "regulation") {
       const sections = create("input", { type: "checkbox", id: "nw-sections", checked: regulation.sections });
       sections.addEventListener("change", () => {
@@ -158,14 +176,42 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
     if (busy) return;
     const header = deps.collectHeader();
     const footer = deps.collectFooter();
-    if (!header.ok || !footer.ok) {
+    const profile = deps.currentStandard();
+    const entry = findTemplate(profile, entryKey);
+    // Biên bản và văn bản nhiều bên ký có khối ký riêng nên không dùng Khối cuối.
+    const multiSign = entry?.family === "minutes" || entry?.family === "agreement";
+    if (!header.ok || (!multiSign && !footer.ok)) {
       show("error", [header.ok ? "" : `Khối đầu: ${header.error}`, footer.ok ? "" : `Khối cuối: ${footer.error}`].filter(Boolean).join(" "));
       return;
     }
-    const profile = deps.currentStandard();
     let parts: DocumentParts;
-    const entry = findTemplate(profile, entryKey);
-    if (header.kind === "quocHieu" && footer.kind === "quocHieu" && entry?.family === "regulation") {
+    if (multiSign && header.ok && header.kind === "quocHieu") {
+      if (header.titleInput?.variant !== "named") {
+        show("error", "Ở Khối đầu hãy chọn \"Văn bản có tên loại\" và nhập trích yếu.");
+        return;
+      }
+      const parties = parseSignLines(signed.lines);
+      const sign = multiSignFromOptions(profile, deps.values(), { parties, recipients: signed.recipients.split(/\r?\n/), luu: "" });
+      const document = { header: header.input, title: { ...header.titleInput, typeName: entry.typeName } };
+      const signProblems = validateMultiSign(sign);
+      if (signProblems.length > 0) {
+        show("error", signProblems.join(" "));
+        return;
+      }
+      if (entry.family === "minutes") {
+        parts = { buildBody: () => assembleMinutesBody(document, profile.styles.prefix, sign), headText: QUOC_HIEU, signerName: "" };
+      } else {
+        const agreement = { parties: parties.length, articleCount: Number(signed.articles), stylePrefix: profile.styles.prefix, firstLineIndentMm: typeof deps.values().firstLineIndent === "number" ? (deps.values().firstLineIndent as number) : profile.styles.defaults.firstLineIndentMm };
+        const problems = [...validateAgreement(agreement)];
+        if (problems.length > 0) {
+          show("error", problems.join(" "));
+          return;
+        }
+        parts = { buildBody: () => assembleAgreementBody(document, agreement, sign), headText: QUOC_HIEU, signerName: "", numberingXml: agreementNumberingXml(agreement) };
+      }
+    } else if (!footer.ok) {
+      return;
+    } else if (header.kind === "quocHieu" && footer.kind === "quocHieu" && entry?.family === "regulation") {
       if (header.titleInput?.variant !== "named") {
         show("error", "Ở Khối đầu hãy chọn \"Văn bản có tên loại\" và nhập trích yếu.");
         return;
@@ -213,7 +259,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
       if (!confirmed) {
         const reasons: string[] = [];
         if (await hasContent()) reasons.push("Tài liệu đang có nội dung; công văn mới sẽ thay toàn bộ nội dung đó (có thể khôi phục).");
-        if (footer.academicTitle) reasons.push(`Họ tên người ký có "${footer.academicTitle}", quy định chỉ ghi họ và tên.`);
+        if (footer.ok && footer.academicTitle) reasons.push(`Họ tên người ký có "${footer.academicTitle}", quy định chỉ ghi họ và tên.`);
         if (reasons.length > 0) {
           const box = create("div", { className: "nw-box", id: "nw-confirm" });
           box.setAttribute("role", "alert");

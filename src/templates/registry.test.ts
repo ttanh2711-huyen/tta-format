@@ -45,8 +45,13 @@ describe("registry loại văn bản", () => {
     expect(findTemplate(HD05, "bao-cao")?.family).toBe("titled");
   });
 
+  it("biên bản và các văn bản nhiều bên ký có họ mẫu riêng", () => {
+    expect(findTemplate(ND30, "bien-ban")?.family).toBe("minutes");
+    for (const id of ["hop-dong", "ban-ghi-nho", "ban-thoa-thuan"]) expect(findTemplate(ND30, id)?.family).toBe("agreement");
+  });
+
   it("loại chưa có họ mẫu hiện kèm lý do, không bị ẩn", () => {
-    const entry = findTemplate(ND30, "hop-dong");
+    const entry = findTemplate(ND30, "cong-dien");
     expect(entry).toMatchObject({ supported: false, family: null });
     expect(entry?.reason).toContain("chưa có mẫu");
   });

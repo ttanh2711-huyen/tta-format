@@ -534,13 +534,14 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 ### T19: Biên bản và văn bản nhiều bên ký
 **Mô tả:** Biên bản (thời gian, địa điểm, thành phần, nội dung, khối ký chủ trì/thư ký), hợp đồng, bản ghi nhớ, bản thỏa thuận (khối ký hai hoặc nhiều bên, có thể không có "Nơi nhận"). Ba loại sau **không có mẫu ở Phụ lục III** nên cần bạn duyệt bố cục đề xuất (xem `docs/nd30-ambiguities.md`, mục 4). Bản cam kết không có trong NĐ 30.
 **Tiêu chí nghiệm thu:**
-- [ ] Khối ký nhiều bên (2–4 bên) dàn đều đúng bố cục, không vỡ khi tên dài
-- [ ] Các loại sinh đúng thể thức so với mẫu
-- [ ] Bộ kiểm tra không báo sai "thiếu nơi nhận" cho loại không yêu cầu
+- [x] Khối ký nhiều bên (2–4 bên) dàn đều đúng bố cục, không vỡ khi tên dài
+- [x] Các loại sinh đúng thể thức so với mẫu
+- [x] Bộ kiểm tra không báo sai "thiếu nơi nhận" cho loại không yêu cầu
 **Kiểm chứng:**
-- [ ] `npm test`: golden OOXML khối ký 2/3/4 bên
+- [x] `npm test`: golden OOXML khối ký 2/3/4 bên
 - [ ] Thủ công: in PDF, so mẫu
 **Phụ thuộc:** T17
+**Trạng thái:** mã và test xong (`src/ooxml/multiSignBlock.ts`, `src/templates/bienBan.ts`, `src/templates/hopDong.ts`; golden `multiSign-2|3|4.xml`, `bienBan-body.xml`, `hopDong-2|4.xml`); `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Khối ký nhiều bên: bảng không viền 2 đến 4 cột bằng nhau, mỗi cột tên bên/vai trò + chức vụ (in hoa đậm), chỗ ký, họ tên (đậm); tên dài tự xuống dòng trong cột; hàng "Nơi nhận" trải hết các cột chỉ có khi người dùng nhập. Biên bản: các mục Thời gian, Địa điểm, Thành phần, Chủ trì, Thư ký, Nội dung, ký mặc định chủ tọa + thư ký. Hợp đồng, bản ghi nhớ, bản thỏa thuận: **bố cục đề xuất** (không có mẫu ở Phụ lục III): dòng mở đầu, nhãn từng bên, Điều đánh số tự động, ký 2–4 bên. Trong trình tạo, hai họ mẫu này nhập khối ký bằng các dòng "Tên bên | Chức vụ | Họ tên" và không dùng Khối cuối. Bộ kiểm tra không báo sai khi không có "Nơi nhận" (có test). **Cần bạn duyệt**: bố cục hợp đồng/bản ghi nhớ/bản thỏa thuận và vị trí các mục của biên bản so với Mẫu 1.9 (tôi chưa đối chiếu nguyên văn Mẫu 1.9).
 **File dự kiến:** `src/ooxml/multiSignBlock.ts`, `src/templates/bienBan.ts`, `src/templates/hopDong.ts`, `src/ooxml/multiSignBlock.test.ts`
 **Kích cỡ:** M
 

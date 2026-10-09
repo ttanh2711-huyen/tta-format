@@ -12,9 +12,11 @@ import type { DecisionKind } from "./quyetDinh";
  * - titled: tên loại + trích yếu dưới khối đầu, rồi nội dung (Mẫu 1.4 của Chính quyền, thể loại của Đảng);
  * - toTrinh: như titled nhưng có "Kính trình" (chuẩn Đảng);
  * - decision: nghị quyết, quyết định cá biệt (căn cứ, dòng chốt, Điều đánh số tự động);
- * - regulation: quy chế, quy định (Chương, Mục, Điều, Khoản đánh số tự động).
+ * - regulation: quy chế, quy định (Chương, Mục, Điều, Khoản đánh số tự động);
+ * - minutes: biên bản (các mục đầu, khối ký chủ tọa và thư ký);
+ * - agreement: hợp đồng, bản ghi nhớ, bản thỏa thuận (các bên, các Điều, khối ký 2 đến 4 bên).
  */
-export type TemplateFamily = "congVan" | "titled" | "toTrinh" | "decision" | "regulation";
+export type TemplateFamily = "congVan" | "titled" | "toTrinh" | "decision" | "regulation" | "minutes" | "agreement";
 
 export interface TemplateEntry {
   /** Khoá duy nhất trong ô chọn; thường là mã loại, loại có hai biến thể thì kèm hậu tố. */
@@ -48,6 +50,7 @@ const FAMILIES: Record<Headers, Record<string, FamilySpec>> = {
     "co-ten-loai": { family: "titled" },
     "nghi-quyet": { family: "decision", decisionKinds: ["nghiQuyet"] },
     "quyet-dinh": { family: "decision", decisionKinds: ["quyetDinhTrucTiep", "quyetDinhGianTiep"] },
+    "bien-ban": { family: "minutes" },
   },
   dang: {
     "cong-van": { family: "congVan" },
@@ -57,7 +60,13 @@ const FAMILIES: Record<Headers, Record<string, FamilySpec>> = {
 
 /** Riêng một số loại có họ mẫu khác họ bố cục của chúng. */
 const BY_ID: Record<Headers, Record<string, FamilySpec>> = {
-  quocHieu: { "quy-che": { family: "regulation" }, "quy-dinh": { family: "regulation" } },
+  quocHieu: {
+    "quy-che": { family: "regulation" },
+    "quy-dinh": { family: "regulation" },
+    "hop-dong": { family: "agreement" },
+    "ban-ghi-nho": { family: "agreement" },
+    "ban-thoa-thuan": { family: "agreement" },
+  },
   dang: { "to-trinh": { family: "toTrinh" } },
 };
 
