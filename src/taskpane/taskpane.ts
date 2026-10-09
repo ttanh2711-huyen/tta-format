@@ -8,6 +8,7 @@ import { mountFormatPanel } from "../ui/FormatPanel";
 import { mountPageSetupPanel } from "../ui/PageSetupPanel";
 import { mountNewDocWizard } from "../ui/NewDocWizard";
 import { mountInsertPanel } from "../ui/InsertPanel";
+import { mountSettingsPanel } from "../ui/SettingsPanel";
 import { mountReportPanel } from "../ui/ReportPanel";
 import { mountQuickOptions } from "../ui/QuickOptions";
 import { mountStandardSwitcher } from "../ui/StandardSwitcher";
@@ -51,7 +52,8 @@ Office.onReady((info) => {
   const wizardEl = document.getElementById("new-doc");
   const reportEl = document.getElementById("report");
   const extrasEl = document.getElementById("insert-extras");
-  if (!switcherEl || !fixAllEl || !quickEl || !pageEl || !formatEl || !headerEl || !footerEl || !wizardEl || !reportEl || !extrasEl) {
+  const settingsEl = document.getElementById("settings-panel");
+  if (!switcherEl || !fixAllEl || !quickEl || !pageEl || !formatEl || !headerEl || !footerEl || !wizardEl || !reportEl || !extrasEl || !settingsEl) {
     setStatus("Thiếu vùng hiển thị trong trang; hãy tải lại add-in.");
     return;
   }
@@ -78,6 +80,20 @@ Office.onReady((info) => {
     writeStandard: documentSupported ? writeDocumentStandard : undefined,
   });
   const extras = mountInsertPanel(extrasEl, { currentStandard: switcher.currentStandard, values: quick.values });
+  const settings = mountSettingsPanel(settingsEl, {
+    currentStandard: switcher.currentStandard,
+    store,
+    useProfile: (agency) => {
+      header.applyAgency(agency);
+      footer.applyAgency(agency);
+    },
+    onImported: () => {
+      quick.refresh();
+      header.refresh();
+      footer.refresh();
+      wizard.refresh();
+    },
+  });
   const report = mountReportPanel(reportEl, { currentStandard: switcher.currentStandard });
   switcher.onChange(() => {
     report.refresh();
@@ -86,10 +102,12 @@ Office.onReady((info) => {
     footer.refresh();
     wizard.refresh();
     extras.refresh();
+    settings.refresh();
+    settings.applyDefault();
   });
   mountFixAllButton(fixAllEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs, behavior: quick.behavior });
   mountPageSetupPanel(pageEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs });
   mountFormatPanel(formatEl, { currentStandard: switcher.currentStandard, behavior: quick.behavior, styleSpecs: quick.styleSpecs });
   setStatus("Sẵn sàng.");
-  void switcher.start();
+  void switcher.start().then(() => settings.applyDefault());
 });

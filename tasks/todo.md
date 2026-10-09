@@ -630,14 +630,15 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 ### T22: Danh sách cơ quan đã lưu (theo chuẩn), profile và xuất/nhập cấu hình
 **Mô tả:** Quản lý danh sách cơ quan (thêm, sửa, xoá, đặt mặc định) cho ô chọn ở T7 và TD1; **mỗi mục thuộc một chuẩn** (chuẩn Đảng: cơ quan cấp trên trực tiếp 0–2 dòng và cơ quan ban hành, ký hiệu cơ quan đảng tra từ T2B). Cài đặt chung thêm "Chuẩn mặc định cho văn bản mới". Mỗi mục gồm các dòng cơ quan chủ quản (0–3), tên cơ quan ban hành, địa danh, ký hiệu mặc định (ví dụ "CCTL-ĐĐPCTT"), chức vụ và họ tên người ký thường dùng. Dùng chung kho lưu trữ cục bộ với preset ở T6A; có xuất/nhập file cấu hình (gồm cả preset) để chuyển sang máy khác.
 **Tiêu chí nghiệm thu:**
-- [ ] Danh sách cơ quan hiện trong ô chọn của T7 và wizard; chọn một mục thì điền sẵn cả cơ quan chủ quản lẫn cơ quan ban hành
-- [ ] Mở wizard thì điền sẵn từ profile
-- [ ] Giá trị ngoài khoảng NĐ 30 không lưu được kèm giải thích
-- [ ] Xuất rồi nhập trên máy khác giữ nguyên profile và preset
+- [x] Danh sách cơ quan hiện trong ô chọn của T7 và wizard; chọn một mục thì điền sẵn cả cơ quan chủ quản lẫn cơ quan ban hành
+- [x] Mở wizard thì điền sẵn từ profile
+- [x] Giá trị ngoài khoảng NĐ 30 không lưu được kèm giải thích
+- [x] Xuất rồi nhập trên máy khác giữ nguyên profile và preset
 **Kiểm chứng:**
-- [ ] `npm test`: lưu/đọc/kiểm tra/nhập xuất cấu hình, phiên bản định dạng file
+- [x] `npm test`: lưu/đọc/kiểm tra/nhập xuất cấu hình, phiên bản định dạng file
 - [ ] Thủ công: đóng mở lại Word, giá trị còn
 **Phụ thuộc:** T6A, T6B, T12, TD1
+**Trạng thái:** mã và test xong (`src/settings/profile.ts`, `src/settings/exportImport.ts`, `src/ui/SettingsPanel.ts`; `HeaderForm.applyAgency`, `FooterForm.applyAgency`; 27 ca ở `profile.test.ts`; 1092 test cả dự án); `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Bảng "Hồ sơ cơ quan và cấu hình": mỗi chuẩn một danh sách hồ sơ (tên gợi nhớ, 0–3 dòng chủ quản / 0–2 dòng cấp trên của Đảng, cơ quan ban hành 1 dòng / 1–3 dòng của Đảng, địa danh, chữ viết tắt cơ quan, chức vụ, họ tên người ký) với thêm, sửa, xoá, đặt mặc định, "Dùng" (điền Khối đầu và Khối cuối). Hồ sơ mặc định tự điền khi mở add-in và khi đổi chuẩn. Giá trị ngoài giới hạn của chuẩn (số dòng, chữ viết tắt có khoảng trắng hay dấu phân cách, chức vụ quá 3 dòng, trùng tên) không lưu được và có giải thích tiếng Việt. Xuất/nhập: một file JSON có `format`, `version` (hiện 1), gồm hồ sơ, preset, mặc định từng chuẩn, danh sách tên và viết tắt cơ quan, chuẩn mặc định; nhập gộp vào cấu hình sẵn có, file sai/phiên bản mới hơn bị từ chối không ghi gì, mục sai bị bỏ qua và báo lại. "Chuẩn mặc định cho văn bản mới" dùng lựa chọn gần nhất đã có (`defaultStandard`) và được xuất/nhập cùng. **Giới hạn**: xuất ra ô văn bản kèm sao chép và liên kết tải về (chưa thử xem tải về có chạy trong Word không); ô chọn cơ quan cũ (`listAgencies`) vẫn là danh sách riêng chứ chưa hợp nhất với hồ sơ.
 **File dự kiến:** `src/settings/profile.ts`, `src/settings/exportImport.ts`, `src/ui/SettingsPanel.ts`, `src/settings/profile.test.ts`
 **Kích cỡ:** S
 

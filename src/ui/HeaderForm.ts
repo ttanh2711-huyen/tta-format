@@ -5,6 +5,7 @@ import { buildPartyHeaderBlock, MAX_PARENT_LINES as MAX_PARTY_PARENT_LINES, part
 import { buildPartyTitleBody, partyRecipientsRow, partySubjectRow, partyTitleFromOptions, validatePartyTitle, type PartyTitleInput, type PartyTitleVariant } from "../standards/hd05/titleBlock";
 import { placeDateText, soText } from "../rules/validators";
 import { listAgencies, removeAgency, saveAgency } from "../settings/agencies";
+import type { AgencyProfile } from "../settings/profile";
 import type { FormatValues } from "../settings/formatOptions";
 import type { KeyValueStore } from "../settings/storage";
 import type { StandardProfile } from "../standards/types";
@@ -53,7 +54,7 @@ export interface HeaderPreset {
   abbr?: string | null;
 }
 
-export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): { refresh: () => void; collect: () => HeaderCollect; preset: (preset: HeaderPreset) => void } {
+export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): { refresh: () => void; collect: () => HeaderCollect; preset: (preset: HeaderPreset) => void; applyAgency: (agency: AgencyProfile) => void } {
   let hasParent = false;
   let parentLines = [""];
   let issuer = "";
@@ -437,6 +438,15 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       render();
     },
     collect,
+    applyAgency: (agency) => {
+      hasParent = agency.parentLines.length > 0;
+      parentLines = agency.parentLines.length > 0 ? [...agency.parentLines] : [""];
+      issuer = agency.issuerLines.join("\n");
+      if (agency.place !== "") place = agency.place;
+      if (agency.abbrs !== "") number.agencyAbbrs = agency.abbrs;
+      show("", "");
+      render();
+    },
     preset: (preset) => {
       withTitle = true;
       if (deps.currentStandard().headerKind === "dang") partyVariant = preset.form === "congVan" ? "congVan" : preset.form === "toTrinh" ? "toTrinh" : "coTenLoai";

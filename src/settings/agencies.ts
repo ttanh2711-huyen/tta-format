@@ -6,7 +6,8 @@ import type { KeyValueStore } from "./storage";
 /** names: tên cơ quan ban hành; abbrs: chữ viết tắt cơ quan dùng trong ký hiệu văn bản. */
 export type AgencyList = "names" | "abbrs";
 
-const keyOf = (profile: StandardProfile, list: AgencyList): string => (list === "names" ? `nd30.agencies.${profile.id}` : `nd30.agencyAbbrs.${profile.id}`);
+export const agencyKey = (standardId: string, list: AgencyList): string => (list === "names" ? `nd30.agencies.${standardId}` : `nd30.agencyAbbrs.${standardId}`);
+const keyOf = (profile: StandardProfile, list: AgencyList): string => agencyKey(profile.id, list);
 
 export function listAgencies(store: KeyValueStore, profile: StandardProfile, list: AgencyList = "names"): string[] {
   try {

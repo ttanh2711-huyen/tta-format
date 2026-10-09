@@ -18,7 +18,7 @@ export type PresetResult = { ok: true; preset: Preset } | { ok: false; reason: s
 export type SimpleResult = { ok: true } | { ok: false; reason: string };
 
 const PRESETS_KEY = "nd30.presets";
-const defaultsKey = (standardId: StandardId): string => `nd30.defaults.${standardId}`;
+export const defaultsKey = (standardId: StandardId): string => `nd30.defaults.${standardId}`;
 const BUILT_IN_REASON = "Preset có sẵn của chuẩn, không thể đổi tên hoặc xoá. Hãy nhân bản để chỉnh sửa.";
 
 function readJson(store: KeyValueStore, key: string): unknown {
@@ -33,7 +33,7 @@ function readJson(store: KeyValueStore, key: string): unknown {
   }
 }
 
-function isPreset(value: unknown): value is Preset {
+export function isPreset(value: unknown): value is Preset {
   if (typeof value !== "object" || value === null) {
     return false;
   }
@@ -48,12 +48,12 @@ function isPreset(value: unknown): value is Preset {
   );
 }
 
-function readUserPresets(store: KeyValueStore): Preset[] {
+export function readUserPresets(store: KeyValueStore): Preset[] {
   const parsed = readJson(store, PRESETS_KEY);
   return Array.isArray(parsed) ? parsed.filter(isPreset) : [];
 }
 
-function writeUserPresets(store: KeyValueStore, presets: Preset[]): void {
+export function writeUserPresets(store: KeyValueStore, presets: Preset[]): void {
   store.set(PRESETS_KEY, JSON.stringify(presets));
 }
 

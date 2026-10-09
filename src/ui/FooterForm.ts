@@ -2,6 +2,7 @@ import { insertFooterBlock } from "../office/insertFooter";
 import { buildPartyFooterBlock, partyFooterFromOptions, validatePartyFooter, type PartyFooterInput } from "../standards/hd05/footerBlock";
 import { MAX_POSITION_LINES, buildFooterBlock, findAcademicTitle, footerInputFromOptions, validateFooterInput, type FooterBlockInput } from "../ooxml/footerBlock";
 import type { FormatValues } from "../settings/formatOptions";
+import type { AgencyProfile } from "../settings/profile";
 import type { StandardProfile } from "../standards/types";
 
 export interface FooterFormDeps {
@@ -32,7 +33,7 @@ export type FooterCollect =
   | { ok: true; kind: "dang"; input: PartyFooterInput; academicTitle: string | null }
   | { ok: false; error: string };
 
-export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): { refresh: () => void; collect: () => FooterCollect } {
+export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): { refresh: () => void; collect: () => FooterCollect; applyAgency: (agency: AgencyProfile) => void } {
   let recipients = "Như trên";
   let luu = "VT";
   let authority = "";
@@ -181,5 +182,11 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
       render();
     },
     collect,
+    applyAgency: (agency) => {
+      positionLines = agency.positionLines.length > 0 ? [...agency.positionLines] : [""];
+      if (agency.signerName !== "") signerName = agency.signerName;
+      show("", "");
+      render();
+    },
   };
 }
