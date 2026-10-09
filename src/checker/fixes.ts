@@ -46,6 +46,7 @@ export function applyFix(doc: CheckDocument, fix: Fix): CheckDocument {
               ...(fix.name === undefined ? {} : { fontName: fix.name }),
               ...(fix.bold === undefined ? {} : { bold: fix.bold }),
               ...(fix.italic === undefined ? {} : { italic: fix.italic }),
+              ...(fix.underline === undefined ? {} : { underline: fix.underline }),
               ...(fix.sizePt === undefined ? {} : { sizePt: fix.sizePt }),
             },
           };

@@ -65,7 +65,7 @@ export function checkParagraphs(doc: CheckDocument, profile: StandardProfile): I
     const bodyLike = isBodyLike(p, element);
     if (!bodyLike && element === undefined) continue;
     const location = { kind: "paragraph", index: p.index, excerpt: excerpt(r.text) } as const;
-    const add = (issue: Omit<Issue, "location" | "severity">) => issues.push({ severity: "error", location, ...issue });
+    const add = (issue: Omit<Issue, "location" | "severity"> & { severity?: Issue["severity"] }) => issues.push({ severity: "error", location, ...issue });
 
     if (r.fontName !== undefined && r.fontName.toLowerCase() !== profile.font.name.toLowerCase()) {
       add({
@@ -151,6 +151,21 @@ export function checkParagraphs(doc: CheckDocument, profile: StandardProfile): I
         actual: describeLine(r),
         expected,
         fix: lineFix(p.index, profile),
+      });
+    }
+
+    // Chỉ báo đoạn kết thúc bằng chữ hoặc số; kết thúc bằng ":", ";", "," là đoạn dẫn vào danh sách hoặc ý tiếp theo.
+    const text = r.text.trim();
+    if (content.endsWithPeriod && /[\p{L}\p{N}]$/u.test(text)) {
+      const tail = text.slice(-30);
+      add({
+        ruleId: "paragraph.endsWithPeriod",
+        severity: "warning",
+        message: "Nội dung văn bản phải kết thúc bằng dấu chấm.",
+        reference: content.source,
+        actual: text.slice(-1),
+        expected: ".",
+        fix: { kind: "replace", index: p.index, find: tail, replacement: `${tail}.`, label: "Thêm dấu chấm cuối đoạn" },
       });
     }
   }

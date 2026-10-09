@@ -304,3 +304,20 @@ describe("sửa lỗi trang và đoạn bằng cách sửa đi kèm", () => {
     expect(issues.filter((i) => i.ruleId === "page.orientation").every((i) => i.fix === undefined)).toBe(true);
   });
 });
+
+describe("nội dung kết thúc bằng dấu chấm (chuẩn Đảng)", () => {
+  const noPeriod = LONG.replace(/\.$/, "");
+
+  it("đoạn kết thúc bằng chữ bị cảnh báo kèm cách sửa; chuẩn Chính quyền không có quy tắc này", () => {
+    const issues = check(HD05, [paragraph({ text: noPeriod, ...NORMAL_HD05 })]);
+    expect(ids(issues)).toEqual(["paragraph.endsWithPeriod"]);
+    expect(issues[0].severity).toBe("warning");
+    const doc: CheckDocument = { pages: [pageOf(HD05)], paragraphs: [{ ...paragraph({ text: noPeriod, ...NORMAL_HD05 }), index: 0 }] };
+    expect(runChecks(applyFix(doc, issues[0].fix!), HD05)).toEqual([]);
+    expect(check(ND30, [paragraph({ text: noPeriod, ...NORMAL_ND30 })])).toEqual([]);
+  });
+
+  it("đoạn kết thúc bằng dấu hai chấm, chấm phẩy hoặc chấm thì không báo", () => {
+    for (const end of [":", ";", "."]) expect(check(HD05, [paragraph({ text: `${noPeriod}${end}`, ...NORMAL_HD05 })])).toEqual([]);
+  });
+});

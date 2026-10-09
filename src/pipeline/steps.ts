@@ -106,7 +106,7 @@ const tableStep: PipelineStep<FixAllContext> = {
 /** Lỗi khối đầu, khối cuối của chuẩn đang chọn, đọc lại từ tài liệu. */
 async function headerFooterIssues(profile: StandardProfile) {
   const rules = headerFooterRules(profile);
-  return rules.length === 0 ? [] : runChecks(await readCheckDocument(), profile, rules).filter((issue) => issue.ruleId.startsWith("header.") || issue.ruleId.startsWith("footer."));
+  return rules.length === 0 ? [] : runChecks(await readCheckDocument(), profile, rules).filter((issue) => issue.ruleId.startsWith("header.") || issue.ruleId.startsWith("footer.") || issue.ruleId.startsWith("title."));
 }
 
 export const headerFooterStep: PipelineStep<FixAllContext> = {

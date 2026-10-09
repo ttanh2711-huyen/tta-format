@@ -448,14 +448,15 @@ Dùng lại bảng quy tắc ở mục 6B của `plan.md`, bộ style `HD05_*` (
 ### T14B: Kiểm tra lỗi thể thức theo chuẩn Đảng (HD 05)
 **Mô tả:** Thêm bộ quy tắc kiểm tra cho chuẩn Đảng vào engine T13: lề 20/20/30/15 mm (và đối xứng khi in hai mặt), giãn dòng Exactly 18–22 pt, thụt dòng đầu khoảng 10 mm, cỡ chữ từng thành phần theo bảng 6B, tiêu đề "ĐẢNG CỘNG SẢN VIỆT NAM" đúng chữ, dấu `*`, "Số 05-HD/VPTW" (không dấu hai chấm, số 0 phía trước, "-" và "/" đúng chỗ), ngày tháng, 5 dấu gạch nối dưới trích yếu, chức vụ không đậm, "Nơi nhận" gạch chân, số trang cách mép trên 10 mm và ẩn ở trang 1, nội dung kết thúc bằng dấu chấm, bố cục Phần/Chương/Mục/Điều/Khoản/Điểm. Mỗi lỗi có nút "Sửa" khi sửa được tự động.
 **Tiêu chí nghiệm thu:**
-- [ ] Phát hiện đúng các lỗi phổ biến: dùng tiêu ngữ của chính quyền, ghi "Số:" có dấu hai chấm, thiếu 5 dấu gạch nối, giãn dòng sai kiểu (Single thay vì Exactly), chức vụ in đậm, thiếu số 0
-- [ ] Cảnh báo khi tài liệu trộn dấu hiệu của hai chuẩn (có cả quốc hiệu Chính quyền và tiêu đề Đảng)
-- [ ] Văn bản chuẩn Đảng tạo từ TD5 cho 0 lỗi; văn bản chuẩn Chính quyền không bị báo theo luật Đảng
-- [ ] Đăng ký bước "Chuẩn hoá khối đầu/cuối (Đảng)" vào "Chỉnh toàn bộ" (T6C): chỉ sửa định dạng, không đổi chữ; không tự đổi tiêu đề từ chuẩn này sang chuẩn kia (đổi chuẩn là thao tác riêng có xác nhận ở T6B)
+- [x] Phát hiện đúng các lỗi phổ biến: dùng tiêu ngữ của chính quyền, ghi "Số:" có dấu hai chấm, thiếu 5 dấu gạch nối, giãn dòng sai kiểu (Single thay vì Exactly), chức vụ in đậm, thiếu số 0
+- [x] Cảnh báo khi tài liệu trộn dấu hiệu của hai chuẩn (có cả quốc hiệu Chính quyền và tiêu đề Đảng)
+- [x] Văn bản chuẩn Đảng tạo từ TD5 cho 0 lỗi; văn bản chuẩn Chính quyền không bị báo theo luật Đảng
+- [x] Đăng ký bước "Chuẩn hoá khối đầu/cuối (Đảng)" vào "Chỉnh toàn bộ" (T6C): chỉ sửa định dạng, không đổi chữ; không tự đổi tiêu đề từ chuẩn này sang chuẩn kia (đổi chuẩn là thao tác riêng có xác nhận ở T6B)
 **Kiểm chứng:**
-- [ ] `npm test`: tối thiểu 30 ca có/không lỗi cho chuẩn Đảng
+- [x] `npm test`: tối thiểu 30 ca có/không lỗi cho chuẩn Đảng
 - [ ] Thủ công: tài liệu cố ý sai từng quy tắc; thêm một văn bản Đảng thật bạn đang có (đã ẩn thông tin) nếu tiện, không bắt buộc
 **Phụ thuộc:** T13, TD1–TD4
+**Trạng thái:** mã và test xong (39 ca ở `src/standards/hd05/checks.test.ts`, 2 ca ở `engine.test.ts`; 820 test); `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Quy tắc: tiêu đề Đảng (chữ, đậm, cỡ 15), tiêu ngữ Chính quyền trong văn bản Đảng, cơ quan ban hành (hoa, đậm, cỡ) và dấu `*`, "Số 05-HD/VPTW" (dấu hai chấm, số 0, khoảng trắng; ghi kiểu Chính quyền chỉ báo), ngày tháng (dùng chung với Chính quyền, thêm in nghiêng), nhãn Kính gửi/Kính trình nghiêng, thể loại, trích yếu, 5 dấu gạch nối (sai số lượng sửa được; thiếu cả dòng chỉ báo), "Nơi nhận" gạch chân, danh sách nơi nhận, quyền hạn T/M, K/T, T/L (TM., KT., TL. tự sửa; TUQ. chỉ báo), chức vụ hoa và không đậm, họ tên; nội dung kết thúc bằng chữ/số thì cảnh báo thiếu dấu chấm (quy tắc chung `paragraph.endsWithPeriod`). Cảnh báo trộn hai chuẩn (`header.mixed`) và tiêu đề của chuẩn khác (`header.otherStandard`) dùng chung cho cả hai chuẩn (`checker/mixedStandards.ts`); hàm chung chuyển sang `checker/common.ts`. Bước 5 của "Chỉnh toàn bộ" dùng chung cho hai chuẩn (chọn quy tắc theo `headerKind`), chỉ sửa định dạng (đậm, nghiêng, gạch chân, cỡ chữ), nay tính cả lỗi `title.*`. **Giới hạn**: thể loại nhận diện là đoạn in hoa căn giữa đầu tiên trong 6 đoạn thân đầu; chưa kiểm số trang ẩn ở trang 1 và khoảng cách 10 mm trong header, bố cục Phần/Chương/Mục/Điều/Khoản/Điểm, ký hiệu người soạn; khối ký không đi kèm "Nơi nhận:" thì không được kiểm.
 **File dự kiến:** `src/standards/hd05/checks.ts`, `src/standards/hd05/fixes.ts`, `src/checker/engine.ts`, `src/standards/hd05/checks.test.ts`
 **Kích cỡ:** M
 

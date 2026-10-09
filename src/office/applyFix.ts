@@ -55,6 +55,7 @@ export async function applyFixes(fixes: readonly Fix[]): Promise<ApplyFixResult>
         if (fix.name !== undefined) paragraph.font.name = fix.name;
         if (fix.bold !== undefined) paragraph.font.bold = fix.bold;
         if (fix.italic !== undefined) paragraph.font.italic = fix.italic;
+        if (fix.underline !== undefined) paragraph.font.underline = fix.underline ? "Single" : "None";
         if (fix.sizePt !== undefined) paragraph.font.size = fix.sizePt;
         applied += 1;
       } else if (fix.kind === "paragraph") {
