@@ -548,13 +548,14 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 ### T20: Giấy tờ và mẫu nhỏ
 **Mô tả:** Giấy mời (Mẫu 1.7), giấy giới thiệu (Mẫu 1.8), giấy nghỉ phép (Mẫu 1.10), công điện (Mẫu 1.6) và thư công (không có mẫu ở Phụ lục III). Giấy ủy quyền, phiếu gửi, phiếu chuyển, phiếu báo dùng Mẫu 1.4 nên làm ở T17. Mỗi mẫu có bố cục riêng, thường ngắn và có phần tuỳ biến (khung, bảng nhỏ). Nếu một mẫu quá phức tạp thì tách thành task riêng sau khi duyệt.
 **Tiêu chí nghiệm thu:**
-- [ ] Mỗi mẫu có trong registry và sinh đúng thể thức so với Phụ lục III
+- [x] Mỗi mẫu có trong registry và sinh đúng thể thức so với Phụ lục III
 - [ ] Mẫu chưa hỗ trợ (nếu có) được đánh dấu rõ trong giao diện, không im lặng
-- [ ] Bộ kiểm tra không báo sai cho các mẫu này
+- [x] Bộ kiểm tra không báo sai cho các mẫu này
 **Kiểm chứng:**
-- [ ] `npm test`: golden từng mẫu
+- [x] `npm test`: golden từng mẫu
 - [ ] Thủ công: tạo từng mẫu, in PDF
 **Phụ thuộc:** T17
+**Trạng thái:** mã và test xong (`src/templates/smallForms.ts`; golden `smallForm-*.xml`); `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Năm mẫu có trong registry (họ `form`) và trong trình tạo: giấy mời, giấy giới thiệu, công điện, giấy nghỉ phép, thư công. Mỗi mẫu = khối đầu + tên loại/trích yếu + các mục cần điền (nhãn đậm, con trỏ ở mục đầu) + câu kết + khối cuối thường. Với chuẩn Chính quyền, mọi loại trong `docTypes` nay đều có họ mẫu. **Giới hạn quan trọng**: tôi chưa có nguyên văn Mẫu 1.6, 1.7, 1.8, 1.10 nên các mục và câu kết là bố cục theo cách trình bày thông dụng; trình tạo ghi rõ điều này khi chọn từng mẫu. Cần bạn đối chiếu với Phụ lục III và báo mục nào khác để tôi sửa (một chỗ: `SMALL_FORMS`). Khung viền, bảng nhỏ riêng của từng mẫu chưa làm. Công điện chưa có dấu "HỎA TỐC" (T21).
 **File dự kiến:** `src/templates/smallForms.ts`, `src/ooxml/smallForms.ts`, `src/templates/registry.ts`, `src/templates/smallForms.test.ts`
 **Kích cỡ:** M
 

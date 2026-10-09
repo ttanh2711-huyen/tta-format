@@ -14,9 +14,10 @@ import type { DecisionKind } from "./quyetDinh";
  * - decision: nghị quyết, quyết định cá biệt (căn cứ, dòng chốt, Điều đánh số tự động);
  * - regulation: quy chế, quy định (Chương, Mục, Điều, Khoản đánh số tự động);
  * - minutes: biên bản (các mục đầu, khối ký chủ tọa và thư ký);
- * - agreement: hợp đồng, bản ghi nhớ, bản thỏa thuận (các bên, các Điều, khối ký 2 đến 4 bên).
+ * - agreement: hợp đồng, bản ghi nhớ, bản thỏa thuận (các bên, các Điều, khối ký 2 đến 4 bên);
+ * - form: giấy tờ và mẫu nhỏ (giấy mời, giấy giới thiệu, công điện, giấy nghỉ phép, thư công): các mục cần điền.
  */
-export type TemplateFamily = "congVan" | "titled" | "toTrinh" | "decision" | "regulation" | "minutes" | "agreement";
+export type TemplateFamily = "congVan" | "titled" | "toTrinh" | "decision" | "regulation" | "minutes" | "agreement" | "form";
 
 export interface TemplateEntry {
   /** Khoá duy nhất trong ô chọn; thường là mã loại, loại có hai biến thể thì kèm hậu tố. */
@@ -66,6 +67,11 @@ const BY_ID: Record<Headers, Record<string, FamilySpec>> = {
     "hop-dong": { family: "agreement" },
     "ban-ghi-nho": { family: "agreement" },
     "ban-thoa-thuan": { family: "agreement" },
+    "giay-moi": { family: "form" },
+    "giay-gioi-thieu": { family: "form" },
+    "cong-dien": { family: "form" },
+    "giay-nghi-phep": { family: "form" },
+    "thu-cong": { family: "form" },
   },
   dang: { "to-trinh": { family: "toTrinh" } },
 };

@@ -10,6 +10,7 @@ import { findTemplate, templatesFor, type TemplateEntry } from "../templates/reg
 import { multiSignFromOptions, parseSignLines, validateMultiSign } from "../ooxml/multiSignBlock";
 import { assembleMinutesBody, defaultMinutesParties } from "../templates/bienBan";
 import { agreementNumberingXml, assembleAgreementBody, defaultAgreementParties, MAX_ARTICLES as MAX_AGREEMENT_ARTICLES, validateAgreement } from "../templates/hopDong";
+import { assembleSmallFormBody, findSmallForm } from "../templates/smallForms";
 import { assembleRegulationBody, MAX_ARTICLES_PER_CHAPTER, MAX_CHAPTERS, regulationInputFromOptions, regulationNumberingXml, validateRegulation } from "../templates/quyChe";
 import { assembleDecisionBody, decisionInputFromOptions, decisionKindInfo, decisionNumberingXml, MAX_ARTICLES, validateDecision } from "../templates/quyetDinh";
 import { assemblePartyDocumentBody } from "../standards/hd05/assembleDocument";
@@ -123,6 +124,11 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
         el.addEventListener("input", () => onInput(el.value));
         return create("div", {}, el);
       };
+    if (entry?.family === "form") {
+      const smallForm = findSmallForm(entry.docTypeId);
+      formBox.append(create("p", { className: "note", textContent: `Khối đầu đã chuyển sang "Văn bản có tên loại"; nhập trích yếu. Add-in dựng các mục cần điền (${smallForm?.fields.join(" ")}) rồi khối cuối. Lưu ý: ${smallForm?.source ?? ""}.` }));
+      return;
+    }
     if (entry?.family === "minutes" || entry?.family === "agreement") {
       if (signed.lines.trim() === "") signed.lines = (entry.family === "minutes" ? defaultMinutesParties() : defaultAgreementParties(2)).map((p) => `${p.title} | |`).join("\n");
       const lines = create("textarea", { id: "nw-sign-lines", rows: 4, value: signed.lines, placeholder: "Mỗi bên một dòng: Tên bên | Chức vụ | Họ tên (2 đến 4 bên)" });
@@ -211,6 +217,14 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
       }
     } else if (!footer.ok) {
       return;
+    } else if (header.kind === "quocHieu" && footer.kind === "quocHieu" && entry?.family === "form") {
+      const smallForm = findSmallForm(entry.docTypeId);
+      if (!smallForm || header.titleInput?.variant !== "named") {
+        show("error", "Ở Khối đầu hãy chọn \"Văn bản có tên loại\" và nhập trích yếu.");
+        return;
+      }
+      const document = { header: header.input, title: { ...header.titleInput, typeName: entry.typeName }, footer: footer.input };
+      parts = { buildBody: () => assembleSmallFormBody(document, smallForm, profile.styles.prefix), headText: QUOC_HIEU, signerName: footer.input.signerName };
     } else if (header.kind === "quocHieu" && footer.kind === "quocHieu" && entry?.family === "regulation") {
       if (header.titleInput?.variant !== "named") {
         show("error", "Ở Khối đầu hãy chọn \"Văn bản có tên loại\" và nhập trích yếu.");

@@ -50,8 +50,13 @@ describe("registry loại văn bản", () => {
     for (const id of ["hop-dong", "ban-ghi-nho", "ban-thoa-thuan"]) expect(findTemplate(ND30, id)?.family).toBe("agreement");
   });
 
+  it("giấy tờ nhỏ của chuẩn Chính quyền có họ mẫu form; mọi loại của chuẩn này đều được hỗ trợ", () => {
+    for (const id of ["giay-moi", "giay-gioi-thieu", "cong-dien", "giay-nghi-phep", "thu-cong"]) expect(findTemplate(ND30, id)?.family).toBe("form");
+    expect(templatesFor(ND30).filter((entry) => !entry.supported)).toEqual([]);
+  });
+
   it("loại chưa có họ mẫu hiện kèm lý do, không bị ẩn", () => {
-    const entry = findTemplate(ND30, "cong-dien");
+    const entry = findTemplate(HD05, "giay-chung-nhan");
     expect(entry).toMatchObject({ supported: false, family: null });
     expect(entry?.reason).toContain("chưa có mẫu");
   });
