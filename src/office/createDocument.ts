@@ -15,6 +15,8 @@ export interface LetterContext extends FixAllContext {
   signerName: string;
   /** Phần numbering.xml (cả thẻ `w:numbering`) nếu thân văn bản dùng đánh số tự động (Điều, Khoản, Điểm). */
   numberingXml?: string;
+  /** Tên style của đoạn chỗ nội dung nếu không phải style nội dung (ví dụ tên Chương của quy chế); bỏ trống thì dùng style nội dung. */
+  markerStyle?: string;
 }
 
 const insertStep: PipelineStep<LetterContext> = {
@@ -52,9 +54,10 @@ const insertStep: PipelineStep<LetterContext> = {
       } else {
         marker.insertText("", "Replace");
       }
-      if (marker.style !== bodyStyle) {
-        marker.style = bodyStyle;
-        if (exactPt !== undefined) notes.push(`Đoạn nội dung phải gán lại style ${bodyStyle} nên giãn dòng Exactly ${exactPt} pt có thể chưa còn; bấm "Định dạng nội dung" để đặt lại.`);
+      const markerStyle = ctx.markerStyle ?? bodyStyle;
+      if (marker.style !== markerStyle) {
+        marker.style = markerStyle;
+        if (exactPt !== undefined && !ctx.markerStyle) notes.push(`Đoạn nội dung phải gán lại style ${bodyStyle} nên giãn dòng Exactly ${exactPt} pt có thể chưa còn; bấm "Định dạng nội dung" để đặt lại.`);
       }
       if (hasLead) marker.select("End");
       else marker.select();
@@ -65,7 +68,7 @@ const insertStep: PipelineStep<LetterContext> = {
       last.load("values");
       await context.sync();
 
-      if (exactPt !== undefined && !hasExactLineRule(markerXml.value, Math.round(exactPt * 20))) {
+      if (exactPt !== undefined && !ctx.markerStyle && !hasExactLineRule(markerXml.value, Math.round(exactPt * 20))) {
         notes.push(`Giãn dòng Exactly ${exactPt} pt chưa đặt được cho đoạn nội dung; bấm "Định dạng nội dung" sau khi gõ.`);
       }
       const headOk = first.values.some((row) => row.some((text) => text.includes(ctx.headText)));

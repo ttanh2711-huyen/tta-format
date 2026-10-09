@@ -11,9 +11,10 @@ import type { DecisionKind } from "./quyetDinh";
  * - congVan: công văn (V/v và Kính gửi trong bảng đầu văn bản);
  * - titled: tên loại + trích yếu dưới khối đầu, rồi nội dung (Mẫu 1.4 của Chính quyền, thể loại của Đảng);
  * - toTrinh: như titled nhưng có "Kính trình" (chuẩn Đảng);
- * - decision: nghị quyết, quyết định cá biệt (căn cứ, dòng chốt, Điều đánh số tự động).
+ * - decision: nghị quyết, quyết định cá biệt (căn cứ, dòng chốt, Điều đánh số tự động);
+ * - regulation: quy chế, quy định (Chương, Mục, Điều, Khoản đánh số tự động).
  */
-export type TemplateFamily = "congVan" | "titled" | "toTrinh" | "decision";
+export type TemplateFamily = "congVan" | "titled" | "toTrinh" | "decision" | "regulation";
 
 export interface TemplateEntry {
   /** Khoá duy nhất trong ô chọn; thường là mã loại, loại có hai biến thể thì kèm hậu tố. */
@@ -56,7 +57,7 @@ const FAMILIES: Record<Headers, Record<string, FamilySpec>> = {
 
 /** Riêng một số loại có họ mẫu khác họ bố cục của chúng. */
 const BY_ID: Record<Headers, Record<string, FamilySpec>> = {
-  quocHieu: {},
+  quocHieu: { "quy-che": { family: "regulation" }, "quy-dinh": { family: "regulation" } },
   dang: { "to-trinh": { family: "toTrinh" } },
 };
 

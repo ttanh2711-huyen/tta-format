@@ -520,13 +520,14 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 ### T18: Quy chế, quy định (Chương/Mục/Điều)
 **Mô tả:** Họ mẫu có cấu trúc Chương, Mục, Điều, Khoản, Điểm với cỡ chữ và kiểu chữ từng cấp theo quy tắc; tên văn bản dạng "QUY CHẾ" kèm trích yếu và phần ban hành kèm theo.
 **Tiêu chí nghiệm thu:**
-- [ ] Chương/Mục/Điều đánh số tự động, đúng cấp và đúng kiểu chữ
-- [ ] Hai loại (quy chế, quy định) sinh đúng thể thức
-- [ ] Bộ kiểm tra nhận biết cấu trúc Chương/Mục
+- [x] Chương/Mục/Điều đánh số tự động, đúng cấp và đúng kiểu chữ
+- [x] Hai loại (quy chế, quy định) sinh đúng thể thức
+- [x] Bộ kiểm tra nhận biết cấu trúc Chương/Mục
 **Kiểm chứng:**
-- [ ] `npm test`: golden OOXML numbering nhiều cấp
+- [x] `npm test`: golden OOXML numbering nhiều cấp
 - [ ] Thủ công: so mẫu Phụ lục III
 **Phụ thuộc:** T16, T17
+**Trạng thái:** mã và test xong (`src/templates/quyChe.ts`, `src/ooxml/numbering.ts` nay là bộ dựng danh sách nhiều cấp dùng chung, `src/standards/nd30/structureChecks.ts`; golden `quyChe-*.xml`); `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Loại "quy chế", "quy định" (chuẩn Chính quyền) có họ mẫu `regulation`: dòng "(Ban hành kèm theo ...)", rồi từng Chương (nhãn "Chương I" tự đánh số La Mã, tên Chương in hoa đậm ở đoạn dưới, con trỏ ở tên Chương 1), tuỳ chọn Mục ("Mục 1" + tên), các Điều "Điều N." (số chạy liên tục qua Chương/Mục, `lvlRestart=0`), mỗi Điều một Khoản "1."; Điểm "a)" có trong danh sách. Bộ kiểm tra `structure.*`: tên Chương/Mục in hoa và đậm, Điều đậm, nhãn "Điều N." gõ tay liên tục. **Rủi ro chưa thử**: `lvlRestart`, `suff=nothing`, nhãn La Mã tự đánh số khi nhận qua `insertOoxml`. **Cần bạn duyệt**: dòng "ban hành kèm theo" (docs/nd30-ambiguities.md mục 16).
 **File dự kiến:** `src/templates/quyChe.ts`, `src/ooxml/numbering.ts`, `src/checker/headerRules.ts`, `src/templates/quyChe.test.ts`
 **Kích cỡ:** M
 

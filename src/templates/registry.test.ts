@@ -15,11 +15,12 @@ describe("registry loại văn bản", () => {
     expect(new Set(entries.map((entry) => entry.key)).size).toBe(entries.length);
   });
 
-  it("chuẩn Chính quyền: 17 loại dùng Mẫu 1.4 đều là họ có tên loại", () => {
+  it("chuẩn Chính quyền: 17 loại dùng Mẫu 1.4, trong đó quy chế và quy định có cấu trúc Chương/Điều", () => {
     const titled = templatesFor(ND30).filter((entry) => entry.family === "titled");
-    expect(titled).toHaveLength(ND30.docTypes.filter((type) => type.layout === "co-ten-loai").length);
-    expect(titled).toHaveLength(17);
-    expect(titled.map((entry) => entry.docTypeId)).toEqual(expect.arrayContaining(["chi-thi", "quy-che", "thong-bao", "ke-hoach", "bao-cao", "to-trinh", "giay-uy-quyen", "phieu-gui", "phieu-chuyen", "phieu-bao"]));
+    expect(titled).toHaveLength(15);
+    expect(templatesFor(ND30).filter((entry) => entry.family === "regulation").map((entry) => entry.docTypeId)).toEqual(["quy-che", "quy-dinh"]);
+    expect(titled.length + 2).toBe(ND30.docTypes.filter((type) => type.layout === "co-ten-loai").length);
+    expect(titled.map((entry) => entry.docTypeId)).toEqual(expect.arrayContaining(["chi-thi", "thong-bao", "ke-hoach", "bao-cao", "to-trinh", "giay-uy-quyen", "phieu-gui", "phieu-chuyen", "phieu-bao"]));
   });
 
   it("chữ viết tắt gợi ý theo từng loại", () => {

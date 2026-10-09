@@ -7,6 +7,7 @@ import type { StyleSpec } from "../ooxml/styleSpecs";
 import { assembleDocumentBody } from "../ooxml/documentAssembler";
 import { QUOC_HIEU } from "../ooxml/headerBlock";
 import { findTemplate, templatesFor, type TemplateEntry } from "../templates/registry";
+import { assembleRegulationBody, MAX_ARTICLES_PER_CHAPTER, MAX_CHAPTERS, regulationInputFromOptions, regulationNumberingXml, validateRegulation } from "../templates/quyChe";
 import { assembleDecisionBody, decisionInputFromOptions, decisionKindInfo, decisionNumberingXml, MAX_ARTICLES, validateDecision } from "../templates/quyetDinh";
 import { assemblePartyDocumentBody } from "../standards/hd05/assembleDocument";
 import type { StandardId, StandardProfile } from "../standards/types";
@@ -26,7 +27,7 @@ export interface NewDocWizardDeps {
   writeStandard?: (id: StandardId) => Promise<void>;
 }
 
-type DocumentParts = Pick<LetterContext, "buildBody" | "headText" | "signerName" | "numberingXml">;
+type DocumentParts = Pick<LetterContext, "buildBody" | "headText" | "signerName" | "numberingXml" | "markerStyle">;
 
 function create<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -60,6 +61,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
 
   let entryKey = "cong-van";
   const decision = { authority: "", basis: "", articles: "3" };
+  const regulation = { chapters: "3", articles: "2", sections: false, attached: "" };
   const note = create("p", { className: "note" });
   const formBox = create("div", { id: "nw-form" });
   const create_ = button("Tạo công văn", () => void onCreate(false), { id: "nw-create" });
@@ -112,12 +114,27 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
     });
     formBox.append(create("label", {}, "Loại văn bản ", select));
     const entry = findTemplate(profile, entryKey);
+    const field =
+      (el: HTMLInputElement | HTMLTextAreaElement, onInput: (v: string) => void): HTMLElement => {
+        el.addEventListener("input", () => onInput(el.value));
+        return create("div", {}, el);
+      };
+    if (entry?.family === "regulation") {
+      const sections = create("input", { type: "checkbox", id: "nw-sections", checked: regulation.sections });
+      sections.addEventListener("change", () => {
+        regulation.sections = sections.checked;
+      });
+      formBox.append(
+        create("p", { className: "note", textContent: `Khối đầu đã chuyển sang "Văn bản có tên loại"; nhập trích yếu (ví dụ "Làm việc của ..."). Add-in dựng các Chương (nhãn tự đánh số La Mã, tên Chương in hoa đậm), các Điều (số chạy liên tục) và Khoản; con trỏ ở tên Chương thứ nhất.` }),
+        field(create("input", { type: "text", id: "nw-attached", value: regulation.attached, placeholder: "Dòng ban hành kèm theo, ví dụ Ban hành kèm theo Quyết định số ... ngày ... của ..." }), (v) => (regulation.attached = v)),
+        field(create("input", { type: "text", id: "nw-chapters", value: regulation.chapters, placeholder: `Số Chương (1 đến ${MAX_CHAPTERS})`, inputMode: "numeric" }), (v) => (regulation.chapters = v)),
+        field(create("input", { type: "text", id: "nw-reg-articles", value: regulation.articles, placeholder: `Số Điều mỗi Chương (1 đến ${MAX_ARTICLES_PER_CHAPTER})`, inputMode: "numeric" }), (v) => (regulation.articles = v)),
+        create("label", {}, sections, " Mỗi Chương có một Mục"),
+      );
+      return;
+    }
     if (entry?.family !== "decision" || !entry.decisionKind) return;
     const info = decisionKindInfo(entry.decisionKind);
-    const field = (el: HTMLInputElement | HTMLTextAreaElement, onInput: (v: string) => void): HTMLElement => {
-      el.addEventListener("input", () => onInput(el.value));
-      return create("div", {}, el);
-    };
     formBox.append(
       create("p", { className: "note", textContent: `Khối đầu đã chuyển sang "Văn bản có tên loại"; nhập trích yếu (ví dụ "Về việc ..."). Add-in tự ghi tên loại "${info.typeName.toUpperCase()}". Phần dưới tạo thẩm quyền ban hành, căn cứ, dòng "${info.verdict}" và các Điều đánh số tự động.` }),
       field(create("input", { type: "text", id: "nw-authority", value: decision.authority, placeholder: "Thẩm quyền ban hành, ví dụ Chủ tịch Ủy ban nhân dân thành phố" }), (v) => (decision.authority = v)),
@@ -148,7 +165,26 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
     const profile = deps.currentStandard();
     let parts: DocumentParts;
     const entry = findTemplate(profile, entryKey);
-    if (header.kind === "quocHieu" && footer.kind === "quocHieu" && entry?.family === "decision" && entry.decisionKind) {
+    if (header.kind === "quocHieu" && footer.kind === "quocHieu" && entry?.family === "regulation") {
+      if (header.titleInput?.variant !== "named") {
+        show("error", "Ở Khối đầu hãy chọn \"Văn bản có tên loại\" và nhập trích yếu.");
+        return;
+      }
+      const regulationInput = regulationInputFromOptions(profile, deps.values(), { chapters: Number(regulation.chapters), articlesPerChapter: Number(regulation.articles), withSections: regulation.sections, attachedLine: regulation.attached });
+      const regulationProblems = validateRegulation(regulationInput);
+      if (regulationProblems.length > 0) {
+        show("error", regulationProblems.join(" "));
+        return;
+      }
+      const document = { header: header.input, title: { ...header.titleInput, typeName: entry.typeName }, footer: footer.input };
+      parts = {
+        buildBody: () => assembleRegulationBody(document, regulationInput),
+        headText: QUOC_HIEU,
+        signerName: footer.input.signerName,
+        numberingXml: regulationNumberingXml(regulationInput),
+        markerStyle: `${profile.styles.prefix}TieuDePhanChuong`,
+      };
+    } else if (header.kind === "quocHieu" && footer.kind === "quocHieu" && entry?.family === "decision" && entry.decisionKind) {
       if (header.titleInput?.variant !== "named") {
         show("error", "Ở Khối đầu hãy chọn \"Văn bản có tên loại\" và nhập trích yếu.");
         return;
