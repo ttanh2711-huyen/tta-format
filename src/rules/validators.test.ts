@@ -20,6 +20,12 @@ describe("soText: số và ký hiệu", () => {
     expect(soText(HD05, { so: null, typeAbbr: "HD", agencyAbbrs: ["VPTW"] })).toEqual({ ok: true, text: `Số ${GAP}-HD/VPTW` });
   });
 
+  it("chuẩn Đảng: các ví dụ trong hướng dẫn, kể cả liên cơ quan và văn bản đại hội", () => {
+    expect(soText(HD05, { so: 127, typeAbbr: "QĐ", agencyAbbrs: ["TW"] })).toEqual({ ok: true, text: "Số 127-QĐ/TW" });
+    expect(soText(HD05, { so: 5, typeAbbr: "QC", agencyAbbrs: ["BTCTU", "BNCTU"] })).toEqual({ ok: true, text: "Số 05-QC/BTCTU-BNCTU" });
+    expect(soText(HD05, { so: 1, typeAbbr: "BC", agencyAbbrs: ["ĐH"] })).toEqual({ ok: true, text: "Số 01-BC/ĐH" });
+  });
+
   it.each([0, 1.5, -3])("số %p không hợp lệ bị từ chối", (so) => {
     expect(soText(ND30, { so, typeAbbr: null, agencyAbbrs: ["A"] })).toEqual({ ok: false, error: "Số văn bản phải là số nguyên dương." });
   });
@@ -78,6 +84,11 @@ describe("placeDateText: địa danh và ngày tháng", () => {
     [{ day: 1.5, month: 1, year: 2020 }, "Ngày phải từ 1 đến 31."],
   ])("giá trị ngoài khoảng bị từ chối %#", (input, error) => {
     expect(placeDateText({ place: "A", ...input })).toEqual({ ok: false, error });
+  });
+
+  it("cấp hành chính ghi trước địa danh được giữ nguyên", () => {
+    expect(placeDateText({ place: "TP. Huế", day: 3, month: 2, year: 2026 })).toEqual({ ok: true, text: "TP. Huế, ngày 03 tháng 02 năm 2026" });
+    expect(placeDateText({ place: "Phường Ngô Quyền", day: 20, month: 10, year: 2025 })).toMatchObject({ ok: true, text: "Phường Ngô Quyền, ngày 20 tháng 10 năm 2025" });
   });
 
   it("địa danh bắt buộc, khoảng trắng thừa được gọn", () => {

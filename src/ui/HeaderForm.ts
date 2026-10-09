@@ -69,17 +69,19 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
   /** Đọc và kiểm tra các ô đang nhập; dùng chung cho nút "Chèn khối đầu" và trình tạo công văn. */
   function collect(): HeaderCollect {
     const profile = deps.currentStandard();
-    if (profile.headerKind === "dang") {
-      const partyInput = partyHeaderFromOptions(profile, deps.values(), { parentLines: hasParent ? parentLines : [], issuerLines: issuer.split(/\r?\n/) });
-      const partyProblems = validatePartyHeader(partyInput);
-      return partyProblems.length > 0 ? { ok: false, error: partyProblems.join(" ") } : { ok: true, kind: "dang", input: partyInput };
-    }
     let numberRow: { so: string; placeDate: string } | undefined;
     if (withNumberRow) {
       const so = soText(profile, { so: toInt(number.so), typeAbbr: number.typeAbbr.trim() === "" ? null : number.typeAbbr.trim(), agencyAbbrs: number.agencyAbbrs.split("-").map((part) => part.trim()).filter((part) => part !== "") });
       const date = placeDateText({ place, day: toInt(number.day), month: toInt(number.month), year: toInt(number.year) });
       if (!so.ok || !date.ok) return { ok: false, error: [so.ok ? "" : so.error, date.ok ? "" : date.error].filter(Boolean).join(" ") };
       numberRow = { so: so.text, placeDate: date.text };
+    }
+    if (profile.headerKind === "dang") {
+      const partyInput = partyHeaderFromOptions(profile, deps.values(), { parentLines: hasParent ? parentLines : [], issuerLines: issuer.split(/\r?\n/), numberRow });
+      const partyProblems = validatePartyHeader(partyInput);
+      if (partyProblems.length > 0) return { ok: false, error: partyProblems.join(" ") };
+      if (numberRow) deps.store.set(PLACE_KEY, place.trim());
+      return { ok: true, kind: "dang", input: partyInput };
     }
     let subjectRow: { text: string } | undefined;
     let titleInput: TitleBlockInput | undefined;
@@ -192,6 +194,56 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
     return section;
   }
 
+  /** Gợi ý ký hiệu: chữ viết tắt loại từ bảng loại văn bản, chữ viết tắt cơ quan đã lưu và bảng tra của chuẩn. */
+  function suggestionSection(): HTMLElement {
+    const profile = deps.currentStandard();
+    const section = create("div", { className: "hf-suggest" });
+    const types = [...new Set(profile.docTypes.map((type) => type.abbr).filter((abbr): abbr is string => abbr !== null))];
+    if (types.length > 0) {
+      section.append(create("div", { className: "note", textContent: "Gợi ý viết tắt loại:" }));
+      for (const abbr of types) {
+        section.append(
+          button(abbr, () => {
+            number.typeAbbr = abbr;
+            render();
+          }, { title: profile.docTypes.filter((type) => type.abbr === abbr).map((type) => type.name).join(", ") }),
+        );
+      }
+    }
+    const append = (abbr: string) => {
+      number.agencyAbbrs = number.agencyAbbrs.trim() === "" ? abbr : `${number.agencyAbbrs.trim()}-${abbr}`;
+      render();
+    };
+    const saved = listAgencies(deps.store, profile, "abbrs");
+    section.append(
+      create("div", {},
+        button("Lưu viết tắt cơ quan", () => {
+          const result = saveAgency(deps.store, profile, number.agencyAbbrs, "abbrs");
+          if (result.ok) render();
+          show(result.ok ? "ok" : "error", result.ok ? "Đã lưu chữ viết tắt cơ quan." : result.reason);
+        }, { id: "hf-save-abbr" }),
+      ),
+    );
+    if (saved.length > 0) {
+      section.append(create("div", { className: "note", textContent: "Đã lưu:" }));
+      for (const abbr of saved) {
+        section.append(
+          button(abbr, () => append(abbr)),
+          button("×", () => {
+            removeAgency(deps.store, profile, abbr, "abbrs");
+            render();
+          }, { title: `Xoá "${abbr}" khỏi danh sách`, className: "hf-remove" }),
+        );
+      }
+    }
+    if (profile.agencyCodes) {
+      const details = create("details", {}, create("summary", { textContent: "Bảng ký hiệu cơ quan của chuẩn" }));
+      for (const agency of profile.agencyCodes) details.append(button(agency.code, () => append(agency.code), { title: agency.name }));
+      section.append(details);
+    }
+    return section;
+  }
+
   function numberSection(): HTMLElement {
     const toggle = create("input", { type: "checkbox", id: "hf-with-number", checked: withNumberRow });
     toggle.addEventListener("change", () => {
@@ -211,6 +263,7 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       field("hf-so", "Số", number.so, (v) => (number.so = v), 50),
       field("hf-type", "Viết tắt loại", number.typeAbbr, (v) => (number.typeAbbr = v), 60),
       field("hf-agency", "Viết tắt cơ quan (nối bằng -)", number.agencyAbbrs, (v) => (number.agencyAbbrs = v), 110),
+      suggestionSection(),
       create("div", {}, field("hf-place", "Địa danh", place, (v) => (place = v), 130)),
       create("div", {},
         field("hf-day", "Ngày", number.day, (v) => (number.day = v), 36),
@@ -273,9 +326,10 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
     body.replaceChildren();
     if (profile.headerKind === "dang") {
       body.append(
-        create("p", { className: "note", textContent: "Chèn bảng cơ quan cấp trên, cơ quan ban hành (dấu *) và tiêu đề ĐẢNG CỘNG SẢN VIỆT NAM ở đầu tài liệu. Số, ký hiệu, ngày tháng, thể loại và trích yếu sẽ có ở các bước TD2, TD3." }),
+        create("p", { className: "note", textContent: "Chèn bảng cơ quan cấp trên, cơ quan ban hành (dấu *) và tiêu đề ĐẢNG CỘNG SẢN VIỆT NAM ở đầu tài liệu. Thể loại và trích yếu sẽ có ở bước TD3." }),
         parentSection(),
         issuerSection(profile),
+        numberSection(),
       );
     } else {
       body.append(

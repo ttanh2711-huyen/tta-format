@@ -19,7 +19,9 @@ export interface PartyHeaderInput {
   parentLines: readonly string[];
   /** Cơ quan ban hành, từ 1 đến 3 dòng (liên cơ quan nhập mỗi cơ quan một dòng hoặc nối bằng dấu gạch nối). */
   issuerLines: readonly string[];
-  sizes: { title: number; parent: number; issuer: number };
+  sizes: { title: number; parent: number; issuer: number; so: number; placeDate: number };
+  /** Hàng thứ hai: số và ký hiệu (trái, dưới tên cơ quan) và địa danh, ngày tháng (phải), đã dựng sẵn thành chữ (TD2). */
+  numberRow?: { so: string; placeDate: string };
   /** Bề rộng vùng chữ (mm) mà bảng phải vừa. */
   textWidthMm: number;
 }
@@ -56,20 +58,31 @@ export function buildPartyHeaderBlock(input: PartyHeaderInput): string {
   ];
   const right = [textParagraph(title, input.sizes.title, { bold: true }), lineParagraph(Math.min(textWidthMm(title, input.sizes.title, true), rightMm), rightWidth)];
 
-  return borderlessTable(total, leftWidth, `<w:tr>${cell(leftWidth, left)}${cell(rightWidth, right)}</w:tr>`);
+  const numberRow = input.numberRow
+    ? `<w:tr>${cell(leftWidth, [textParagraph(input.numberRow.so, input.sizes.so, { beforePt: 6 })])}${cell(rightWidth, [
+        textParagraph(input.numberRow.placeDate, input.sizes.placeDate, { italic: true, beforePt: 6 }),
+      ])}</w:tr>`
+    : "";
+  return borderlessTable(total, leftWidth, `<w:tr>${cell(leftWidth, left)}${cell(rightWidth, right)}</w:tr>${numberRow}`);
 }
 
 /** Dựng thông số khối đầu chuẩn Đảng từ Tuỳ chọn nhanh: cỡ chữ và bề rộng vùng chữ theo lề đang chọn. */
 export function partyHeaderFromOptions(
   profile: StandardProfile,
   values: FormatValues,
-  text: { parentLines: readonly string[]; issuerLines: readonly string[] },
+  text: { parentLines: readonly string[]; issuerLines: readonly string[]; numberRow?: { so: string; placeDate: string } },
 ): PartyHeaderInput {
   const num = (id: string, fallback: number): number => (typeof values[id] === "number" ? (values[id] as number) : fallback);
   const fixed = profile.pageDefaults.marginsMm;
   return {
     ...text,
-    sizes: { title: num("size.tieuDe", 15), parent: num("size.coQuanCapTren", 14), issuer: num("size.coQuanBanHanh", 14) },
+    sizes: {
+      title: num("size.tieuDe", 15),
+      parent: num("size.coQuanCapTren", 14),
+      issuer: num("size.coQuanBanHanh", 14),
+      so: num("size.soKyHieu", 14),
+      placeDate: num("size.diaDanhNgayThang", 14),
+    },
     textWidthMm: profile.page.paper.widthMm - num("marginLeft", fixed.left) - num("marginRight", fixed.right),
   };
 }

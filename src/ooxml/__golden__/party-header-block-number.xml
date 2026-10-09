@@ -1,0 +1,144 @@
+<w:tbl>
+<w:tblPr>
+<w:tblW w:w="9354" w:type="dxa"/>
+<w:tblInd w:w="0" w:type="dxa"/>
+<w:tblBorders>
+<w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+<w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+<w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+<w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+<w:insideH w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+<w:insideV w:val="none" w:sz="0" w:space="0" w:color="auto"/>
+</w:tblBorders>
+<w:tblLayout w:type="fixed"/>
+<w:tblCellMar>
+<w:left w:w="0" w:type="dxa"/>
+<w:right w:w="0" w:type="dxa"/>
+</w:tblCellMar>
+</w:tblPr>
+<w:tblGrid>
+<w:gridCol w:w="4209"/>
+<w:gridCol w:w="5145"/>
+</w:tblGrid>
+<w:tr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:w="4209" w:type="dxa"/>
+</w:tcPr>
+<w:p>
+<w:pPr>
+<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+<w:jc w:val="center"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>
+<w:sz w:val="28"/>
+<w:szCs w:val="28"/>
+</w:rPr>
+<w:t xml:space="preserve">TỈNH ỦY ĐỒNG THÁP</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+<w:jc w:val="center"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>
+<w:b/>
+<w:sz w:val="28"/>
+<w:szCs w:val="28"/>
+</w:rPr>
+<w:t xml:space="preserve">BAN TỔ CHỨC</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+<w:jc w:val="center"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>
+<w:sz w:val="28"/>
+<w:szCs w:val="28"/>
+</w:rPr>
+<w:t xml:space="preserve">*</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:w="5145" w:type="dxa"/>
+</w:tcPr>
+<w:p>
+<w:pPr>
+<w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+<w:jc w:val="center"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>
+<w:b/>
+<w:sz w:val="30"/>
+<w:szCs w:val="30"/>
+</w:rPr>
+<w:t xml:space="preserve">ĐẢNG CỘNG SẢN VIỆT NAM</w:t>
+</w:r>
+</w:p>
+<w:p>
+<w:pPr>
+<w:pBdr>
+<w:bottom w:val="single" w:sz="6" w:space="1" w:color="auto"/>
+</w:pBdr>
+<w:spacing w:before="0" w:after="0" w:line="120" w:lineRule="exact"/>
+<w:ind w:left="506" w:right="506"/>
+<w:jc w:val="center"/>
+</w:pPr>
+</w:p>
+</w:tc>
+</w:tr>
+<w:tr>
+<w:tc>
+<w:tcPr>
+<w:tcW w:w="4209" w:type="dxa"/>
+</w:tcPr>
+<w:p>
+<w:pPr>
+<w:spacing w:before="120" w:after="0" w:line="240" w:lineRule="auto"/>
+<w:jc w:val="center"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>
+<w:sz w:val="28"/>
+<w:szCs w:val="28"/>
+</w:rPr>
+<w:t xml:space="preserve">Số 05-HD/VPTW</w:t>
+</w:r>
+</w:p>
+</w:tc>
+<w:tc>
+<w:tcPr>
+<w:tcW w:w="5145" w:type="dxa"/>
+</w:tcPr>
+<w:p>
+<w:pPr>
+<w:spacing w:before="120" w:after="0" w:line="240" w:lineRule="auto"/>
+<w:jc w:val="center"/>
+</w:pPr>
+<w:r>
+<w:rPr>
+<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>
+<w:i/>
+<w:sz w:val="28"/>
+<w:szCs w:val="28"/>
+</w:rPr>
+<w:t xml:space="preserve">Hà Nội, ngày 03 tháng 02 năm 2026</w:t>
+</w:r>
+</w:p>
+</w:tc>
+</w:tr>
+</w:tbl>

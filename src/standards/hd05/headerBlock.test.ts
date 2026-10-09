@@ -8,7 +8,7 @@ import { buildPartyHeaderBlock, partyHeaderFromOptions, validatePartyHeader, typ
 const base: PartyHeaderInput = {
   parentLines: ["Tỉnh ủy Đồng Tháp"],
   issuerLines: ["Ban Tổ chức"],
-  sizes: { title: 15, parent: 14, issuer: 14 },
+  sizes: { title: 15, parent: 14, issuer: 14, so: 14, placeDate: 14 },
   textWidthMm: 165,
 };
 
@@ -108,8 +108,32 @@ describe("partyHeaderFromOptions", () => {
     expect(partyHeaderFromOptions(HD05, values, { parentLines: [], issuerLines: ["a"] })).toEqual({
       parentLines: [],
       issuerLines: ["a"],
-      sizes: { title: 15, parent: 14, issuer: 14 },
+      sizes: { title: 15, parent: 14, issuer: 14, so: 14, placeDate: 14 },
       textWidthMm: 165,
     });
+  });
+});
+
+describe("buildPartyHeaderBlock: hàng số, ký hiệu và ngày tháng (TD2)", () => {
+  const withRow: PartyHeaderInput = { ...base, numberRow: { so: "Số 05-HD/VPTW", placeDate: "Hà Nội, ngày 03 tháng 02 năm 2026" } };
+
+  it("thêm hàng thứ hai: số căn giữa 14 pt giãn trước 6 pt, ngày nghiêng 14 pt", () => {
+    const t = tableOf(withRow);
+    expect(t.rows).toHaveLength(2);
+    expect(t.rows[1][0][0]).toMatchObject({ text: "Số 05-HD/VPTW", sizePt: 14, align: "center", spaceBeforePt: 6 });
+    expect(t.rows[1][0][0].italic).toBeFalsy();
+    expect(t.rows[1][1][0]).toMatchObject({ text: "Hà Nội, ngày 03 tháng 02 năm 2026", sizePt: 14, italic: true, align: "center" });
+  });
+
+  it("không truyền numberRow thì chỉ một hàng", () => {
+    expect(tableOf(base).rows).toHaveLength(1);
+  });
+
+  it("giữ nguyên chỗ trống chờ điền", () => {
+    expect(buildPartyHeaderBlock({ ...withRow, numberRow: { so: "Số       -HD/VPTW", placeDate: "Hà Nội, ngày      tháng      năm 2026" } })).toContain('xml:space="preserve">Số       -HD/VPTW<');
+  });
+
+  it("golden", () => {
+    expectMatchesGolden("party-header-block-number.xml", buildPartyHeaderBlock(withRow).replace(/></g, ">\n<"));
   });
 });

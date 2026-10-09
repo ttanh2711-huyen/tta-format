@@ -349,14 +349,15 @@ Dùng lại bảng quy tắc ở mục 6B của `plan.md`, bộ style `HD05_*` (
 ### TD2: Số và ký hiệu, địa danh, ngày tháng (chuẩn Đảng)
 **Mô tả:** Hàng dưới của bảng đầu văn bản: "Số 05-HD/VPTW" (14 pt, đứng, căn giữa dưới tên cơ quan, **không có dấu hai chấm**) và "Hà Nội, ngày 03 tháng 02 năm 2026" (14 pt, nghiêng, đối diện bên phải). Có bộ kiểm tra số, ký hiệu loại, ký hiệu cơ quan (bảng tra từ T2B), liên cơ quan và ngày tháng; cho phép để trống số và ngày chờ vào sổ.
 **Tiêu chí nghiệm thu:**
-- [ ] Số nhỏ hơn 10 tự thêm số 0; số và ký hiệu nối bằng "-", tên loại và cơ quan viết tắt nối bằng "/", liên cơ quan nối bằng "-"; ví dụ hợp lệ "Số 127-QĐ/TW", "Số 05-QC/BTCTU-BNCTU", "Số 01-BC/ĐH"
-- [ ] Ngày nhỏ hơn 10 và tháng nhỏ hơn 3 thêm số 0; ngày không hợp lệ bị từ chối; cấp hành chính trước địa danh ghi được (ví dụ "TP. Huế", "Phường Ngô Quyền") khi cần
-- [ ] Gợi ý ký hiệu loại từ thể loại đã chọn (bảng tra T2B) và ký hiệu cơ quan từ danh sách đã lưu
+- [x] Số nhỏ hơn 10 tự thêm số 0; số và ký hiệu nối bằng "-", tên loại và cơ quan viết tắt nối bằng "/", liên cơ quan nối bằng "-"; ví dụ hợp lệ (có test cho cả ba ví dụ) "Số 127-QĐ/TW", "Số 05-QC/BTCTU-BNCTU", "Số 01-BC/ĐH"
+- [x] Ngày nhỏ hơn 10 và tháng nhỏ hơn 3 thêm số 0; ngày không hợp lệ bị từ chối; cấp hành chính trước địa danh ghi được (địa danh là ô tự do; có test "TP. Huế", "Phường Ngô Quyền")
+- [ ] Gợi ý ký hiệu: bấm để điền chữ viết tắt loại (từ bảng loại văn bản của chuẩn), chữ viết tắt cơ quan đã lưu và bảng ký hiệu cơ quan của chuẩn. **Gợi ý theo thể loại đã chọn chưa làm** vì thể loại chỉ được chọn ở TD3/TD5
 **Kiểm chứng:**
-- [ ] `npm test`: bảng ca biên cho số, ký hiệu loại, ký hiệu cơ quan, liên cơ quan, ngày tháng; golden OOXML
+- [x] `npm test`: 616 test; ca biên cho số, ký hiệu, liên cơ quan, ngày tháng; golden `party-header-block-number.xml`
 - [ ] Thủ công: in PDF, so ô 3–4 của Phụ lục 1 và Phụ lục 2
 **Phụ thuộc:** TD1
-**File dự kiến:** `src/standards/hd05/soKyHieuBlock.ts`, `src/standards/hd05/validators.ts`, `src/ui/HeaderForm.ts`, `src/standards/hd05/validators.test.ts`
+**Trạng thái:** mã, giao diện và test xong; `typecheck`, `lint`, `build` sạch; đã thử trong trình duyệt giả lập (thiếu ký hiệu loại, điền gợi ý, lưu viết tắt cơ quan, chèn); **chưa thử trong Word**. Không cần bộ kiểm tra riêng của chuẩn Đảng: dùng lại `soText`/`placeDateText` của T8 vì `formatSoKyHieu` của chuẩn đã mã hoá cách ghi ("Số 05-HD/VPTW", bắt buộc có ký hiệu loại). Số trống thì chừa chỗ trống tại vị trí số. Thêm hàng thứ hai vào khối đầu chuẩn Đảng (số căn giữa 14 pt dưới tên cơ quan, ngày nghiêng 14 pt bên phải), trường `agencyCodes` của chuẩn và danh sách "viết tắt cơ quan" đã lưu (tách khỏi danh sách tên cơ quan). Trong ký hiệu liên cơ quan nhập các viết tắt nối bằng "-".
+**File thực tế:** mở rộng `src/standards/hd05/headerBlock.ts` (`numberRow`), `src/ui/HeaderForm.ts`, `src/settings/agencies.ts`, `src/standards/{types.ts,hd05/profile.ts}`; thêm test vào `src/rules/validators.test.ts`
 **Kích cỡ:** M
 
 ### TD3: Thể loại, trích yếu, "về việc" của công văn, "Kính gửi"/"Kính trình", căn cứ ban hành

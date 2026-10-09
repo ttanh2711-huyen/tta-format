@@ -178,6 +178,8 @@ export interface StandardProfile {
   pageDefaults: PageDefaults;
   /** Kiểu khối đầu văn bản: quốc hiệu và tiêu ngữ (Chính quyền) hay tiêu đề Đảng. */
   headerKind: "quocHieu" | "dang";
+  /** Bảng chữ viết tắt tên cơ quan dùng trong ký hiệu văn bản (chuẩn nào có bảng tra mới khai báo). */
+  agencyCodes?: ReadonlyArray<{ name: string; code: string }>;
   /** Độ dài đường kẻ dưới tên cơ quan so với độ dài dòng chữ; chuẩn không dùng đường kẻ thì bỏ trống. */
   agencyLineRatio?: Range;
   /** Độ dài đường kẻ dưới trích yếu so với độ dài dòng chữ; chuẩn không dùng đường kẻ thì bỏ trống. */

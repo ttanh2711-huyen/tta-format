@@ -43,4 +43,15 @@ describe("danh sách cơ quan đã lưu", () => {
     store.set("nd30.agencies.nd30", JSON.stringify([1, "A", null]));
     expect(listAgencies(store, ND30)).toEqual(["A"]);
   });
+
+  it("danh sách chữ viết tắt cơ quan tách riêng với danh sách tên cơ quan", () => {
+    const store = memoryStore();
+    saveAgency(store, HD05, "Ban Tổ chức");
+    saveAgency(store, HD05, "BTCTU", "abbrs");
+    expect(listAgencies(store, HD05)).toEqual(["Ban Tổ chức"]);
+    expect(listAgencies(store, HD05, "abbrs")).toEqual(["BTCTU"]);
+    removeAgency(store, HD05, "BTCTU", "abbrs");
+    expect(listAgencies(store, HD05, "abbrs")).toEqual([]);
+    expect(listAgencies(store, HD05)).toEqual(["Ban Tổ chức"]);
+  });
 });
