@@ -1,7 +1,9 @@
 import { formatBody, isFormatBodySupported, previewFormatBody } from "../office/formatBody";
 import { applyFixes } from "../office/applyFix";
-import { readCheckDocument } from "../office/readDocument";
+import { checkDocument, runFixAll } from "../office/fixAll";
+import { isReadDocumentSupported, readCheckDocument } from "../office/readDocument";
 import { runChecks } from "../checker/engine";
+import { planFixes, type FixPlanOptions } from "../checker/fixAll";
 import { isFormatOnly } from "../checker/fixes";
 import { headerFooterRules } from "../checker/ruleSets";
 import { applyPageNumbers, isPageNumberSupported, planPageNumberDocument } from "../office/pageNumber";
@@ -161,11 +163,46 @@ export const pageNumberStep: PipelineStep<FixAllContext> = {
 };
 
 /**
+ * Bước cuối: sửa các lỗi còn sửa được tự động sau các bước trên, không đổi chữ. Giữ định dạng cục bộ thì không động
+ * vào phông, cỡ chữ, căn lề, thụt dòng, giãn đoạn, giãn dòng của phần thân, vì người dùng đã chọn giữ.
+ */
+function remainingFixOptions(ctx: FixAllContext): FixPlanOptions {
+  return {
+    includeText: false,
+    skipRule: ctx.localFormatting === "keep" ? (id) => id.startsWith("font.") || id.startsWith("paragraph.") : undefined,
+  };
+}
+
+export const remainingFixStep: PipelineStep<FixAllContext> = {
+  id: "remainingFixes",
+  label: "7. Sửa các lỗi còn lại",
+  order: 60,
+  async plan(ctx) {
+    if (!isReadDocumentSupported()) return unsupported("Word chưa hỗ trợ đọc tài liệu (cần Microsoft 365 bản 2507 trở lên).");
+    const issues = await checkDocument(ctx.profile);
+    const plan = planFixes(issues, remainingFixOptions(ctx));
+    if (plan.fixes.length === 0) {
+      return { willRun: false, lines: [], skipReason: issues.length > 0 ? `không còn lỗi sửa được tự động; còn ${issues.length} lỗi cần bạn xem ở mục Kiểm tra văn bản.` : "không còn lỗi." };
+    }
+    const lines = [`Sửa tự động ${plan.fixes.length} chỗ còn lệch chuẩn (không đổi chữ).`];
+    if (ctx.localFormatting === "keep") lines.push("Giữ định dạng cục bộ của phần thân nên không đụng phông, cỡ chữ, căn lề, giãn đoạn, giãn dòng.");
+    if (plan.manual.length > 0) lines.push(`Còn ${plan.manual.length} lỗi để bạn xem ở mục Kiểm tra văn bản.`);
+    return { willRun: true, lines };
+  },
+  async run(ctx) {
+    const result = await runFixAll(ctx.profile, remainingFixOptions(ctx));
+    const left = result.remaining.length;
+    const text = `Đã sửa ${result.applied} chỗ sau ${result.rounds} lượt.${left > 0 ? ` Còn ${left} lỗi hoặc cảnh báo, xem ở mục Kiểm tra văn bản.` : ""}`;
+    return result.skipped.length > 0 ? { status: "done", kind: "warning", text: `${text} Không sửa được: ${result.skipped.join("; ")}.` } : { status: "done", kind: left > 0 ? "warning" : "ok", text };
+  },
+};
+
+/**
  * Khung bước của "Chỉnh toàn bộ". Task sau thêm bước (số trang, khối đầu, khối cuối, sửa lỗi còn lại) bằng
  * `registry.register(...)` với `order` phù hợp; không phải sửa khung chạy hay giao diện.
  */
 export function createFixAllRegistry(): StepRegistry<FixAllContext> {
   const registry = new StepRegistry<FixAllContext>();
-  for (const step of [pageStep, styleStep, bodyStep, tableStep, headerFooterStep, pageNumberStep]) registry.register(step);
+  for (const step of [pageStep, styleStep, bodyStep, tableStep, headerFooterStep, pageNumberStep, remainingFixStep]) registry.register(step);
   return registry;
 }

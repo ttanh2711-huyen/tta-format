@@ -463,14 +463,15 @@ Dùng lại bảng quy tắc ở mục 6B của `plan.md`, bộ style `HD05_*` (
 ### T15: "Sửa tất cả" có xem trước và hoàn tác
 **Mô tả:** Sửa hàng loạt các lỗi có thể sửa tự động; xem trước danh sách thay đổi; hoàn tác một lần; xuất báo cáo lỗi (txt/docx).
 **Tiêu chí nghiệm thu:**
-- [ ] Xem trước liệt kê chính xác các thay đổi sẽ làm
-- [ ] Sau khi sửa, kiểm tra lại cho 0 lỗi có thể sửa
-- [ ] Đăng ký bước cuối "Sửa các lỗi còn lại" vào "Chỉnh toàn bộ" (T6C); chạy "Chỉnh toàn bộ" trên văn bản có lỗi cài sẵn của cả hai chuẩn rồi kiểm tra lại cho 0 lỗi có thể sửa
+- [x] Xem trước liệt kê chính xác các thay đổi sẽ làm
+- [x] Sau khi sửa, kiểm tra lại cho 0 lỗi có thể sửa
+- [x] Đăng ký bước cuối "Sửa các lỗi còn lại" vào "Chỉnh toàn bộ" (T6C); chạy "Chỉnh toàn bộ" trên văn bản có lỗi cài sẵn của cả hai chuẩn rồi kiểm tra lại cho 0 lỗi có thể sửa
 - [ ] Văn bản 100 trang xử lý trong ngưỡng chấp nhận (đặt ngưỡng cụ thể sau khi đo, ví dụ < 15 giây)
 **Kiểm chứng:**
-- [ ] `npm test`: logic gom/sắp xếp bản sửa
+- [x] `npm test`: logic gom/sắp xếp bản sửa
 - [ ] Thủ công: tài liệu 100 trang, đo thời gian; Ctrl+Z hoàn tác
 **Phụ thuộc:** T14, T14B
+**Trạng thái:** mã và test xong (12 ca ở `src/checker/fixAll.test.ts`; 832 test); `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**; **chưa đo văn bản 100 trang** (còn mở). Cách làm: `checker/fixAll.ts` (thuần tuý) gom cách sửa của danh sách lỗi — bỏ trùng, gộp font/đoạn/lề cùng chỗ, hoãn cách thay chữ thứ hai trên cùng một đoạn sang lượt sau, sắp xếp trang trước rồi theo đoạn — và giả lập "sửa rồi kiểm tra lại" (tối đa 3 lượt). `office/fixAll.ts` làm vòng sửa thật trong Word. Bảng Kiểm tra văn bản: "Sửa tất cả (N)" mở hộp xem trước liệt kê từng thay đổi, bấm "Áp dụng" mới sửa (chụp tài liệu trước, sau đó có nút "Hoàn tác lần sửa tất cả" dùng bản chụp T3, hoặc Ctrl+Z); "Xuất báo cáo" hiện báo cáo chữ (`checker/exportReport.ts`) kèm nút Sao chép và liên kết Tải về .txt. Bước 7 "Sửa các lỗi còn lại" của "Chỉnh toàn bộ": chỉ cách sửa không đổi chữ; chọn giữ định dạng cục bộ thì bỏ qua lỗi phông, cỡ chữ, căn lề, giãn của phần thân. **Giới hạn**: chưa có xuất .docx (chỉ chữ thuần); hoàn tác bằng bản chụp thay lại cả thân văn bản nên mất mọi chỉnh sửa tay sau lần "Sửa tất cả"; footer chưa nằm trong bản chụp.
 **File dự kiến:** `src/checker/fixAll.ts`, `src/ui/FixPreview.ts`, `src/checker/exportReport.ts`, `src/checker/fixAll.test.ts`
 **Kích cỡ:** M
 
