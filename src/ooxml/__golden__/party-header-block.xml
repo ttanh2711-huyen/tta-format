@@ -94,6 +94,53 @@
 </w:pPr>
 <w:r>
 <w:rPr>
+<w:noProof/>
+</w:rPr>
+<mc:AlternateContent>
+<mc:Choice Requires="wps">
+<w:drawing>
+<wp:anchor distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="251658341" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1">
+<wp:simplePos x="0" y="0"/>
+<wp:positionH relativeFrom="column">
+<wp:posOffset>321278</wp:posOffset>
+</wp:positionH>
+<wp:positionV relativeFrom="paragraph">
+<wp:posOffset>257175</wp:posOffset>
+</wp:positionV>
+<wp:extent cx="2624519" cy="0"/>
+<wp:effectExtent l="0" t="0" r="0" b="0"/>
+<wp:wrapNone/>
+<wp:docPr id="101" name="Straight Connector 101"/>
+<wp:cNvGraphicFramePr/>
+<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+<a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
+<wps:wsp>
+<wps:cNvCnPr/>
+<wps:spPr>
+<a:xfrm>
+<a:off x="0" y="0"/>
+<a:ext cx="2624519" cy="0"/>
+</a:xfrm>
+<a:prstGeom prst="line">
+<a:avLst/>
+</a:prstGeom>
+<a:ln w="9525">
+<a:solidFill>
+<a:srgbClr val="000000"/>
+</a:solidFill>
+</a:ln>
+</wps:spPr>
+<wps:bodyPr/>
+</wps:wsp>
+</a:graphicData>
+</a:graphic>
+</wp:anchor>
+</w:drawing>
+</mc:Choice>
+</mc:AlternateContent>
+</w:r>
+<w:r>
+<w:rPr>
 <w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>
 <w:b/>
 <w:sz w:val="30"/>
@@ -101,16 +148,6 @@
 </w:rPr>
 <w:t xml:space="preserve">ĐẢNG CỘNG SẢN VIỆT NAM</w:t>
 </w:r>
-</w:p>
-<w:p>
-<w:pPr>
-<w:pBdr>
-<w:bottom w:val="single" w:sz="6" w:space="1" w:color="auto"/>
-</w:pBdr>
-<w:spacing w:before="0" w:after="0" w:line="120" w:lineRule="exact"/>
-<w:ind w:left="506" w:right="506"/>
-<w:jc w:val="center"/>
-</w:pPr>
 </w:p>
 </w:tc>
 </w:tr>

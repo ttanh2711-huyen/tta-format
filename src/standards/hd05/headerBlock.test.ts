@@ -37,15 +37,13 @@ describe("buildPartyHeaderBlock", () => {
     expect(left[2].bold).toBeFalsy();
   });
 
-  it("phải: tiêu đề in hoa đậm 15 pt, đường kẻ viền đoạn dài bằng tiêu đề", () => {
+  it("phải: tiêu đề in hoa đậm 15 pt, đường kẻ là hình đường thẳng neo trong đoạn, dài bằng tiêu đề", () => {
     const [, right] = tableOf(base).rows[0];
+    expect(right).toHaveLength(1);
     expect(right[0]).toMatchObject({ text: "ĐẢNG CỘNG SẢN VIỆT NAM", sizePt: 15, bold: true, align: "center" });
-    expect(right[1]).toMatchObject({ text: "", borderBottom: true });
-    const xml = buildPartyHeaderBlock(base);
-    const ind = /<w:ind w:left="(\d+)" w:right="(\d+)"\/>/.exec(xml);
-    const cellTwips = Math.round((165 * 0.55 * 1440) / 25.4);
-    const lineMm = ((cellTwips - Number(ind?.[1]) - Number(ind?.[2])) * 25.4) / 1440;
-    expect(lineMm).toBeCloseTo(textWidthMm("ĐẢNG CỘNG SẢN VIỆT NAM", 15, true), 0);
+    expect(right[0].floatingLinesMm?.[0]).toBeCloseTo(textWidthMm("ĐẢNG CỘNG SẢN VIỆT NAM", 15, true), 0);
+    expect(right[0].borderBottom).toBeUndefined();
+    expect(buildPartyHeaderBlock(base)).not.toContain("<w:pBdr>");
   });
 
   it.each([0, 1, 2])("%i dòng cơ quan cấp trên đều sinh khối đúng", (count) => {

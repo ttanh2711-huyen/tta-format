@@ -39,18 +39,20 @@ describe("buildHeaderBlock: cấu trúc", () => {
     expect(t.indentMm ?? 0).toBeCloseTo(0, 1);
   });
 
-  it("ô trái: chủ quản (in hoa), cơ quan ban hành (in hoa), đường kẻ; ô phải: quốc hiệu, tiêu ngữ, đường kẻ", () => {
+  it("ô trái: chủ quản, cơ quan ban hành (in hoa); ô phải: quốc hiệu, tiêu ngữ; đường kẻ là hình đường thẳng neo trong đoạn chữ", () => {
     const [left, right] = table(base).rows[0];
-    expect(left.map((p) => p.text)).toEqual(["SỞ NÔNG NGHIỆP VÀ MÔI TRƯỜNG", "THÀNH PHỐ CẦN THƠ", "CHI CỤC THỦY LỢI", ""]);
-    expect(right.map((p) => p.text)).toEqual(["CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", "Độc lập - Tự do - Hạnh phúc", ""]);
-    expect(left[3].borderBottom).toBe(true);
-    expect(right[2].borderBottom).toBe(true);
+    expect(left.map((p) => p.text)).toEqual(["SỞ NÔNG NGHIỆP VÀ MÔI TRƯỜNG", "THÀNH PHỐ CẦN THƠ", "CHI CỤC THỦY LỢI"]);
+    expect(right.map((p) => p.text)).toEqual(["CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", "Độc lập - Tự do - Hạnh phúc"]);
+    expect(left[2].floatingLinesMm).toHaveLength(1);
+    expect(right[1].floatingLinesMm).toHaveLength(1);
+    expect(left[0].floatingLinesMm).toBeUndefined();
+    expect(left[2].borderBottom).toBeUndefined();
   });
 
   it.each([0, 1, 2, 3])("%i dòng cơ quan chủ quản đều sinh khối đúng", (count) => {
     const parents = ["Dòng một", "Dòng hai", "Dòng ba"].slice(0, count);
     const [left] = table({ ...base, parentLines: parents }).rows[0];
-    expect(left).toHaveLength(count + 2);
+    expect(left).toHaveLength(count + 1);
     expect(left[count].text).toBe("CHI CỤC THỦY LỢI");
     expect(left[count].bold).toBe(true);
     for (const p of left.slice(0, count)) expect(p.bold).toBeFalsy();
@@ -58,7 +60,7 @@ describe("buildHeaderBlock: cấu trúc", () => {
 
   it("bỏ dòng chủ quản trống và khoảng trắng thừa", () => {
     const [left] = table({ ...base, parentLines: ["  ", "Thành phố   Cần Thơ ", ""] }).rows[0];
-    expect(left.map((p) => p.text)).toEqual(["THÀNH PHỐ CẦN THƠ", "CHI CỤC THỦY LỢI", ""]);
+    expect(left.map((p) => p.text)).toEqual(["THÀNH PHỐ CẦN THƠ", "CHI CỤC THỦY LỢI"]);
   });
 
   it("thoát ký tự đặc biệt của XML trong tên cơ quan", () => {
@@ -67,38 +69,41 @@ describe("buildHeaderBlock: cấu trúc", () => {
   });
 });
 
-describe("buildHeaderBlock: đường kẻ", () => {
-  function lineLengthMm(input: HeaderBlockInput, side: 0 | 1): number {
-    const xml = buildHeaderBlock(input);
-    const cells = xml.split("<w:tc>").slice(1);
-    const ind = /<w:ind w:left="(\d+)" w:right="(\d+)"\/>/.exec(cells[side].slice(cells[side].lastIndexOf("<w:pBdr>")));
-    if (!ind) throw new Error("không thấy thụt của đường kẻ");
-    const widthTwips = Number(/<w:tcW w:w="(\d+)"/.exec(cells[side])?.[1]);
-    return ((widthTwips - Number(ind[1]) - Number(ind[2])) * 25.4) / 1440;
-  }
+describe("buildHeaderBlock: đường kẻ (Insert > Shapes > Line)", () => {
+  const lineMm = (input: HeaderBlockInput, side: 0 | 1): number => {
+    const cell = table(input).rows[0][side];
+    return cell[cell.length - 1].floatingLinesMm?.[0] ?? Number.NaN;
+  };
 
   it("đường kẻ dưới tên cơ quan dài đúng tỉ lệ so với dòng chữ", () => {
     const width = textWidthMm("CHI CỤC THỦY LỢI", 13, true);
-    expect(lineLengthMm(base, 0)).toBeCloseTo(width * 0.5, 0);
-    expect(lineLengthMm({ ...base, agencyLineRatio: 1 / 3 }, 0)).toBeCloseTo(width / 3, 0);
+    expect(lineMm(base, 0)).toBeCloseTo(width * 0.5, 0);
+    expect(lineMm({ ...base, agencyLineRatio: 1 / 3 }, 0)).toBeCloseTo(width / 3, 0);
   });
 
   it("đường kẻ dưới tiêu ngữ dài bằng dòng tiêu ngữ", () => {
-    expect(lineLengthMm(base, 1)).toBeCloseTo(textWidthMm("Độc lập - Tự do - Hạnh phúc", 14, true), 0);
+    expect(lineMm(base, 1)).toBeCloseTo(textWidthMm("Độc lập - Tự do - Hạnh phúc", 14, true), 0);
   });
 
-  it("tên cơ quan dài hơn ô thì đường kẻ tính theo bề rộng ô, không âm", () => {
+  it("tên cơ quan dài hơn ô thì đường kẻ tính theo bề rộng ô", () => {
     const long = "Sở Nông nghiệp và Môi trường thành phố Cần Thơ về việc thực hiện nhiệm vụ rất dài";
-    const length = lineLengthMm({ ...base, parentLines: [], issuer: long }, 0);
+    const length = lineMm({ ...base, parentLines: [], issuer: long }, 0);
     expect(length).toBeGreaterThan(0);
     expect(length).toBeLessThanOrEqual(72);
   });
 
-  it("đường kẻ nằm trong đoạn riêng, tên cơ quan không bị thụt nên tự xuống dòng được", () => {
+  it("đường kẻ là hình nổi neo vào đoạn chữ, canh giữa cột, không dùng viền hay đoạn riêng", () => {
+    const xml = buildHeaderBlock(base);
+    expect(xml.match(/prst="line"/g)).toHaveLength(2);
+    expect(xml).toContain('<wp:positionH relativeFrom="column">');
+    expect(xml).toContain('<wp:positionV relativeFrom="paragraph">');
+    expect(xml).not.toContain("<w:pBdr>");
+    expect(new Set(xml.match(/<wp:docPr id="(\d+)"/g)).size).toBe(2);
+  });
+
+  it("tên cơ quan dài tự xuống dòng, không thụt", () => {
     const [left] = table({ ...base, issuer: "Chi cục Thủy lợi và Phòng chống thiên tai thành phố Cần Thơ" }).rows[0];
-    const issuer = left[left.length - 2];
-    expect(issuer.leftIndentMm).toBeUndefined();
-    expect(issuer.borderBottom).toBeUndefined();
+    expect(left[left.length - 1].leftIndentMm).toBeUndefined();
   });
 });
 

@@ -230,12 +230,13 @@ Preset đặt tên ("Công văn thường", "Báo cáo dài"...): lưu, đổi t
 **Tiêu chí nghiệm thu:**
 - [x] Quốc hiệu/tiêu ngữ đúng chữ, cỡ, kiểu, in hoa/thường theo quy tắc và theo `fixtures/congvan-mau.json` (test dùng `compareToFixture` với các đoạn của hàng đầu trong fixture)
 - [x] Cơ quan chủ quản bật/tắt, 0 đến 3 dòng đều sinh khối đúng (có test); cơ quan ban hành chọn từ danh sách đã lưu hoặc nhập mới (đã thử trong trình duyệt giả lập)
-- [ ] Đường kẻ có độ dài đúng tỷ lệ cho phép, đi theo văn bản (viền dưới của một đoạn riêng, không hình nổi): độ dài tính bằng **ước lượng bề rộng chữ** (bảng độ rộng Times New Roman, lệch vài %, đã đối chiếu với file mẫu: tiêu ngữ 59 mm trong ±6%); **chờ bạn xem bản in thử**
+- [ ] Đường kẻ có độ dài đúng tỷ lệ cho phép, đi theo đoạn chữ (**đã đổi theo yêu cầu của bạn ngày 09/10/2026: là đường thẳng nổi Insert > Shapes > Line neo trong đoạn, như file mẫu, không còn là viền đoạn riêng**): độ dài tính bằng **ước lượng bề rộng chữ** (bảng độ rộng Times New Roman, lệch vài %, đã đối chiếu với file mẫu: tiêu ngữ 59 mm trong ±6%); **chờ bạn xem bản in thử**
 - [x] Tên cơ quan dài tự xuống dòng không làm vỡ bảng (bảng bố cục cố định, tên không thụt; đường kẻ tính theo bề rộng ô); **xem bằng mắt chờ bạn**
 **Kiểm chứng:**
 - [x] `npm test`: 491 test; bộ dựng OOXML khớp golden file (`__golden__/header-block.xml`); `compareToFixture` không khác biệt; 0/1/2/3 dòng chủ quản
 - [ ] Thủ công: in PDF, so với file mẫu của bạn và Phụ lục III
 **Phụ thuộc:** T2A, T5, T6A
+**Cập nhật 09/10/2026:** đường kẻ dưới cơ quan ban hành và dưới tiêu ngữ nay là hình đường thẳng neo (`ooxml/lineShape.ts`, cùng cấu trúc với file mẫu), độ dài vẫn theo tỉ lệ ước lượng bề rộng chữ; đường kẻ dưới trích yếu (T9) vẫn là viền đoạn. Chưa kiểm chứng trong Word việc `insertOoxml` giữ được hình nổi này.
 **Trạng thái:** mã, giao diện (form "Khối đầu văn bản" trên Tuỳ chọn nhanh) và test xong; `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Bảng 1 hàng 2 cột 45%/55%, không viền, lề ô 0, vừa vùng chữ (theo lề trong Tuỳ chọn nhanh), thụt 0; cơ quan chủ quản không đậm, cơ quan ban hành đậm, quốc hiệu 13 đậm, tiêu ngữ 14 đậm, đều in hoa trừ tiêu ngữ. Hàng số/ký hiệu, địa danh và V/v thêm ở T8, T9 (cần mở rộng `buildHeaderBlock`). Chèn vào đầu thân bằng `insertOoxml(..., "Start")` kèm một đoạn trống, đọc lại bảng đầu để kiểm tra; tài liệu đã bắt đầu bằng bảng thì hỏi trước khi chèn thêm; tài liệu trống sẽ có hai đoạn trống sau bảng. Thêm tuỳ chọn `agencyLineRatio` (1/3 hoặc 1/2, mặc định 1/2) và hai trường `headerKind`, `agencyLineRatio` cho chuẩn; chuẩn Đảng hiện chỉ hiện ghi chú "TD1". `flatOpc` chuyển từ spike sang `src/ooxml/flatOpc.ts`. Danh sách cơ quan lưu theo chuẩn trong localStorage (T22 bổ sung xuất/nhập).
 **File thực tế:** `src/ooxml/{headerBlock,textWidth,flatOpc}.ts` (+ test, golden), `src/office/insertHeader.ts`, `src/ui/HeaderForm.ts`, `src/settings/agencies.ts` (+ test)
 **Kích cỡ:** M
@@ -342,6 +343,7 @@ Dùng lại bảng quy tắc ở mục 6B của `plan.md`, bộ style `HD05_*` (
 - [x] `npm test`: 609 test; golden `party-header-block.xml`, `party-header-block-multi.xml`; ca 0/1/2 dòng cấp trên, nhiều dòng cơ quan, liên cơ quan
 - [ ] Thủ công: in PDF, đối chiếu ô 1–2 của Phụ lục 1 và ví dụ ở Phụ lục 2
 **Phụ thuộc:** T2B, T5, T6A, T6B
+**Cập nhật 09/10/2026:** đường kẻ dưới tiêu đề "ĐẢNG CỘNG SẢN VIỆT NAM" nay là hình đường thẳng neo trong đoạn tiêu đề (theo yêu cầu của bạn), không còn là viền đoạn.
 **Trạng thái:** mã, giao diện (form Khối đầu đổi theo chuẩn: chuẩn Đảng có ô cơ quan cấp trên 0–2 dòng và ô cơ quan ban hành nhiều dòng) và test xong; `typecheck`, `lint`, `build` sạch; đã thử form trong trình duyệt giả lập; **chưa thử trong Word**. Dùng lại bảng 2 cột 45%/55% của T7 (tách các hàm dùng chung `borderlessTable`, `textParagraph`, `cell` ra khỏi `ooxml/headerBlock.ts`; golden T7 không đổi). Hàng số, ký hiệu, ngày tháng (TD2) và thể loại, trích yếu (TD3) chưa có. "Liên cơ quan" hiện hiểu là nhiều dòng cơ quan ban hành, người dùng tự gõ dấu gạch nối nếu muốn một dòng.
 **File thực tế:** `src/standards/hd05/headerBlock.ts` (+ test, 2 golden), `src/ooxml/headerBlock.ts`, `src/ui/HeaderForm.ts` (kết quả `collect()` có thêm `kind`), `src/ui/NewDocWizard.ts` (từ chối chuẩn Đảng tới TD5)
 **Kích cỡ:** M

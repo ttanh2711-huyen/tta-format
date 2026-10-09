@@ -84,6 +84,7 @@ describe("assembleDocumentBody: thứ tự các khối", () => {
 describe("công văn nhập đúng nội dung của file mẫu khớp fixture về định dạng", () => {
   const blocks = modelOf(sample).blocks;
   const fixtureHead = fixture.blocks[0] as TableModel;
+  const fixtureHeadTable = fixtureHead;
   const fixtureSign = fixture.blocks[8] as TableModel;
 
   it("trang: lề, khoảng cách header, footer (theo tuỳ chọn mặc định) nằm ở bước thiết lập trang, không ở thân", () => {
@@ -96,6 +97,14 @@ describe("công văn nhập đúng nội dung của file mẫu khớp fixture v�
     expect(actual).toHaveLength(expected.length);
     expect(compareToFixture(asDoc(actual), asDoc(expected), { ignore: [/floatingLinesMm/, /\.text$/] })).toEqual([]);
     expect(actual.map((p) => p.text)).toContain("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM");
+  });
+
+  it("đường kẻ hình nổi nằm đúng đoạn như file mẫu: dưới cơ quan ban hành và dưới tiêu ngữ", () => {
+    const withLines = (table: TableModel) => table.rows.flatMap((row) => row.flatMap((cell) => cell.filter((p) => p.floatingLinesMm !== undefined).map((p) => p.text)));
+    const actual = withLines(blocks[0] as TableModel);
+    const expected = withLines(fixtureHeadTable);
+    expect(actual).toHaveLength(expected.length);
+    expect(actual).toEqual(["CHI CỤC THỦY LỢI", "Độc lập - Tự do - Hạnh phúc"]);
   });
 
   it("Kính gửi khớp fixture", () => {

@@ -1,6 +1,7 @@
 import type { FormatValues } from "../settings/formatOptions";
 import type { StandardProfile } from "../standards/types";
 import { mmToTwips } from "./flatOpc";
+import { lineShapeRun } from "./lineShape";
 import { textWidthMm } from "./textWidth";
 
 /**
@@ -47,12 +48,12 @@ export function validateHeaderInput(input: HeaderBlockInput): string[] {
   return errors;
 }
 
-export function textParagraph(text: string, sizePt: number, style: { bold?: boolean; italic?: boolean; beforePt?: number } = {}): string {
+export function textParagraph(text: string, sizePt: number, style: { bold?: boolean; italic?: boolean; beforePt?: number; shape?: string } = {}): string {
   const half = sizePt * 2;
   const before = (style.beforePt ?? 0) * 20;
   return (
     `<w:p><w:pPr><w:spacing w:before="${before}" w:after="0" w:line="240" w:lineRule="auto"/><w:jc w:val="center"/></w:pPr>` +
-    `<w:r><w:rPr>${FONT}${style.bold ? "<w:b/>" : ""}${style.italic ? "<w:i/>" : ""}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr><w:t xml:space="preserve">${escapeXml(text)}</w:t></w:r></w:p>`
+    `${style.shape ?? ""}<w:r><w:rPr>${FONT}${style.bold ? "<w:b/>" : ""}${style.italic ? "<w:i/>" : ""}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr><w:t xml:space="preserve">${escapeXml(text)}</w:t></w:r></w:p>`
   );
 }
 
@@ -96,12 +97,10 @@ export function buildHeaderBlock(input: HeaderBlockInput): string {
   const issuerLine = Math.min(textWidthMm(issuer, input.sizes.issuer, true), mm(leftWidth)) * input.agencyLineRatio;
   const tieuNguLine = Math.min(textWidthMm(TIEU_NGU, input.sizes.tieuNgu, true), mm(rightWidth));
 
-  const left = [
-    ...parents.map((line) => textParagraph(line, input.sizes.parent)),
-    textParagraph(issuer, input.sizes.issuer, { bold: true }),
-    lineParagraph(issuerLine, leftWidth),
-  ];
-  const right = [textParagraph(QUOC_HIEU, input.sizes.quocHieu, { bold: true }), textParagraph(TIEU_NGU, input.sizes.tieuNgu, { bold: true }), lineParagraph(tieuNguLine, rightWidth)];
+  const issuerShape = lineShapeRun({ lengthMm: issuerLine, columnTwips: leftWidth, textSizePt: input.sizes.issuer, id: 101 });
+  const tieuNguShape = lineShapeRun({ lengthMm: tieuNguLine, columnTwips: rightWidth, textSizePt: input.sizes.tieuNgu, id: 102 });
+  const left = [...parents.map((line) => textParagraph(line, input.sizes.parent)), textParagraph(issuer, input.sizes.issuer, { bold: true, shape: issuerShape })];
+  const right = [textParagraph(QUOC_HIEU, input.sizes.quocHieu, { bold: true }), textParagraph(TIEU_NGU, input.sizes.tieuNgu, { bold: true, shape: tieuNguShape })];
 
   const numberRow = input.numberRow
     ? `<w:tr>${cell(leftWidth, [textParagraph(input.numberRow.so, input.sizes.so, { beforePt: 6 })])}${cell(rightWidth, [

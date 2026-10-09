@@ -1,5 +1,6 @@
 import { mmToTwips } from "../../ooxml/flatOpc";
-import { borderlessTable, cell, LEFT_COLUMN_RATIO, lineParagraph, textParagraph } from "../../ooxml/headerBlock";
+import { borderlessTable, cell, LEFT_COLUMN_RATIO, textParagraph } from "../../ooxml/headerBlock";
+import { lineShapeRun } from "../../ooxml/lineShape";
 import { textWidthMm } from "../../ooxml/textWidth";
 import type { FormatValues } from "../../settings/formatOptions";
 import type { StandardProfile } from "../types";
@@ -58,7 +59,8 @@ export function buildPartyHeaderBlock(input: PartyHeaderInput): string {
     ...upper(input.issuerLines).map((line) => textParagraph(line, input.sizes.issuer, { bold: true })),
     textParagraph(HEADER_MARKS.agencyStar, input.sizes.issuer),
   ];
-  const right = [textParagraph(title, input.sizes.title, { bold: true }), lineParagraph(Math.min(textWidthMm(title, input.sizes.title, true), rightMm), rightWidth)];
+  const titleShape = lineShapeRun({ lengthMm: Math.min(textWidthMm(title, input.sizes.title, true), rightMm), columnTwips: rightWidth, textSizePt: input.sizes.title, id: 101 });
+  const right = [textParagraph(title, input.sizes.title, { bold: true, shape: titleShape })];
 
   const numberRow = input.numberRow
     ? `<w:tr>${cell(leftWidth, [textParagraph(input.numberRow.so, input.sizes.so, { beforePt: 6 })])}${cell(rightWidth, [
