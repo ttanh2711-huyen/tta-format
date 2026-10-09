@@ -661,11 +661,12 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 **Tiêu chí nghiệm thu:**
 - [ ] Cài được theo hướng dẫn trên Word 365 sạch, dùng được hằng ngày
 - [ ] Xác nhận bằng giám sát mạng: không có request chứa nội dung văn bản
-- [ ] Có số phiên bản, cách cập nhật và gỡ cài đặt
+- [x] Có số phiên bản, cách cập nhật và gỡ cài đặt
 **Kiểm chứng:**
-- [ ] `npm run build` bản production; kiểm tra manifest hợp lệ
+- [x] `npm run build` bản production; kiểm tra manifest hợp lệ
 - [ ] Cài thử trên hồ sơ Word sạch theo đúng hướng dẫn
 **Phụ thuộc:** T23
+**Trạng thái:** mã, workflow và tài liệu xong (`tools/make-manifest.js`, `tools/check-release.js`, `.github/workflows/pages.yml`, `webpack.config.js` có chế độ `--env release` bỏ trang thăm dò spike và ghi số phiên bản, `README.md`, `docs/huong-dan-cai-dat.md`, `docs/privacy.md`, `src/privacy.test.ts`); `typecheck`, `lint`, `build` sạch; manifest phát hành qua `office-addin-manifest validate` báo hợp lệ; chạy thử cục bộ `build:release` → `manifest:release` → `check:release` đạt (dist chỉ gồm `taskpane.html`, `taskpane.js`, `manifest.xml`, `assets`). Số phiên bản `0.9.0` (package.json → manifest `0.9.0.0`, hiện ở dòng đầu add-in). **Chưa làm / cần bạn**: (1) tạo repo GitHub và bật Pages (Settings > Pages > Source: GitHub Actions), đẩy `main`, lấy địa chỉ `https://<tài khoản>.github.io/<repo>/`; (2) cài thử trên hồ sơ Word sạch theo `docs/huong-dan-cai-dat.md` và báo bước nào sai; (3) giám sát mạng với văn bản thử (mục 8 của hướng dẫn) để xác nhận không có yêu cầu chứa nội dung; (4) đổi `0.9.0` thành `1.0.0` khi bạn xác nhận dùng hằng ngày. Dự phòng Cloudflare Pages: cùng thư mục `dist`, cùng lệnh `manifest:release` với địa chỉ của Cloudflare.
 **File dự kiến:** `manifest.xml`, `docs/huong-dan-cai-dat.md`, `docs/privacy.md`, `README.md`
 **Kích cỡ:** S
 

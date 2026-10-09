@@ -1,5 +1,12 @@
 import { describeDegraded, describeMissing, evaluateFeatures, officeIsSupported, type IsSetSupported } from "../office/capabilities";
 
+declare const __APP_VERSION__: string | undefined;
+
+/** Số phiên bản của bản đang chạy (do bước build ghi vào); bản chạy thử trong test không có. */
+export function appVersion(): string {
+  return typeof __APP_VERSION__ === "string" ? __APP_VERSION__ : "chạy thử";
+}
+
 function create<K extends keyof HTMLElementTagNameMap>(tag: K, props: Partial<HTMLElementTagNameMap[K]> = {}, ...children: Array<Node | string>): HTMLElementTagNameMap[K] {
   const element = document.createElement(tag);
   Object.assign(element, props);
@@ -22,7 +29,7 @@ export function mountEnvironmentPanel(container: HTMLElement, isSupported: IsSet
       create("li", { className: status.supported ? (note ? "warning" : "ok") : "error" }, create("strong", { textContent: status.supported ? (note ? "Chạy một phần: " : "Chạy được: ") : "Không chạy được: " }), status.feature.label, note ? create("div", { className: "note", textContent: note }) : ""),
     );
   }
-  const summary = unsupported > 0 ? `Môi trường Word: ${unsupported} tính năng không chạy được` : degraded > 0 ? `Môi trường Word: ${degraded} tính năng chạy một phần` : "Môi trường Word: đủ tính năng";
+  const summary = `Phiên bản ${appVersion()} · ${unsupported > 0 ? `Môi trường Word: ${unsupported} tính năng không chạy được` : degraded > 0 ? `Môi trường Word: ${degraded} tính năng chạy một phần` : "Môi trường Word: đủ tính năng"}`;
   const details = create("details", { id: "env-details", open: unsupported > 0 }, create("summary", { textContent: summary }), list);
   container.replaceChildren(details);
   return { unsupported };

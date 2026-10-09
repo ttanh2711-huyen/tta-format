@@ -1,4 +1,6 @@
 const path = require("path");
+const webpack = require("webpack");
+const { version } = require("./package.json");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const { receiveSpikeReport } = require("./tools/receiveSpikeReport");
@@ -14,11 +16,10 @@ async function getHttpsOptions() {
 
 module.exports = async (env) => {
   const serving = Boolean(env && env.WEBPACK_SERVE);
+  // Bản phát hành không gồm trang thăm dò API (spike) dùng khi phát triển.
+  const release = Boolean(env && env.release);
   return {
-    entry: {
-      taskpane: "./src/taskpane/taskpane.ts",
-      spike: "./src/spike/spike.ts",
-    },
+    entry: release ? { taskpane: "./src/taskpane/taskpane.ts" } : { taskpane: "./src/taskpane/taskpane.ts", spike: "./src/spike/spike.ts" },
     output: {
       path: path.resolve(__dirname, "dist"),
       filename: "[name].js",
@@ -34,12 +35,17 @@ module.exports = async (env) => {
         template: "./src/taskpane/taskpane.html",
         chunks: ["taskpane"],
       }),
-      new HtmlWebpackPlugin({
-        filename: "spike.html",
-        template: "./src/spike/spike.html",
-        chunks: ["spike"],
-      }),
+      ...(release
+        ? []
+        : [
+            new HtmlWebpackPlugin({
+              filename: "spike.html",
+              template: "./src/spike/spike.html",
+              chunks: ["spike"],
+            }),
+          ]),
       new CopyWebpackPlugin({ patterns: [{ from: "assets", to: "assets" }] }),
+      new webpack.DefinePlugin({ __APP_VERSION__: JSON.stringify(version) }),
     ],
     devServer: serving
       ? {

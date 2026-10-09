@@ -1,6 +1,6 @@
 {
   "name": "nd30-word-addin",
-  "version": "0.1.0",
+  "version": "0.9.0",
   "private": true,
   "description": "Add-in Word định dạng văn bản theo Nghị định 30/2020/NĐ-CP và Hướng dẫn 05-HD/VPTW",
   "config": {
@@ -10,6 +10,9 @@
   "scripts": {
     "build": "webpack --mode production",
     "build:dev": "webpack --mode development",
+    "build:release": "webpack --mode production --env release",
+    "manifest:release": "node tools/make-manifest.js",
+    "check:release": "node tools/check-release.js",
     "dev-server": "webpack serve --mode development",
     "start": "office-addin-debugging start manifest.xml desktop",
     "stop": "office-addin-debugging stop manifest.xml",
