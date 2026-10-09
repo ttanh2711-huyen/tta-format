@@ -57,28 +57,33 @@ export function validateTitleInput(input: TitleBlockInput): string[] {
   return errors;
 }
 
-interface ParagraphStyle {
+export interface ParagraphStyle {
   sizePt: number;
   bold?: boolean;
-  align?: "center" | "left";
+  italic?: boolean;
+  align?: "center" | "left" | "both";
   beforePt?: number;
   afterPt?: number;
   lineMultiple?: number;
+  /** Giãn dòng Exactly (pt); có thì thay cho `lineMultiple`. */
+  exactPt?: number;
   leftMm?: number;
   hangingMm?: number;
 }
 
-function paragraph(text: string, style: ParagraphStyle): string {
+/** Một đoạn chữ đã định dạng trực tiếp (Times New Roman); dùng chung cho các khối tên loại của hai chuẩn. */
+export function paragraph(text: string, style: ParagraphStyle): string {
   const half = style.sizePt * 2;
   // Word ghi giãn dòng bội số theo 1/240 dòng, cắt phần lẻ (1,17 dòng là 280).
-  const line = Math.floor((style.lineMultiple ?? 1) * 240 + 1e-6);
+  const line = style.exactPt === undefined ? Math.floor((style.lineMultiple ?? 1) * 240 + 1e-6) : Math.round(style.exactPt * 20);
+  const rule = style.exactPt === undefined ? "auto" : "exact";
   const indent =
     style.leftMm === undefined
       ? ""
       : `<w:ind w:left="${mmToTwips(style.leftMm + (style.hangingMm ?? 0))}"${style.hangingMm ? ` w:hanging="${mmToTwips(style.hangingMm)}"` : ""}/>`;
   return (
-    `<w:p><w:pPr><w:spacing w:before="${(style.beforePt ?? 0) * 20}" w:after="${(style.afterPt ?? 0) * 20}" w:line="${line}" w:lineRule="auto"/>${indent}<w:jc w:val="${style.align ?? "center"}"/></w:pPr>` +
-    `<w:r><w:rPr>${FONT}${style.bold ? "<w:b/>" : ""}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr><w:t xml:space="preserve">${escapeXml(text)}</w:t></w:r></w:p>`
+    `<w:p><w:pPr><w:spacing w:before="${(style.beforePt ?? 0) * 20}" w:after="${(style.afterPt ?? 0) * 20}" w:line="${line}" w:lineRule="${rule}"/>${indent}<w:jc w:val="${style.align ?? "center"}"/></w:pPr>` +
+    `<w:r><w:rPr>${FONT}${style.bold ? "<w:b/>" : ""}${style.italic ? "<w:i/>" : ""}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr><w:t xml:space="preserve">${escapeXml(text)}</w:t></w:r></w:p>`
   );
 }
 

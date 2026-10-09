@@ -22,6 +22,8 @@ export interface PartyHeaderInput {
   sizes: { title: number; parent: number; issuer: number; so: number; placeDate: number };
   /** Hàng thứ hai: số và ký hiệu (trái, dưới tên cơ quan) và địa danh, ngày tháng (phải), đã dựng sẵn thành chữ (TD2). */
   numberRow?: { so: string; placeDate: string };
+  /** Hàng thứ ba của công văn: dòng "về việc ..." (nghiêng) ở ô trái, ô phải để trống (TD3). */
+  subjectRow?: { text: string; sizePt: number };
   /** Bề rộng vùng chữ (mm) mà bảng phải vừa. */
   textWidthMm: number;
 }
@@ -63,14 +65,17 @@ export function buildPartyHeaderBlock(input: PartyHeaderInput): string {
         textParagraph(input.numberRow.placeDate, input.sizes.placeDate, { italic: true, beforePt: 6 }),
       ])}</w:tr>`
     : "";
-  return borderlessTable(total, leftWidth, `<w:tr>${cell(leftWidth, left)}${cell(rightWidth, right)}</w:tr>${numberRow}`);
+  const subjectRow = input.subjectRow
+    ? `<w:tr>${cell(leftWidth, [textParagraph(input.subjectRow.text, input.subjectRow.sizePt, { italic: true, beforePt: 6 })])}${cell(rightWidth, [textParagraph("", input.subjectRow.sizePt)])}</w:tr>`
+    : "";
+  return borderlessTable(total, leftWidth, `<w:tr>${cell(leftWidth, left)}${cell(rightWidth, right)}</w:tr>${numberRow}${subjectRow}`);
 }
 
 /** Dựng thông số khối đầu chuẩn Đảng từ Tuỳ chọn nhanh: cỡ chữ và bề rộng vùng chữ theo lề đang chọn. */
 export function partyHeaderFromOptions(
   profile: StandardProfile,
   values: FormatValues,
-  text: { parentLines: readonly string[]; issuerLines: readonly string[]; numberRow?: { so: string; placeDate: string } },
+  text: { parentLines: readonly string[]; issuerLines: readonly string[]; numberRow?: { so: string; placeDate: string }; subjectRow?: { text: string; sizePt: number } },
 ): PartyHeaderInput {
   const num = (id: string, fallback: number): number => (typeof values[id] === "number" ? (values[id] as number) : fallback);
   const fixed = profile.pageDefaults.marginsMm;

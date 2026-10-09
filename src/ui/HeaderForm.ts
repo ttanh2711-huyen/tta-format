@@ -2,6 +2,7 @@ import { insertHeaderBlock, isInsertHeaderSupported, startsWithTable } from "../
 import { buildTitleBody, subjectLine, titleInputFromOptions, validateTitleInput, type TitleBlockInput } from "../ooxml/titleBlock";
 import { QUOC_HIEU, buildHeaderBlock, headerInputFromOptions, MAX_PARENT_LINES, validateHeaderInput, type HeaderBlockInput } from "../ooxml/headerBlock";
 import { buildPartyHeaderBlock, MAX_PARENT_LINES as MAX_PARTY_PARENT_LINES, partyHeaderFromOptions, validatePartyHeader, type PartyHeaderInput } from "../standards/hd05/headerBlock";
+import { buildPartyTitleBody, partySubjectRow, partyTitleFromOptions, validatePartyTitle, type PartyTitleInput, type PartyTitleVariant } from "../standards/hd05/titleBlock";
 import { placeDateText, soText } from "../rules/validators";
 import { listAgencies, removeAgency, saveAgency } from "../settings/agencies";
 import type { FormatValues } from "../settings/formatOptions";
@@ -40,7 +41,7 @@ function button(text: string, onClick: () => void, props: Partial<HTMLButtonElem
 /** Form "Khối đầu văn bản" (T7): cơ quan chủ quản 0 đến 3 dòng, cơ quan ban hành, chèn bảng quốc hiệu và tiêu ngữ. */
 export type HeaderCollect =
   | { ok: true; kind: "quocHieu"; input: HeaderBlockInput; titleInput: TitleBlockInput | undefined }
-  | { ok: true; kind: "dang"; input: PartyHeaderInput }
+  | { ok: true; kind: "dang"; input: PartyHeaderInput; titleInput: PartyTitleInput | undefined }
   | { ok: false; error: string };
 
 export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): { refresh: () => void; collect: () => HeaderCollect } {
@@ -52,6 +53,8 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
   let withTitle = true;
   let variant: "letter" | "named" = "letter";
   const title = { typeName: "", subject: "", recipients: "" };
+  let partyVariant: PartyTitleVariant = "congVan";
+  let basis = "";
   const number = { so: "", typeAbbr: "", agencyAbbrs: "", day: "", month: "", year: "" };
   const PLACE_KEY = "nd30.place";
   let place = deps.store.get(PLACE_KEY) ?? "";
@@ -77,11 +80,28 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       numberRow = { so: so.text, placeDate: date.text };
     }
     if (profile.headerKind === "dang") {
-      const partyInput = partyHeaderFromOptions(profile, deps.values(), { parentLines: hasParent ? parentLines : [], issuerLines: issuer.split(/\r?\n/), numberRow });
+      let partyTitle: PartyTitleInput | undefined;
+      if (withTitle) {
+        partyTitle = partyTitleFromOptions(profile, deps.values(), {
+          variant: partyVariant,
+          typeName: title.typeName,
+          subject: title.subject,
+          recipients: title.recipients.split(/\r?\n/),
+          basis: basis.split(/\r?\n/),
+        });
+        const titleProblems = validatePartyTitle(partyTitle);
+        if (titleProblems.length > 0) return { ok: false, error: titleProblems.join(" ") };
+      }
+      const partyInput = partyHeaderFromOptions(profile, deps.values(), {
+        parentLines: hasParent ? parentLines : [],
+        issuerLines: issuer.split(/\r?\n/),
+        numberRow,
+        subjectRow: partyTitle ? partySubjectRow(partyTitle) : undefined,
+      });
       const partyProblems = validatePartyHeader(partyInput);
       if (partyProblems.length > 0) return { ok: false, error: partyProblems.join(" ") };
       if (numberRow) deps.store.set(PLACE_KEY, place.trim());
-      return { ok: true, kind: "dang", input: partyInput };
+      return { ok: true, kind: "dang", input: partyInput, titleInput: partyTitle };
     }
     let subjectRow: { text: string } | undefined;
     let titleInput: TitleBlockInput | undefined;
@@ -110,7 +130,7 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       return;
     }
     const profile = deps.currentStandard();
-    const xml = collected.kind === "dang" ? buildPartyHeaderBlock(collected.input) : buildHeaderBlock(collected.input) + (collected.titleInput ? buildTitleBody(collected.titleInput) : "");
+    const xml = collected.kind === "dang" ? buildPartyHeaderBlock(collected.input) + (collected.titleInput ? buildPartyTitleBody(collected.titleInput) : "") : buildHeaderBlock(collected.input) + (collected.titleInput ? buildTitleBody(collected.titleInput) : "");
     const expected = collected.kind === "dang" ? profile.identifyingTitle : QUOC_HIEU;
     try {
       if (!force && (await startsWithTable())) {
@@ -281,6 +301,42 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
     return section;
   }
 
+  /** Thể loại, trích yếu, Kính gửi/Kính trình và căn cứ ban hành của chuẩn Đảng (TD3). */
+  function partyTitleSection(): HTMLElement {
+    const toggle = create("input", { type: "checkbox", id: "hf-with-title", checked: withTitle });
+    toggle.addEventListener("change", () => {
+      withTitle = toggle.checked;
+      render();
+    });
+    const section = create("div", {}, create("label", {}, toggle, " Thêm thể loại, trích yếu, Kính gửi, căn cứ"));
+    if (!withTitle) return section;
+    const radio = (value: PartyTitleVariant, label: string): HTMLElement => {
+      const input = create("input", { type: "radio", name: "hf-party-variant", id: `hf-variant-${value}`, value, checked: partyVariant === value });
+      input.addEventListener("change", () => {
+        partyVariant = value;
+        if (value === "toTrinh" && title.typeName.trim() === "") title.typeName = "Tờ trình";
+        render();
+      });
+      return create("label", {}, input, ` ${label}`);
+    };
+    const text = (id: string, placeholder: string, value: string, onInput: (v: string) => void): HTMLInputElement => {
+      const input = create("input", { type: "text", id, value, placeholder });
+      input.addEventListener("input", () => onInput(input.value));
+      return input;
+    };
+    const area = (id: string, placeholder: string, value: string, onInput: (v: string) => void): HTMLTextAreaElement => {
+      const input = create("textarea", { id, rows: 3, value, placeholder });
+      input.addEventListener("input", () => onInput(input.value));
+      return input;
+    };
+    section.append(radio("congVan", "Công văn (về việc, Kính gửi)"), radio("coTenLoai", "Có thể loại (báo cáo, thông báo, quyết định...)"), radio("toTrinh", "Tờ trình (Kính trình)"));
+    if (partyVariant !== "congVan") section.append(create("div", {}, text("hf-type-name", "Thể loại, ví dụ Quyết định", title.typeName, (v) => (title.typeName = v))));
+    section.append(create("div", {}, text("hf-subject", partyVariant === "congVan" ? "Trích yếu (sau \"về việc\")" : "Trích yếu nội dung", title.subject, (v) => (title.subject = v))));
+    if (partyVariant !== "coTenLoai") section.append(create("div", {}, area("hf-recipients", partyVariant === "toTrinh" ? "Nơi nhận Kính trình, mỗi nơi một dòng" : "Nơi nhận Kính gửi, mỗi nơi một dòng", title.recipients, (v) => (title.recipients = v))));
+    section.append(create("div", {}, area("hf-basis", "Căn cứ ban hành (nếu có), mỗi căn cứ một dòng", basis, (v) => (basis = v))));
+    return section;
+  }
+
   function titleSection(): HTMLElement {
     const toggle = create("input", { type: "checkbox", id: "hf-with-title", checked: withTitle });
     toggle.addEventListener("change", () => {
@@ -326,10 +382,11 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
     body.replaceChildren();
     if (profile.headerKind === "dang") {
       body.append(
-        create("p", { className: "note", textContent: "Chèn bảng cơ quan cấp trên, cơ quan ban hành (dấu *) và tiêu đề ĐẢNG CỘNG SẢN VIỆT NAM ở đầu tài liệu. Thể loại và trích yếu sẽ có ở bước TD3." }),
+        create("p", { className: "note", textContent: "Chèn bảng cơ quan cấp trên, cơ quan ban hành (dấu *) và tiêu đề ĐẢNG CỘNG SẢN VIỆT NAM ở đầu tài liệu. Có thêm số, ký hiệu, ngày tháng, thể loại, trích yếu, Kính gửi và căn cứ ban hành." }),
         parentSection(),
         issuerSection(profile),
         numberSection(),
+        partyTitleSection(),
       );
     } else {
       body.append(

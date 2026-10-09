@@ -363,14 +363,15 @@ Dùng lại bảng quy tắc ở mục 6B của `plan.md`, bộ style `HD05_*` (
 ### TD3: Thể loại, trích yếu, "về việc" của công văn, "Kính gửi"/"Kính trình", căn cứ ban hành
 **Mô tả:** Giữa trang đầu: thể loại (in hoa 15–16 pt, đậm), trích yếu (in thường 14–15 pt, đậm) và **5 dấu gạch nối** căn giữa bên dưới. Công văn không ghi tên loại; dòng "về việc ..." (in thường 12 pt, nghiêng) căn đối diện số và ký hiệu. Dòng "Kính gửi:" (14 pt, nghiêng) và danh sách nơi nhận xử lý (mỗi nơi một dòng, gạch đầu dòng, cuối dòng `;`, dòng cuối `.`) cho công văn; "Kính trình:" cho tờ trình. Phần căn cứ ban hành: mỗi căn cứ một dòng bắt đầu bằng gạch ngang, kết thúc `;`, căn cứ cuối kết thúc `.`.
 **Tiêu chí nghiệm thu:**
-- [ ] Ba biến thể (có thể loại + trích yếu; công văn "về việc" + "Kính gửi"; tờ trình "Kính trình") đúng cỡ, kiểu, vị trí
-- [ ] Trích yếu nhiều dòng vẫn căn giữa đúng; 5 dấu gạch nối luôn là dòng riêng dưới trích yếu
-- [ ] Căn cứ ban hành nhập nhiều dòng, dấu câu tự chuẩn hoá
+- [ ] Ba biến thể (có thể loại + trích yếu; công văn "về việc" + "Kính gửi"; tờ trình "Kính trình") đúng cỡ, kiểu và thứ tự: mã và test xong; **vị trí dòng "về việc" cần bạn xem** (xem Trạng thái)
+- [x] Trích yếu dài tự xuống dòng vẫn là một đoạn căn giữa; 5 dấu gạch nối luôn là dòng riêng dưới trích yếu
+- [x] Căn cứ ban hành nhập nhiều dòng (mỗi dòng một căn cứ), dấu gạch đầu dòng, `;` và `.` tự chuẩn hoá
 **Kiểm chứng:**
-- [ ] `npm test`: golden OOXML ba biến thể và danh sách căn cứ
+- [x] `npm test`: 637 test; golden `party-title-named.xml`, `party-title-letter.xml`, `party-title-trinh.xml` (có căn cứ)
 - [ ] Thủ công: in PDF, so ô 5a, 5b, 9b của Phụ lục 1 và ví dụ Phụ lục 2
 **Phụ thuộc:** TD2
-**File dự kiến:** `src/standards/hd05/titleBlock.ts`, `src/standards/hd05/recipientsTop.ts`, `src/office/insertHeader.ts`, `src/standards/hd05/titleBlock.test.ts`
+**Trạng thái:** mã, giao diện (mục "Thêm thể loại, trích yếu, Kính gửi, căn cứ" của form Khối đầu chuẩn Đảng) và test xong; `typecheck`, `lint`, `build` sạch; đã thử trong trình duyệt giả lập (công văn, tờ trình, lỗi thiếu dữ liệu); **chưa thử trong Word**. **Giả định cần bạn xác nhận**: (1) dòng "về việc ..." của công văn đặt ở **hàng thứ ba của bảng đầu văn bản, ô trái dưới số và ký hiệu** (giống V/v của NĐ 30), vì hướng dẫn chỉ ghi "căn đối diện số và ký hiệu" chưa rõ cụ thể; (2) "Kính gửi:" nghiêng căn giữa rồi danh sách nơi nhận căn trái, mỗi nơi một dòng "- ...;" (một nơi thì "- ...."); (3) căn cứ ban hành đặt ngay sau phần Kính gửi hoặc trích yếu, căn đều hai bên, thụt treo 4 mm; (4) thể loại 16 pt, trích yếu 14 pt theo mặc định đề xuất Q13; giãn dòng các dòng danh sách lấy Exactly theo tuỳ chọn. Tờ trình tự điền thể loại "Tờ trình". Dùng lại `paragraph` của `ooxml/titleBlock.ts` (thêm nghiêng, căn đều, Exactly; golden NĐ 30 không đổi).
+**File thực tế:** `src/standards/hd05/titleBlock.ts` (+ test, 3 golden), mở rộng `src/standards/hd05/headerBlock.ts` (`subjectRow`), `src/ooxml/titleBlock.ts`, `src/ui/HeaderForm.ts`
 **Kích cỡ:** M
 
 ### TD4: Quyền hạn, chức vụ, họ tên, "Nơi nhận" gạch chân, ký hiệu người soạn

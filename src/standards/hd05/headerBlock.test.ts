@@ -137,3 +137,12 @@ describe("buildPartyHeaderBlock: hàng số, ký hiệu và ngày tháng (TD2)",
     expectMatchesGolden("party-header-block-number.xml", buildPartyHeaderBlock(withRow).replace(/></g, ">\n<"));
   });
 });
+
+describe("buildPartyHeaderBlock: hàng \"về việc\" của công văn (TD3)", () => {
+  it("hàng thứ ba: dòng về việc nghiêng 12 pt ở ô trái, ô phải trống", () => {
+    const t = tableOf({ ...base, numberRow: { so: "Số 05-CV/VPTW", placeDate: "Hà Nội, ngày 03 tháng 02 năm 2026" }, subjectRow: { text: "về việc cử cán bộ", sizePt: 12 } });
+    expect(t.rows).toHaveLength(3);
+    expect(t.rows[2][0][0]).toMatchObject({ text: "về việc cử cán bộ", sizePt: 12, italic: true, align: "center" });
+    expect(t.rows[2][1].map((p) => p.text)).toEqual([""]);
+  });
+});
