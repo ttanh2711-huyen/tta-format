@@ -3,6 +3,7 @@ import type { CheckDocument, CheckParagraph, Fix, Issue } from "../../checker/ty
 import { findAcademicTitle } from "../../ooxml/footerBlock";
 import { TIEU_NGU } from "../../ooxml/headerBlock";
 import type { StandardProfile } from "../types";
+import { checkPartyExtras } from "./extras";
 import { HEADER_MARKS } from "./rules";
 
 /**
@@ -285,5 +286,5 @@ function checkFooter(doc: CheckDocument, profile: StandardProfile): Issue[] {
 
 /** Quy tắc khối đầu, tiêu đề và khối cuối của chuẩn Đảng, dùng làm `extraRules` của engine. */
 export function checkPartyHeaderFooter(doc: CheckDocument, profile: StandardProfile): Issue[] {
-  return [...checkHeader(doc, profile), ...checkTitleBlock(doc, profile), ...checkFooter(doc, profile)];
+  return [...checkHeader(doc, profile), ...checkTitleBlock(doc, profile), ...checkFooter(doc, profile), ...checkPartyExtras(doc, profile)];
 }

@@ -604,13 +604,14 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 ### TD8: Đảng: phụ lục, dấu khẩn, phạm vi lưu hành, dự thảo, thông tin liên hệ
 **Mô tả:** Thành phần bổ sung theo mục II của HD 05: trang phụ lục ("Phụ lục" + số, dòng chỉ dẫn số/ký hiệu văn bản, đánh số trang riêng cho từng phụ lục); dấu chỉ mức độ khẩn (KHẨN, THƯỢNG KHẨN, HỎA TỐC; in hoa 14 pt, đậm, dưới số và ký hiệu, công văn thì dưới trích yếu); chỉ dẫn phạm vi lưu hành (in hoa 12 pt, đậm, góc phải trang đầu, cách mép trên 10 mm; "Không phổ biến trên phương tiện thông tin đại chúng" ở chân trang cuối); chỉ dẫn dự thảo ("Dự thảo lần 2", 14 pt nghiêng, dưới số và ký hiệu); ký hiệu người soạn và số lượng bản (11 pt); thông tin liên hệ (10 pt, trang cuối, dưới đường kẻ ngang hết vùng trình bày).
 **Tiêu chí nghiệm thu:**
-- [ ] Từng thành phần đúng cỡ, kiểu, vị trí theo mục 6B và Phụ lục 1 (ô 10, 11a, 11b, 12, 13)
+- [x] Từng thành phần đúng cỡ, kiểu, vị trí theo mục 6B và Phụ lục 1 (ô 10, 11a, 11b, 12, 13)
 - [ ] Phụ lục bắt đầu trang mới, đánh số trang riêng; chạy lại không tạo trùng
-- [ ] Bộ kiểm tra T14B nhận biết các thành phần này
+- [x] Bộ kiểm tra T14B nhận biết các thành phần này
 **Kiểm chứng:**
-- [ ] `npm test`: golden OOXML từng thành phần
+- [x] `npm test`: golden OOXML từng thành phần
 - [ ] Thủ công: in PDF, so Phụ lục 1 và bảng Phụ lục 2
 **Phụ thuộc:** TD5
+**Trạng thái:** mã và test xong (`src/standards/hd05/extras.ts`; `ui/InsertPanel.ts` nay dùng cho cả hai chuẩn; golden `partyContact.xml`, `partyAppendix-2.xml`); `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Chuẩn Đảng có thêm trong bảng "Chèn dấu khẩn, phụ lục…": dấu khẩn (KHẨN, THƯỢNG KHẨN, HỎA TỐC; dùng chung `urgencyMark`), chỉ dẫn phạm vi lưu hành (khung canh phải 12 pt in hoa đậm), chỉ dẫn dự thảo ("Dự thảo lần N", 14 pt nghiêng), dòng "Không phổ biến trên phương tiện thông tin đại chúng" (12 pt) và thông tin liên hệ (đường kẻ ngang rồi các dòng 10 pt) ở cuối tài liệu, trang phụ lục ("Phụ lục I…" tự đánh số nối tiếp, đếm theo nhãn danh sách, bắt đầu trang mới, tên in hoa đậm, chỉ dẫn nghiêng). Ký hiệu người soạn và số bản (11 pt) đã có từ TD4. Bộ kiểm tra: `extras.draft.*`, `extras.noPublic.size`, `urgency.*` (có nút Sửa). **Chưa làm / giới hạn**: đánh số trang riêng cho từng phụ lục (cần ngắt phần và `pgNumType`, rủi ro làm hỏng thiết lập trang nên để người dùng đặt tay, giao diện có hướng dẫn); chỉ dẫn phạm vi lưu hành chèn tại con trỏ chứ chưa tự đặt cách mép trên 10 mm; dòng "Không phổ biến" và thông tin liên hệ chèn vào cuối tài liệu chứ chưa vào chân trang cuối. Tôi cũng chưa có nguyên văn mục 6B/Phụ lục 1 ô 10–13 nên cỡ chữ lấy từ `ELEMENTS` của chuẩn.
 **File dự kiến:** `src/standards/hd05/extras.ts`, `src/standards/hd05/appendix.ts`, `src/ui/InsertPanel.ts`, `src/standards/hd05/extras.test.ts`
 **Kích cỡ:** M
 
