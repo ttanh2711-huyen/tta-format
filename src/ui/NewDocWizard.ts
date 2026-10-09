@@ -6,6 +6,7 @@ import type { FormatValues } from "../settings/formatOptions";
 import type { StyleSpec } from "../ooxml/styleSpecs";
 import { assembleDocumentBody } from "../ooxml/documentAssembler";
 import { QUOC_HIEU } from "../ooxml/headerBlock";
+import { assembleDecisionBody, DECISION_KINDS, decisionInputFromOptions, decisionKindInfo, decisionNumberingXml, MAX_ARTICLES, validateDecision, type DecisionKind } from "../templates/quyetDinh";
 import { assemblePartyDocumentBody } from "../standards/hd05/assembleDocument";
 import type { StandardId, StandardProfile } from "../standards/types";
 import type { FooterCollect } from "./FooterForm";
@@ -22,7 +23,9 @@ export interface NewDocWizardDeps {
   writeStandard?: (id: StandardId) => Promise<void>;
 }
 
-type DocumentParts = Pick<LetterContext, "buildBody" | "headText" | "signerName">;
+type DocumentParts = Pick<LetterContext, "buildBody" | "headText" | "signerName" | "numberingXml">;
+
+type FormKind = "congVan" | DecisionKind;
 
 function create<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -54,13 +57,16 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
   let busy = false;
   let snapshot: DocumentSnapshot | null = null;
 
+  let form: FormKind = "congVan";
+  const decision = { authority: "", basis: "", articles: "3" };
   const note = create("p", { className: "note" });
+  const formBox = create("div", { id: "nw-form" });
   const create_ = button("Tạo công văn", () => void onCreate(false), { id: "nw-create" });
   const restore = button("Khôi phục bản trước khi tạo", () => onRestore(), { id: "nw-restore", hidden: true });
   const panel = create("div", { id: "nw-panel" });
   const message = create("p", { id: "nw-message" });
   message.setAttribute("role", "status");
-  container.append(create("h2", { textContent: "Tạo công văn mới" }), note, create("div", {}, create_, " ", restore), panel, message);
+  container.append(create("h2", { textContent: "Tạo công văn mới" }), note, formBox, create("div", {}, create_, " ", restore), panel, message);
 
   function show(kind: "ok" | "warning" | "error" | "", text: string): void {
     message.className = kind;
@@ -77,9 +83,40 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
     const profile = deps.currentStandard();
     const party = profile.headerKind === "dang";
     note.textContent = `Điền Khối đầu và Khối cuối bên dưới rồi bấm: add-in thiết lập trang${party ? " (lề đối xứng nếu bật in hai mặt)" : ""}, cài style, dựng khối đầu, ${party ? "thể loại hoặc Kính gửi, căn cứ" : "Kính gửi"}, chỗ nội dung, khối cuối và đánh số trang. Sau đó bạn gõ nội dung vào chỗ con trỏ.`;
-    create_.textContent = party ? "Tạo văn bản Đảng" : "Tạo công văn";
+    create_.textContent = party ? "Tạo văn bản Đảng" : form === "congVan" ? "Tạo công văn" : `Tạo ${decisionKindInfo(form).label.toLowerCase()}`;
+    renderForm(party);
     panel.replaceChildren();
     show("", "");
+  }
+
+  /** Chọn dạng văn bản (chuẩn Chính quyền) và các ô riêng của nghị quyết, quyết định cá biệt. */
+  function renderForm(party: boolean): void {
+    formBox.replaceChildren();
+    if (party) {
+      form = "congVan";
+      return;
+    }
+    const select = create("select", { id: "nw-form-kind" });
+    select.append(create("option", { value: "congVan", textContent: "Công văn" }));
+    for (const info of DECISION_KINDS) select.append(create("option", { value: info.kind, textContent: `${info.label} (${info.template})` }));
+    select.value = form;
+    select.addEventListener("change", () => {
+      form = select.value as FormKind;
+      refresh();
+    });
+    formBox.append(create("label", {}, "Dạng văn bản ", select));
+    if (form === "congVan") return;
+    const info = decisionKindInfo(form);
+    const field = (id: string, el: HTMLInputElement | HTMLTextAreaElement, onInput: (v: string) => void): HTMLElement => {
+      el.addEventListener("input", () => onInput(el.value));
+      return create("div", {}, el);
+    };
+    formBox.append(
+      create("p", { className: "note", textContent: `Ở Khối đầu hãy chọn "Văn bản có tên loại" và nhập trích yếu (ví dụ "Về việc ..."); add-in tự ghi tên loại "${info.typeName.toUpperCase()}". Phần dưới tạo thẩm quyền ban hành, căn cứ, dòng "${info.verdict}" và các Điều đánh số tự động.` }),
+      field("nw-authority", create("input", { type: "text", id: "nw-authority", value: decision.authority, placeholder: "Thẩm quyền ban hành, ví dụ Chủ tịch Ủy ban nhân dân thành phố" }), (v) => (decision.authority = v)),
+      field("nw-basis", create("textarea", { id: "nw-basis", rows: 4, value: decision.basis, placeholder: "Căn cứ, mỗi căn cứ một dòng" }), (v) => (decision.basis = v)),
+      field("nw-articles", create("input", { type: "text", id: "nw-articles", value: decision.articles, placeholder: `Số Điều (1 đến ${MAX_ARTICLES})`, inputMode: "numeric" }), (v) => (decision.articles = v)),
+    );
   }
 
   async function hasContent(): Promise<boolean> {
@@ -96,7 +133,21 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
     }
     const profile = deps.currentStandard();
     let parts: DocumentParts;
-    if (header.kind === "quocHieu" && footer.kind === "quocHieu") {
+    if (header.kind === "quocHieu" && footer.kind === "quocHieu" && form !== "congVan") {
+      if (header.titleInput?.variant !== "named") {
+        show("error", "Ở Khối đầu hãy chọn \"Văn bản có tên loại\" và nhập trích yếu.");
+        return;
+      }
+      const info = decisionKindInfo(form);
+      const decisionInput = decisionInputFromOptions(profile, deps.values(), { kind: form, authority: decision.authority, basis: decision.basis.split(/\r?\n/), articleCount: Number(decision.articles) });
+      const decisionProblems = validateDecision(decisionInput);
+      if (decisionProblems.length > 0) {
+        show("error", decisionProblems.join(" "));
+        return;
+      }
+      const document = { header: header.input, title: { ...header.titleInput, typeName: info.typeName }, footer: footer.input };
+      parts = { buildBody: () => assembleDecisionBody(document, decisionInput), headText: QUOC_HIEU, signerName: footer.input.signerName, numberingXml: decisionNumberingXml(decisionInput) };
+    } else if (header.kind === "quocHieu" && footer.kind === "quocHieu") {
       const document = { header: header.input, title: header.titleInput, footer: footer.input };
       parts = { buildBody: (body) => assembleDocumentBody(document, body), headText: QUOC_HIEU, signerName: footer.input.signerName };
     } else if (header.kind === "dang" && footer.kind === "dang") {

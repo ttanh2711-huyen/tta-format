@@ -9,15 +9,16 @@ export function mmToTwips(mm: number): number {
   return Math.round((mm * 1440) / 25.4);
 }
 
-/** Gói OOXML phẳng đưa vào insertOoxml; có phần styles khi truyền `stylesXml`. */
-export function flatOpc(options: { bodyXml: string; stylesXml?: string }): string {
-  const { bodyXml, stylesXml } = options;
+/** Gói OOXML phẳng đưa vào insertOoxml; có phần styles khi truyền `stylesXml`, phần numbering khi truyền `numberingXml` (cả thẻ `w:numbering`). */
+export function flatOpc(options: { bodyXml: string; stylesXml?: string; numberingXml?: string }): string {
+  const { bodyXml, stylesXml, numberingXml } = options;
   const relsType = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
-  const stylesPart = stylesXml
-    ? `<pkg:part pkg:name="/word/styles.xml" pkg:contentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"><pkg:xmlData><w:styles xmlns:w="${W_NS}">${stylesXml}</w:styles></pkg:xmlData></pkg:part>`
-    : "";
-  const documentRels = stylesXml
-    ? `<pkg:part pkg:name="/word/_rels/document.xml.rels" pkg:contentType="application/vnd.openxmlformats-package.relationships+xml"><pkg:xmlData><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${relsType}/styles" Target="styles.xml"/></Relationships></pkg:xmlData></pkg:part>`
+  const part = (name: string, type: string, xml: string) => `<pkg:part pkg:name="/word/${name}.xml" pkg:contentType="application/vnd.openxmlformats-officedocument.wordprocessingml.${type}+xml"><pkg:xmlData>${xml}</pkg:xmlData></pkg:part>`;
+  const stylesPart = stylesXml ? part("styles", "styles", `<w:styles xmlns:w="${W_NS}">${stylesXml}</w:styles>`) : "";
+  const numberingPart = numberingXml ? part("numbering", "numbering", numberingXml) : "";
+  const rels = [stylesXml ? `<Relationship Id="rId1" Type="${relsType}/styles" Target="styles.xml"/>` : "", numberingXml ? `<Relationship Id="rId2" Type="${relsType}/numbering" Target="numbering.xml"/>` : ""].join("");
+  const documentRels = rels
+    ? `<pkg:part pkg:name="/word/_rels/document.xml.rels" pkg:contentType="application/vnd.openxmlformats-package.relationships+xml"><pkg:xmlData><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rels}</Relationships></pkg:xmlData></pkg:part>`
     : "";
   return (
     `<pkg:package xmlns:pkg="http://schemas.microsoft.com/office/2006/xmlPackage">` +
@@ -25,6 +26,7 @@ export function flatOpc(options: { bodyXml: string; stylesXml?: string }): strin
     documentRels +
     `<pkg:part pkg:name="/word/document.xml" pkg:contentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"><pkg:xmlData><w:document xmlns:w="${W_NS}" ${DRAWING_NS}><w:body>${bodyXml}</w:body></w:document></pkg:xmlData></pkg:part>` +
     stylesPart +
+    numberingPart +
     `</pkg:package>`
   );
 }

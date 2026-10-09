@@ -13,6 +13,8 @@ export interface LetterContext extends FixAllContext {
   headText: string;
   /** Họ tên người ký, phải thấy trong bảng cuối cùng. */
   signerName: string;
+  /** Phần numbering.xml (cả thẻ `w:numbering`) nếu thân văn bản dùng đánh số tự động (Điều, Khoản, Điểm). */
+  numberingXml?: string;
 }
 
 const insertStep: PipelineStep<LetterContext> = {
@@ -28,7 +30,7 @@ const insertStep: PipelineStep<LetterContext> = {
     const exactPt = spec?.paragraph.lineSpacing.kind === "exactly" ? spec.paragraph.lineSpacing.pt : undefined;
     return Word.run(async (context) => {
       const body = context.document.body;
-      body.insertOoxml(flatOpc({ bodyXml: ctx.buildBody({ styleId: styleIdFromName(bodyStyle), exactPt }) }), "Replace");
+      body.insertOoxml(flatOpc({ bodyXml: ctx.buildBody({ styleId: styleIdFromName(bodyStyle), exactPt }), numberingXml: ctx.numberingXml }), "Replace");
       await context.sync();
 
       const paragraphs = body.paragraphs;
@@ -39,12 +41,23 @@ const insertStep: PipelineStep<LetterContext> = {
       const marker = paragraphs.items.find((paragraph) => paragraph.text.includes(BODY_MARKER));
       if (!marker) throw new Error("Không thấy chỗ đánh dấu nội dung sau khi chèn.");
       const notes: string[] = [];
-      marker.insertText("", "Replace");
+      // Đoạn chỗ nội dung có thể kèm chữ dẫn đứng trước (ví dụ "Ban hành kèm theo Quyết định này "): chỉ xoá chữ đánh dấu.
+      const hasLead = marker.text.trim() !== BODY_MARKER;
+      if (hasLead) {
+        const found = marker.search(BODY_MARKER);
+        found.load("items");
+        await context.sync();
+        if (found.items.length === 0) throw new Error("Không tìm thấy chữ đánh dấu nội dung trong đoạn.");
+        found.items[0].insertText("", "Replace");
+      } else {
+        marker.insertText("", "Replace");
+      }
       if (marker.style !== bodyStyle) {
         marker.style = bodyStyle;
         if (exactPt !== undefined) notes.push(`Đoạn nội dung phải gán lại style ${bodyStyle} nên giãn dòng Exactly ${exactPt} pt có thể chưa còn; bấm "Định dạng nội dung" để đặt lại.`);
       }
-      marker.select();
+      if (hasLead) marker.select("End");
+      else marker.select();
       const markerXml = marker.getOoxml();
       const first = tables.items[0];
       const last = tables.items[tables.items.length - 1];

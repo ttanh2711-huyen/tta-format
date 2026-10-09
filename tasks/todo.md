@@ -492,13 +492,14 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 ### T16: Quyết định và nghị quyết (cá biệt)
 **Mô tả:** Mẫu có phần "Căn cứ" (nghiêng, kết thúc ";"), dòng "QUYẾT ĐỊNH:" (hoặc tương ứng), đánh số Điều/Khoản/Điểm bằng multilevel list gắn với style `ND30_*`.
 **Tiêu chí nghiệm thu:**
-- [ ] Điều (đậm), Khoản (số), Điểm (chữ cái) đánh số tự động đúng cấp
-- [ ] Hai loại sinh đúng thể thức: nghị quyết cá biệt (Mẫu 1.1) và quyết định cá biệt quy định trực tiếp (Mẫu 1.2) hoặc gián tiếp (Mẫu 1.3). Chỉ thị dùng Mẫu 1.4, làm ở T17
-- [ ] Bộ kiểm tra T14 nhận biết và kiểm tra các thành phần mới
+- [x] Điều (đậm), Khoản (số), Điểm (chữ cái) đánh số tự động đúng cấp
+- [x] Hai loại sinh đúng thể thức: nghị quyết cá biệt (Mẫu 1.1) và quyết định cá biệt quy định trực tiếp (Mẫu 1.2) hoặc gián tiếp (Mẫu 1.3). Chỉ thị dùng Mẫu 1.4, làm ở T17
+- [x] Bộ kiểm tra T14 nhận biết và kiểm tra các thành phần mới
 **Kiểm chứng:**
-- [ ] `npm test`: golden OOXML numbering
+- [x] `npm test`: golden OOXML numbering
 - [ ] Thủ công: so mẫu Phụ lục III; thêm/xoá Điều thì số tự cập nhật
 **Phụ thuộc:** T12, T14
+**Trạng thái:** mã và test xong (`src/ooxml/numbering.ts`, `src/templates/quyetDinh.ts`, `src/standards/nd30/decisionChecks.ts`; 3 golden `quyetDinh-*.xml`; 886 test); `typecheck`, `lint`, `build` sạch; **chưa thử trong Word** (numbering qua `insertOoxml` là điểm rủi ro nhất, chưa có spike). Cách dùng: ở chuẩn Chính quyền, mục "Tạo công văn" có ô chọn *Dạng văn bản* (Công văn / Nghị quyết cá biệt / Quyết định cá biệt trực tiếp / gián tiếp); chọn dạng quyết định thì Khối đầu phải ở chế độ "Văn bản có tên loại" (add-in tự ghi tên loại QUYẾT ĐỊNH hoặc NGHỊ QUYẾT), nhập thêm thẩm quyền ban hành, các căn cứ, số Điều. Kết quả: khối đầu, tên loại + trích yếu, thẩm quyền (đậm, giữa), căn cứ (nghiêng, `;` và `,` ở căn cứ cuối), "QUYẾT ĐỊNH:"/"QUYẾT NGHỊ:", các Điều tự đánh số "Điều N." (nhãn đậm, nội dung thường, style ND30_NoiDung), con trỏ ở Điều 1 (gián tiếp: sau câu "Ban hành kèm theo Quyết định này "), khối cuối. Numbering ba cấp Điều/Khoản/Điểm đã định nghĩa (`legalParagraph("khoan"|"diem", …)`), nhưng trình tạo mới chỉ sinh cấp Điều; Khoản/Điểm người dùng thêm bằng Tab/Shift+Tab trong danh sách. Bộ kiểm tra: căn cứ liền trên dòng chốt phải nghiêng, cỡ 13–14, dấu cuối dòng đúng; dòng chốt đậm (`basis.*`, có nút Sửa). **Giới hạn / cần bạn duyệt**: (1) dấu cuối căn cứ cuối (xem `docs/nd30-ambiguities.md` mục 14); (2) chữ cái Điểm "đ" (mục 15); (3) Mẫu 1.2 và 1.3 hiện khác nhau chỉ ở câu mở Điều 1; chưa có phần "văn bản ban hành kèm theo"; (4) chưa tự động thêm Khoản/Điểm vào các Điều; (5) tên Điều (tiêu đề) và Khoản trong style ND30_Dieu/ND30_Khoan dùng cho quy chế (T18), quyết định dùng style nội dung.
 **File dự kiến:** `src/ooxml/numbering.ts`, `src/templates/quyetDinh.ts`, `src/checker/headerRules.ts`, `src/templates/quyetDinh.test.ts`
 **Kích cỡ:** M
 
