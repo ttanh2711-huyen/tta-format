@@ -1,6 +1,6 @@
 import { runChecks, summarizeIssues } from "../checker/engine";
 import { headerFooterRules } from "../checker/ruleSets";
-import type { Issue } from "../checker/types";
+import type { Fix, Issue } from "../checker/types";
 import { applyFixes } from "../office/applyFix";
 import { isReadDocumentSupported, readCheckDocument, selectParagraph } from "../office/readDocument";
 import type { StandardProfile } from "../standards/types";
@@ -30,12 +30,14 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
   const check = create("button", { id: "rp-check", type: "button", textContent: "Kiểm tra văn bản" });
   const summary = create("p", { id: "rp-summary" });
   summary.setAttribute("role", "status");
+  const fixAll = create("button", { id: "rp-fix-all", type: "button", textContent: "Sửa tất cả", hidden: true });
   const list = create("ol", { id: "rp-list" });
   container.append(
     create("h2", { textContent: "Kiểm tra văn bản" }),
     create("p", { className: "note", textContent: "Đối chiếu trang, phông, cỡ chữ, căn lề, thụt dòng, giãn đoạn, giãn dòng, khối đầu và khối cuối của văn bản với chuẩn đang chọn. Kiểm tra chỉ đọc; chỉ nút \"Sửa\" của từng lỗi mới sửa đúng chỗ đó." }),
     check,
     summary,
+    fixAll,
     list,
   );
 
@@ -79,17 +81,40 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
     return item;
   }
 
+  let pending: Fix[] = [];
+
+  fixAll.addEventListener("click", () => {
+    fixAll.disabled = true;
+    void applyFixes(pending)
+      .then((result) => onCheck().then(() => result))
+      .then((result) => {
+        if (result.skipped.length > 0) show("warning", `Đã sửa ${result.applied} lỗi; bỏ qua: ${result.skipped.join("; ")}`);
+      })
+      .catch((error: unknown) => show("error", `Không sửa được: ${errorText(error)}`))
+      .finally(() => {
+        fixAll.disabled = false;
+      });
+  });
+
   async function onCheck(): Promise<void> {
     if (busy) return;
     busy = true;
     check.disabled = true;
     list.replaceChildren();
+    fixAll.hidden = true;
     show("ok", "Đang đọc tài liệu…");
     try {
       const profile = deps.currentStandard();
       const issues = runChecks(await readCheckDocument(), profile, headerFooterRules(profile));
       const counts = summarizeIssues(issues);
       for (const issue of issues) list.append(renderIssue(issue));
+      // Bỏ cách sửa trùng hệt nhau (ví dụ hai lỗi cùng đòi một việc) để không áp hai lần lên cùng chỗ.
+      const unique = new Map<string, Fix>();
+      for (const issue of issues) if (issue.fix) unique.set(JSON.stringify(issue.fix), issue.fix);
+      pending = [...unique.values()];
+      fixAll.hidden = pending.length === 0;
+      fixAll.textContent = `Sửa tất cả (${pending.length})`;
+      fixAll.title = "Áp mọi cách sửa tự động trong một lần; Ctrl+Z hoàn tác.";
       if (issues.length === 0) show("ok", `Không thấy lỗi theo chuẩn ${profile.name}.`);
       else show(counts.errors > 0 ? "error" : "warning", `Chuẩn ${profile.name}: ${counts.errors} lỗi, ${counts.warnings} cảnh báo.`);
     } catch (error) {
@@ -110,6 +135,7 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
   return {
     refresh: () => {
       list.replaceChildren();
+      fixAll.hidden = true;
       if (isReadDocumentSupported()) show("", "");
     },
   };
