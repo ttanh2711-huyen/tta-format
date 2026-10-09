@@ -392,14 +392,15 @@ Dùng lại bảng quy tắc ở mục 6B của `plan.md`, bộ style `HD05_*` (
 ### TD5: Wizard "Tạo văn bản Đảng"
 **Mô tả:** Dùng lại vỏ wizard của T12 với tham số chuẩn Đảng: chọn thể loại (công văn, báo cáo, thông báo, tờ trình, quyết định ở bản đầu; các loại còn lại ở TD7), nhập cơ quan, số, ngày, trích yếu, "Kính gửi", căn cứ, người ký, nơi nhận → tạo tài liệu có đủ khối đầu, thân (con trỏ ở nội dung), khối cuối, số trang (T11 cho chuẩn Đảng: giữa trang, cách mép trên 10 mm, trang 1 không hiện), trang A4 lề 20/20/30/15 và style `HD05_*`.
 **Tiêu chí nghiệm thu:**
-- [ ] Từ tài liệu trống, một lần chạy cho ra văn bản Đảng đủ thể thức; ghi chuẩn Đảng vào thuộc tính tài liệu
-- [ ] Số trang đúng vị trí và không hiện ở trang 1; tuỳ chọn in hai mặt tạo lề đối xứng
-- [ ] Chạy trong tài liệu đã có nội dung thì hỏi xác nhận trước khi chèn
+- [ ] Từ tài liệu trống, một lần chạy cho ra văn bản Đảng đủ thể thức: mã xong, **chờ bạn thử trong Word**; chuẩn Đảng được ghi vào thuộc tính tài liệu sau khi tạo xong
+- [ ] Số trang (giữa, header cách mép trên 10 mm theo bước thiết lập trang, trang 1 không hiện) và lề đối xứng khi bật "In hai mặt" (bước thiết lập trang dùng `mirrorMargins`): dùng lại các bước đã có, **chờ bạn thử**
+- [x] Chạy trong tài liệu đã có nội dung (hoặc họ tên người ký có học hàm, học vị) thì hỏi xác nhận trước khi tạo; có nút khôi phục
 **Kiểm chứng:**
-- [ ] `npm test`: golden toàn tài liệu cho công văn, báo cáo, thông báo; `npm run build` thành công
+- [ ] `npm test`: 662 test; `npm run build` thành công; golden toàn tài liệu `document-party-letter.xml` (công văn); các ca có thể loại và căn cứ kiểm tra bằng cấu trúc, **chưa có golden riêng cho báo cáo và thông báo** (khác công văn chỉ ở các dòng thể loại, đã có golden `party-title-*.xml`)
 - [ ] Thủ công: tạo ba văn bản mẫu (công văn nhiều nơi nhận, báo cáo kèm căn cứ, thông báo ký thay) rồi in PDF
 **Phụ thuộc:** T11, T12, TD1, TD2, TD3, TD4
-**File dự kiến:** `src/ui/NewDocWizard.ts`, `src/standards/hd05/assembleDocument.ts`, `src/office/createDocument.ts`, `src/standards/hd05/assembleDocument.test.ts`
+**Trạng thái:** mã, giao diện (nút "Tạo văn bản Đảng" cùng vỏ với "Tạo công văn", đổi nhãn theo chuẩn) và test xong; `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Dùng chung vỏ của T12; `createDocument.ts` nay nhận hàm `buildBody` của từng chuẩn (không còn phụ thuộc kiểu của chuẩn Chính quyền). Đoạn chỗ nội dung được gắn sẵn style `HD05_NoiDung` (mã style suy từ tên, Word bỏ dấu gạch dưới) và **giãn dòng Exactly đặt trực tiếp** vì style cài bằng JSON chỉ ra "tối thiểu"; sau khi dựng, mã đọc lại và báo nếu style hay Exactly chưa đúng. Thể loại: chọn công văn, có thể loại (báo cáo, thông báo, quyết định...) hoặc tờ trình ở form Khối đầu; thể loại gõ tay (danh sách đầy đủ ở TD7). Chưa có: chọn thể loại từ danh sách, gợi ý ký hiệu loại theo thể loại.
+**File thực tế:** `src/standards/hd05/assembleDocument.ts` (+ test, golden), `src/office/createDocument.ts`, `src/ooxml/documentAssembler.ts` (`markerParagraph`), `src/ui/NewDocWizard.ts`, `src/taskpane/taskpane.ts`
 **Kích cỡ:** M
 
 ### Checkpoint 3B – MVP chuẩn Đảng

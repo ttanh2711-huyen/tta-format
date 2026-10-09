@@ -70,6 +70,7 @@ Office.onReady((info) => {
     behavior: quick.behavior,
     collectHeader: header.collect,
     collectFooter: footer.collect,
+    writeStandard: documentSupported ? writeDocumentStandard : undefined,
   });
   switcher.onChange(() => {
     quick.refresh();

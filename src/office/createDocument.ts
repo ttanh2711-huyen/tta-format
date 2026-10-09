@@ -1,54 +1,73 @@
-import { assembleDocumentBody, BODY_MARKER, type AssembleInput } from "../ooxml/documentAssembler";
+import { BODY_MARKER, type BodyParagraph } from "../ooxml/documentAssembler";
 import { flatOpc } from "../ooxml/flatOpc";
-import { QUOC_HIEU } from "../ooxml/headerBlock";
+import { hasExactLineRule } from "../ooxml/facts";
+import { styleIdFromName } from "../ooxml/styleXml";
 import { pageNumberStep, pageStep, styleStep, type FixAllContext } from "../pipeline/steps";
 import { runPipeline, type PipelineReport, type PipelineStep, type ProgressEvent } from "../pipeline/runner";
 
-/** Ngữ cảnh của trình tạo công văn: các tuỳ chọn của "Chỉnh toàn bộ" cộng với nội dung đã nhập. */
+/** Ngữ cảnh của trình tạo văn bản: các tuỳ chọn của "Chỉnh toàn bộ" cộng với nội dung đã dựng sẵn của từng chuẩn. */
 export interface LetterContext extends FixAllContext {
-  document: AssembleInput;
+  /** Dựng thân văn bản (khối đầu, tên loại, chỗ nội dung, khối cuối) với đoạn chỗ nội dung đã cho. */
+  buildBody: (body: BodyParagraph) => string;
+  /** Chữ phải thấy trong bảng đầu tiên sau khi dựng (quốc hiệu hoặc tiêu đề Đảng). */
+  headText: string;
+  /** Họ tên người ký, phải thấy trong bảng cuối cùng. */
+  signerName: string;
 }
 
 const insertStep: PipelineStep<LetterContext> = {
   id: "insert",
-  label: "3. Dựng khối đầu, Kính gửi, khối cuối",
+  label: "3. Dựng khối đầu, thân, khối cuối",
   order: 30,
   async plan() {
-    return { willRun: true, lines: ["Thay toàn bộ nội dung bằng công văn mới: khối đầu, Kính gửi, chỗ nội dung, khối cuối."] };
+    return { willRun: true, lines: ["Thay toàn bộ nội dung bằng văn bản mới: khối đầu, các dòng thể loại hoặc Kính gửi, chỗ nội dung, khối cuối."] };
   },
   async run(ctx) {
     const bodyStyle = `${ctx.profile.styles.prefix}NoiDung`;
+    const spec = ctx.specs.find((item) => item.name === bodyStyle);
+    const exactPt = spec?.paragraph.lineSpacing.kind === "exactly" ? spec.paragraph.lineSpacing.pt : undefined;
     return Word.run(async (context) => {
       const body = context.document.body;
-      body.insertOoxml(flatOpc({ bodyXml: assembleDocumentBody(ctx.document) }), "Replace");
+      body.insertOoxml(flatOpc({ bodyXml: ctx.buildBody({ styleId: styleIdFromName(bodyStyle), exactPt }) }), "Replace");
       await context.sync();
 
       const paragraphs = body.paragraphs;
-      paragraphs.load("items/text");
+      paragraphs.load("items/text,items/style");
       const tables = body.tables;
       tables.load("items");
       await context.sync();
       const marker = paragraphs.items.find((paragraph) => paragraph.text.includes(BODY_MARKER));
       if (!marker) throw new Error("Không thấy chỗ đánh dấu nội dung sau khi chèn.");
+      const notes: string[] = [];
       marker.insertText("", "Replace");
-      marker.style = bodyStyle;
+      if (marker.style !== bodyStyle) {
+        marker.style = bodyStyle;
+        if (exactPt !== undefined) notes.push(`Đoạn nội dung phải gán lại style ${bodyStyle} nên giãn dòng Exactly ${exactPt} pt có thể chưa còn; bấm "Định dạng nội dung" để đặt lại.`);
+      }
       marker.select();
+      const markerXml = marker.getOoxml();
       const first = tables.items[0];
       const last = tables.items[tables.items.length - 1];
       first.load("values");
       last.load("values");
       await context.sync();
 
-      const headOk = first.values.some((row) => row.some((text) => text.includes(QUOC_HIEU)));
-      const footOk = last.values.some((row) => row.some((text) => text.includes(ctx.document.footer.signerName.trim())));
-      return headOk && footOk
-        ? { status: "done" as const, kind: "ok" as const, text: `Đã dựng công văn (${tables.items.length} bảng); con trỏ ở chỗ nội dung.` }
-        : { status: "done" as const, kind: "warning" as const, text: "Đã dựng nhưng đọc lại không thấy đủ quốc hiệu hoặc họ tên người ký; hãy kiểm tra tài liệu." };
+      if (exactPt !== undefined && !hasExactLineRule(markerXml.value, Math.round(exactPt * 20))) {
+        notes.push(`Giãn dòng Exactly ${exactPt} pt chưa đặt được cho đoạn nội dung; bấm "Định dạng nội dung" sau khi gõ.`);
+      }
+      const headOk = first.values.some((row) => row.some((text) => text.includes(ctx.headText)));
+      const footOk = last.values.some((row) => row.some((text) => text.includes(ctx.signerName.trim())));
+      if (!headOk || !footOk) notes.push("Đọc lại không thấy đủ tiêu đề đầu văn bản hoặc họ tên người ký; hãy kiểm tra tài liệu.");
+      return {
+        status: "done" as const,
+        kind: notes.length === 0 ? ("ok" as const) : ("warning" as const),
+        text: [`Đã dựng văn bản (${tables.items.length} bảng); con trỏ ở chỗ nội dung.`, ...notes].join(" "),
+      };
     });
   },
 };
 
-/** Các bước tạo công văn: thiết lập trang, cài style, dựng nội dung, đánh số trang. */
+/** Các bước tạo văn bản: thiết lập trang, cài style, dựng nội dung, đánh số trang. */
 export function letterSteps(): Array<PipelineStep<LetterContext>> {
   return [pageStep, styleStep, insertStep, pageNumberStep];
 }

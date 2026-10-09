@@ -4,7 +4,10 @@ import { describeSnapshot, restoreSnapshot, takeSnapshot, type DocumentSnapshot 
 import { summarizeReport } from "../pipeline/runner";
 import type { FormatValues } from "../settings/formatOptions";
 import type { StyleSpec } from "../ooxml/styleSpecs";
-import type { StandardProfile } from "../standards/types";
+import { assembleDocumentBody } from "../ooxml/documentAssembler";
+import { QUOC_HIEU } from "../ooxml/headerBlock";
+import { assemblePartyDocumentBody } from "../standards/hd05/assembleDocument";
+import type { StandardId, StandardProfile } from "../standards/types";
 import type { FooterCollect } from "./FooterForm";
 import type { HeaderCollect } from "./HeaderForm";
 
@@ -15,7 +18,11 @@ export interface NewDocWizardDeps {
   behavior: () => { localFormatting: "keep" | "clear" };
   collectHeader: () => HeaderCollect;
   collectFooter: () => FooterCollect;
+  /** Ghi chuẩn vào thuộc tính tài liệu sau khi tạo xong; bỏ trống nếu Word không hỗ trợ. */
+  writeStandard?: (id: StandardId) => Promise<void>;
 }
+
+type DocumentParts = Pick<LetterContext, "buildBody" | "headText" | "signerName">;
 
 function create<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -68,11 +75,9 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
 
   function refresh(): void {
     const profile = deps.currentStandard();
-    const supported = profile.headerKind === "quocHieu";
-    note.textContent = supported
-      ? "Điền Khối đầu và Khối cuối bên dưới rồi bấm: add-in thiết lập trang, cài style, dựng khối đầu, Kính gửi, chỗ nội dung, khối cuối và đánh số trang. Sau đó bạn gõ nội dung vào chỗ con trỏ."
-      : `Tạo văn bản theo chuẩn ${profile.name} sẽ có ở bước TD5.`;
-    create_.hidden = !supported;
+    const party = profile.headerKind === "dang";
+    note.textContent = `Điền Khối đầu và Khối cuối bên dưới rồi bấm: add-in thiết lập trang${party ? " (lề đối xứng nếu bật in hai mặt)" : ""}, cài style, dựng khối đầu, ${party ? "thể loại hoặc Kính gửi, căn cứ" : "Kính gửi"}, chỗ nội dung, khối cuối và đánh số trang. Sau đó bạn gõ nội dung vào chỗ con trỏ.`;
+    create_.textContent = party ? "Tạo văn bản Đảng" : "Tạo công văn";
     panel.replaceChildren();
     show("", "");
   }
@@ -89,8 +94,16 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
       show("error", [header.ok ? "" : `Khối đầu: ${header.error}`, footer.ok ? "" : `Khối cuối: ${footer.error}`].filter(Boolean).join(" "));
       return;
     }
-    if (header.kind !== "quocHieu" || footer.kind !== "quocHieu") {
-      show("error", "Tạo văn bản theo chuẩn này sẽ có ở bước TD5.");
+    const profile = deps.currentStandard();
+    let parts: DocumentParts;
+    if (header.kind === "quocHieu" && footer.kind === "quocHieu") {
+      const document = { header: header.input, title: header.titleInput, footer: footer.input };
+      parts = { buildBody: (body) => assembleDocumentBody(document, body), headText: QUOC_HIEU, signerName: footer.input.signerName };
+    } else if (header.kind === "dang" && footer.kind === "dang") {
+      const document = { header: header.input, title: header.titleInput, footer: footer.input };
+      parts = { buildBody: (body) => assemblePartyDocumentBody(document, body), headText: profile.identifyingTitle, signerName: footer.input.signerName };
+    } else {
+      show("error", "Khối đầu và Khối cuối không cùng một chuẩn; hãy tải lại add-in.");
       return;
     }
     setBusy(true);
@@ -114,11 +127,11 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
       }
       panel.replaceChildren();
       const context: LetterContext = {
-        profile: deps.currentStandard(),
+        profile,
         values: deps.values(),
         specs: deps.styleSpecs(),
         localFormatting: deps.behavior().localFormatting,
-        document: { header: header.input, title: header.titleInput, footer: footer.input },
+        ...parts,
       };
       show("ok", "Đang chụp bản trước khi tạo…");
       let taken: DocumentSnapshot;
@@ -135,13 +148,21 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
         snapshot = taken;
         restore.hidden = false;
       }
+      let standardNote = "";
+      if (report.ok && deps.writeStandard) {
+        try {
+          await deps.writeStandard(profile.id);
+        } catch (error) {
+          standardNote = ` Chưa ghi được chuẩn vào tài liệu: ${errorText(error)}`;
+        }
+      }
       const summary = summarizeReport(report);
       const box = create("div", { className: "nw-box", id: "nw-report" }, create("strong", { textContent: report.ok ? "Kết quả" : "Chưa hoàn tất" }));
       const list = create("ul");
       for (const line of summary.lines) list.append(create("li", { textContent: line }));
       box.append(list);
       panel.replaceChildren(box);
-      show(summary.kind, report.ok ? "Đã tạo công văn; hãy gõ nội dung vào chỗ con trỏ." : "Có bước bị lỗi, xem chi tiết bên trên; có thể khôi phục bản trước khi tạo.");
+      show(summary.kind, report.ok ? `Đã tạo văn bản; hãy gõ nội dung vào chỗ con trỏ.${standardNote}` : "Có bước bị lỗi, xem chi tiết bên trên; có thể khôi phục bản trước khi tạo.");
     } catch (error) {
       show("error", `Lỗi ngoài dự kiến: ${errorText(error)}`);
     } finally {
