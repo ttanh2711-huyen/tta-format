@@ -17,9 +17,10 @@ function styled(doc: CheckDocument, name: string): CheckParagraph[] {
 export function checkNd30Structure(doc: CheckDocument, profile: StandardProfile): Issue[] {
   const issues: Issue[] = [];
   const prefix = profile.styles.prefix;
-  const titles: Array<{ style: string; rule: "chuong" | "muc"; label: string; elementId: string }> = [
+  const titles: Array<{ style: string; rule: "chuong" | "muc" | "phuLuc"; label: string; elementId: string }> = [
     { style: `${prefix}TieuDePhanChuong`, rule: "chuong", label: "Tên Chương", elementId: "tieuDePhanChuong" },
     { style: `${prefix}TieuDeMucTieuMuc`, rule: "muc", label: "Tên Mục", elementId: "tieuDeMucTieuMuc" },
+    { style: `${prefix}PhuLucTieuDe`, rule: "phuLuc", label: "Tên phụ lục", elementId: "phuLucTieuDe" },
   ];
   for (const { style, rule, label, elementId } of titles) {
     const source = profile.elements[elementId]?.source ?? "";

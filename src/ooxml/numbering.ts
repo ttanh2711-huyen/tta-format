@@ -26,13 +26,15 @@ export interface LevelSpec {
   continuous?: boolean;
   /** Thụt dòng đầu (twips) của đoạn mang nhãn. */
   firstLineTwips?: number;
+  /** Số bắt đầu của cấp (mặc định 1); dùng để nối số thứ tự giữa các lần chèn. */
+  start?: number;
 }
 
 function level(index: number, spec: LevelSpec): string {
   const suff = spec.labelOnly ? "nothing" : "space";
   const restart = spec.continuous ? '<w:lvlRestart w:val="0"/>' : "";
   return (
-    `<w:lvl w:ilvl="${index}"><w:start w:val="1"/><w:numFmt w:val="${spec.fmt}"/>${restart}<w:suff w:val="${suff}"/><w:lvlText w:val="${escapeXml(spec.text)}"/><w:lvlJc w:val="left"/>` +
+    `<w:lvl w:ilvl="${index}"><w:start w:val="${spec.start ?? 1}"/><w:numFmt w:val="${spec.fmt}"/>${restart}<w:suff w:val="${suff}"/><w:lvlText w:val="${escapeXml(spec.text)}"/><w:lvlJc w:val="left"/>` +
     `<w:pPr><w:ind w:left="0" w:firstLine="${spec.firstLineTwips ?? 0}"/></w:pPr><w:rPr>${spec.bold ? "<w:b/>" : '<w:b w:val="0"/>'}</w:rPr></w:lvl>`
   );
 }

@@ -562,13 +562,14 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 ### T21: Phụ lục và dấu chỉ mức độ khẩn/mật
 **Mô tả:** Chèn trang phụ lục (ngắt trang, tiêu đề "PHỤ LỤC", tên phụ lục) và khung dấu mức độ khẩn (KHẨN/THƯỢNG KHẨN/HỎA TỐC) và độ mật theo quy tắc.
 **Tiêu chí nghiệm thu:**
-- [ ] Dấu khẩn trong khung chữ nhật viền đơn, in hoa, đậm, đúng vị trí
-- [ ] Phụ lục bắt đầu trang mới, đánh số thứ tự tự động
-- [ ] Bộ kiểm tra nhận ra hai thành phần này
+- [x] Dấu khẩn trong khung chữ nhật viền đơn, in hoa, đậm, đúng vị trí
+- [x] Phụ lục bắt đầu trang mới, đánh số thứ tự tự động
+- [x] Bộ kiểm tra nhận ra hai thành phần này
 **Kiểm chứng:**
-- [ ] `npm test`: golden OOXML
+- [x] `npm test`: golden OOXML
 - [ ] Thủ công: so mẫu Phụ lục III
 **Phụ thuộc:** T12
+**Trạng thái:** mã và test xong (`src/ooxml/urgencyMark.ts`, `src/ooxml/appendix.ts`, `src/office/insertExtras.ts`, `src/ui/InsertPanel.ts`, `src/checker/urgencyRules.ts`; golden `urgencyMark-khan.xml`, `appendix-1.xml`; 1012 test); `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Bảng mới "Chèn dấu khẩn và phụ lục": chọn dấu (HỎA TỐC 30×8, THƯỢNG KHẨN 40×8, KHẨN 20×8 mm theo quy định) rồi "Chèn khung tại con trỏ" (bảng một ô viền đơn, cao cố định, chữ in hoa đậm giữa ô); nhập tên và chỉ dẫn rồi "Chèn phụ lục ở cuối tài liệu" (nhãn "Phụ lục I, II…" tự đánh số La Mã, nối tiếp các phụ lục đã có theo số đoạn style PhuLucSo; bắt đầu trang mới bằng `pageBreakBefore`; tên in hoa; chỉ dẫn trong ngoặc, nghiêng). Bộ kiểm tra: `urgency.*` nhận ra khung (chữ trùng dấu của chuẩn, trong bảng) và kiểm in hoa, đậm, cỡ 13–14 (dùng cho cả chuẩn Đảng); `structure.phuLuc.*` kiểm tên phụ lục. **Giới hạn**: dấu khẩn chèn tại con trỏ chứ chưa tự tìm chỗ dưới "Số, ký hiệu"; "độ mật" (mật, tối mật) không có trong NĐ 30 nên chưa làm, phạm vi lưu hành chưa có mục chèn riêng; nếu con trỏ đang ở giữa chữ thì bảng tách đoạn tại đó.
 **File dự kiến:** `src/ooxml/urgencyMark.ts`, `src/ooxml/appendix.ts`, `src/ui/InsertPanel.ts`, `src/ooxml/urgencyMark.test.ts`
 **Kích cỡ:** S
 
