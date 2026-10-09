@@ -9,11 +9,14 @@ const { join, resolve } = require("node:path");
 
 const DEV_ORIGIN = "https://localhost:3000";
 
-/** "0.9.0" thành "0.9.0.0"; Office yêu cầu đúng bốn số nguyên không âm. */
+/** "1.0.0" thành "1.0.0.0"; Office yêu cầu đúng bốn số nguyên không âm. */
 function officeVersion(packageVersion) {
   const parts = String(packageVersion).split(/[.+-]/).slice(0, 3);
   if (parts.length < 3 || parts.some((part) => !/^\d+$/.test(part))) {
     throw new Error(`Số phiên bản "${packageVersion}" phải có dạng x.y.z`);
+  }
+  if (Number(parts[0]) < 1) {
+    throw new Error(`Office yêu cầu phiên bản manifest từ 1.0.0 trở lên, nhưng package.json ghi "${packageVersion}".`);
   }
   return `${parts.join(".")}.0`;
 }
