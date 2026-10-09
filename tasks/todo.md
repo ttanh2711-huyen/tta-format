@@ -477,9 +477,11 @@ Dùng lại bảng quy tắc ở mục 6B của `plan.md`, bộ style `HD05_*` (
 
 ### Checkpoint 4 – Bộ kiểm tra
 - [ ] Nút "Chỉnh toàn bộ" chạy đủ các bước (trang, style, thân, bảng, khối đầu/cuối, số trang, sửa lỗi còn lại) trên cả hai chuẩn và kiểm tra lại cho 0 lỗi sửa được
-- [ ] Bộ văn bản mẫu có lỗi cài sẵn cho **cả hai chuẩn**: báo đủ lỗi, không báo sai trên văn bản chuẩn; tài liệu trộn dấu hiệu hai chuẩn được cảnh báo
+- [x] Bộ văn bản mẫu có lỗi cài sẵn cho **cả hai chuẩn**: báo đủ lỗi, không báo sai trên văn bản chuẩn; tài liệu trộn dấu hiệu hai chuẩn được cảnh báo
 - [ ] Người dùng văn thư thử trên văn bản thật và xác nhận mức độ hữu ích
-- [ ] Test, build, lint xanh
+- [x] Test, build, lint xanh
+
+**Trạng thái (tự động):** `src/checker/checkpoint4.test.ts` (20 ca, 852 test cả dự án): văn bản dựng từ trình tạo của cả hai chuẩn cho 0 lỗi; 12 lỗi cài sẵn (quốc hiệu/tiêu đề, số, ngày, chức vụ, họ tên, gạch nối, "Nơi nhận", quyền hạn…) đều được báo đúng mã và giả lập "Sửa tất cả" hết lỗi sửa được; trộn tiêu đề hai chuẩn bị cảnh báo. **Còn chờ bạn**: chạy "Chỉnh toàn bộ" thật trong Word cho cả hai chuẩn và thử trên văn bản thật (hai ô chưa tick: "Chỉnh toàn bộ" chạy đủ bước, người dùng văn thư xác nhận).
 
 ---
 
