@@ -89,7 +89,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
       show("error", [header.ok ? "" : `Khối đầu: ${header.error}`, footer.ok ? "" : `Khối cuối: ${footer.error}`].filter(Boolean).join(" "));
       return;
     }
-    if (header.kind !== "quocHieu") {
+    if (header.kind !== "quocHieu" || footer.kind !== "quocHieu") {
       show("error", "Tạo văn bản theo chuẩn này sẽ có ở bước TD5.");
       return;
     }

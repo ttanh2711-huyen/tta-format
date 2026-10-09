@@ -1,4 +1,5 @@
 import { insertFooterBlock } from "../office/insertFooter";
+import { buildPartyFooterBlock, partyFooterFromOptions, validatePartyFooter, type PartyFooterInput } from "../standards/hd05/footerBlock";
 import { MAX_POSITION_LINES, buildFooterBlock, findAcademicTitle, footerInputFromOptions, validateFooterInput, type FooterBlockInput } from "../ooxml/footerBlock";
 import type { FormatValues } from "../settings/formatOptions";
 import type { StandardProfile } from "../standards/types";
@@ -26,7 +27,10 @@ function button(text: string, onClick: () => void, props: Partial<HTMLButtonElem
 }
 
 /** Form "Khối cuối văn bản" (T10): nơi nhận, quyền hạn, chức vụ, họ tên; chèn bảng ở cuối tài liệu. */
-export type FooterCollect = { ok: true; input: FooterBlockInput; academicTitle: string | null } | { ok: false; error: string };
+export type FooterCollect =
+  | { ok: true; kind: "quocHieu"; input: FooterBlockInput; academicTitle: string | null }
+  | { ok: true; kind: "dang"; input: PartyFooterInput; academicTitle: string | null }
+  | { ok: false; error: string };
 
 export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): { refresh: () => void; collect: () => FooterCollect } {
   let recipients = "Như trên";
@@ -35,6 +39,9 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
   let positionLines = [""];
   let signerName = "";
   let confirmTitle: string | null = null;
+  let drafter = "";
+  let withConfirmation = false;
+  let confirmation = "";
 
   const body = create("div");
   const message = create("p", { id: "ff-message" });
@@ -48,9 +55,24 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
 
   /** Đọc và kiểm tra các ô đang nhập; dùng chung cho nút "Chèn khối cuối" và trình tạo công văn. */
   function collect(): FooterCollect {
-    const input = footerInputFromOptions(deps.currentStandard(), deps.values(), { recipients: recipients.split(/\r?\n/), luu, authority, positionLines, signerName });
+    const profile = deps.currentStandard();
+    const academicTitle = findAcademicTitle(signerName);
+    if (profile.headerKind === "dang") {
+      const party = partyFooterFromOptions(profile, deps.values(), {
+        recipients: recipients.split(/\r?\n/),
+        luu,
+        drafter,
+        authority,
+        positionLines,
+        signerName,
+        confirmation: withConfirmation ? confirmation : "",
+      });
+      const partyProblems = validatePartyFooter(party);
+      return partyProblems.length > 0 ? { ok: false, error: partyProblems.join(" ") } : { ok: true, kind: "dang", input: party, academicTitle };
+    }
+    const input = footerInputFromOptions(profile, deps.values(), { recipients: recipients.split(/\r?\n/), luu, authority, positionLines, signerName });
     const problems = validateFooterInput(input);
-    return problems.length > 0 ? { ok: false, error: problems.join(" ") } : { ok: true, input, academicTitle: findAcademicTitle(signerName) };
+    return problems.length > 0 ? { ok: false, error: problems.join(" ") } : { ok: true, kind: "quocHieu", input, academicTitle };
   }
 
   async function insert(force: boolean): Promise<void> {
@@ -59,7 +81,7 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
       show("error", collected.error);
       return;
     }
-    const { input } = collected;
+    const xml = collected.kind === "dang" ? buildPartyFooterBlock(collected.input) : buildFooterBlock(collected.input);
     if (!force && collected.academicTitle) {
       confirmTitle = collected.academicTitle;
       render();
@@ -67,7 +89,7 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
     }
     confirmTitle = null;
     try {
-      const result = await insertFooterBlock(buildFooterBlock(input), signerName.trim());
+      const result = await insertFooterBlock(xml, signerName.trim());
       render();
       show(result.verified ? "ok" : "warning", result.verified ? "Đã chèn khối cuối văn bản ở cuối tài liệu." : "Đã chèn nhưng đọc lại không thấy họ tên người ký trong bảng cuối; hãy kiểm tra tài liệu.");
     } catch (error) {
@@ -99,16 +121,13 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
   function render(): void {
     const profile = deps.currentStandard();
     body.replaceChildren();
-    if (profile.headerKind !== "quocHieu") {
-      body.append(create("p", { className: "note", textContent: `Khối cuối của chuẩn ${profile.name} (quyền hạn, nơi nhận gạch chân) sẽ có ở bước TD4.` }));
-      return;
-    }
+    const party = profile.headerKind === "dang";
     const list = create("textarea", { id: "ff-recipients", rows: 3, value: recipients, placeholder: "Nơi nhận, mỗi nơi một dòng" });
     list.addEventListener("input", () => {
       recipients = list.value;
     });
     body.append(
-      create("p", { className: "note", textContent: "Chèn bảng nơi nhận và chữ ký ở cuối tài liệu. Add-in tự thêm gạch đầu dòng, dấu ; và dấu . cuối mục." }),
+      create("p", { className: "note", textContent: party ? "Chèn bảng nơi nhận (gạch chân) và chữ ký (chức vụ không đậm) ở cuối tài liệu. Add-in tự thêm gạch đầu dòng, dấu ; và dấu . cuối mục." : "Chèn bảng nơi nhận và chữ ký ở cuối tài liệu. Add-in tự thêm gạch đầu dòng, dấu ; và dấu . cuối mục." }),
       create("div", {}, list),
       create("div", {}, "Lưu: ", text("ff-luu", "VT, ...", luu, (v) => (luu = v))),
       authoritySection(profile),
@@ -127,6 +146,18 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
       }, { id: "ff-remove-position", disabled: positionLines.length <= 1 }),
       create("div", {}, text("ff-name", "Họ và tên người ký (không ghi học hàm, học vị)", signerName, (v) => (signerName = v))),
     );
+    if (party) {
+      const toggle = create("input", { type: "checkbox", id: "ff-with-confirm", checked: withConfirmation });
+      toggle.addEventListener("change", () => {
+        withConfirmation = toggle.checked;
+        render();
+      });
+      body.append(
+        create("div", {}, text("ff-drafter", "Ký hiệu người soạn, số bản phát hành (nếu có)", drafter, (v) => (drafter = v))),
+        create("div", {}, create("label", {}, toggle, " Có dòng xác nhận chữ ký")),
+      );
+      if (withConfirmation) body.append(create("div", {}, text("ff-confirmation", "Họ tên, chức vụ người được xác nhận", confirmation, (v) => (confirmation = v))));
+    }
     if (confirmTitle !== null) {
       const box = create("div", { className: "ff-box", id: "ff-confirm" });
       box.setAttribute("role", "alert");

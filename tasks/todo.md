@@ -377,14 +377,15 @@ Dùng lại bảng quy tắc ở mục 6B của `plan.md`, bộ style `HD05_*` (
 ### TD4: Quyền hạn, chức vụ, họ tên, "Nơi nhận" gạch chân, ký hiệu người soạn
 **Mô tả:** Bảng 2 cột không viền: trái là "Nơi nhận:" (in thường 14 pt, đứng, gạch chân, có đường kẻ ngang dưới cụm từ) và danh sách (12 pt, gạch đầu dòng, cuối mục `;`, mục "Lưu" kết thúc `.`; công văn có "Như trên"; tờ trình theo mục "Kính trình"); phải là quyền hạn (T/M, K/T, T/L, Q.; in hoa 14 pt, đậm), chức vụ (in hoa 14 pt, **không đậm**), chỗ ký (mặc định 6 dòng trống), họ tên (in thường 14 pt, đậm, không học hàm, học vị). Dòng "Xác nhận chữ ký của đồng chí..." tuỳ chọn. Ký hiệu người soạn thảo và số lượng bản phát hành (11 pt) ở cuối "Nơi nhận" khi bật tuỳ chọn.
 **Tiêu chí nghiệm thu:**
-- [ ] Bốn quyền hạn (T/M, K/T, T/L, Q.) và các tổ hợp chức vụ hai dòng ("K/T TRƯỞNG BAN" / "PHÓ TRƯỞNG BAN") sinh đúng; chức vụ in hoa, không đậm; họ tên đậm
-- [ ] "Nơi nhận" gạch chân, danh sách đúng dấu câu; nhập họ tên có "TS.", "GS." thì cảnh báo
-- [ ] Dòng xác nhận chữ ký bật/tắt được và đặt đúng chỗ
+- [x] Bốn quyền hạn (T/M, K/T, T/L, Q.) và tổ hợp chức vụ hai dòng ("K/T TRƯỞNG BAN" / "PHÓ TRƯỞNG BAN") sinh đúng; quyền hạn đậm, chức vụ in hoa không đậm, họ tên đậm (kiểm tra từng run)
+- [x] "Nơi nhận" gạch chân, danh sách đúng dấu câu; họ tên có "TS.", "GS." thì cảnh báo "Vẫn chèn / Sửa lại" (dùng chung hàm của T10)
+- [ ] Dòng xác nhận chữ ký bật/tắt được; **vị trí (ngay dưới họ tên, cùng ô chữ ký) là giả định cần bạn xác nhận**
 **Kiểm chứng:**
-- [ ] `npm test`: golden OOXML; hàm phát hiện học hàm, học vị dùng chung với T10
+- [x] `npm test`: 655 test; golden `party-footer-block.xml`; hàm phát hiện học hàm, học vị dùng chung với T10
 - [ ] Thủ công: in PDF, so ô 7a–7c, 9a, 12 của Phụ lục 1 và Phụ lục 2
 **Phụ thuộc:** T2B, T5, T6A
-**File dự kiến:** `src/standards/hd05/footerBlock.ts`, `src/standards/hd05/signatureForms.ts`, `src/ui/FooterForm.ts`, `src/standards/hd05/footerBlock.test.ts`
+**Trạng thái:** mã, giao diện (form Khối cuối đổi theo chuẩn) và test xong; `typecheck`, `lint`, `build` sạch; đã thử trong trình duyệt giả lập; **chưa thử trong Word**. Bảng 2 cột 50%/50% không viền; "Nơi nhận:" 14 pt đứng gạch chân (gạch chân của chữ, chưa vẽ đường kẻ riêng), danh sách 12 pt; ký hiệu người soạn và số bản 11 pt là ô nhập tay ở cuối nơi nhận (không có quy tắc tự sinh); dòng xác nhận "Xác nhận chữ ký của đồng chí ..." 14 pt đặt dưới họ tên, cỡ này và vị trí là giả định. Danh sách quyền hạn lấy từ `signAuthority` của chuẩn. Chưa có mục "Nơi nhận" riêng cho tờ trình ("theo mục Kính trình"): người dùng tự nhập. Dùng lại `recipientLines` và `findAcademicTitle` của T10 (file `signatureForms.ts` không cần).
+**File thực tế:** `src/standards/hd05/footerBlock.ts` (+ test, golden), `src/ui/FooterForm.ts` (kết quả `collect()` có thêm `kind`), `src/ui/NewDocWizard.ts`
 **Kích cỡ:** M
 
 ### TD5: Wizard "Tạo văn bản Đảng"
