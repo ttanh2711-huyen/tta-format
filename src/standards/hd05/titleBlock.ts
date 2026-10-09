@@ -1,3 +1,4 @@
+import type { RecipientsRow } from "../../ooxml/headerBlock";
 import { paragraph } from "../../ooxml/titleBlock";
 import type { FormatValues } from "../../settings/formatOptions";
 import type { StandardProfile } from "../types";
@@ -6,7 +7,7 @@ import { HEADER_MARKS } from "./rules";
 /**
  * Phần thể loại, trích yếu, "Kính gửi"/"Kính trình" và căn cứ ban hành của văn bản Đảng (TD3), nằm dưới bảng
  * đầu văn bản. Ba biến thể: có thể loại (thể loại, trích yếu, 5 dấu gạch nối); công văn (không ghi tên loại,
- * dòng "về việc" nằm trong bảng đầu văn bản, rồi "Kính gửi"); tờ trình (có thể loại và "Kính trình").
+ * dòng "về việc" và "Kính gửi" nằm trong bảng đầu văn bản); tờ trình (có thể loại và "Kính trình").
  */
 
 export type PartyTitleVariant = "congVan" | "coTenLoai" | "toTrinh";
@@ -61,6 +62,12 @@ export function partySubjectRow(input: PartyTitleInput): { text: string; sizePt:
   return { text: `về việc ${subject}`, sizePt: input.sizes.trichYeuCongVan };
 }
 
+/** Hàng "Kính gửi" của công văn trong bảng đầu văn bản: nhãn nghiêng canh phải ở ô trái, nơi nhận canh trái ở ô phải. */
+export function partyRecipientsRow(input: PartyTitleInput): RecipientsRow | undefined {
+  if (input.variant !== "congVan") return undefined;
+  return { label: "Kính gửi:", italicLabel: true, lines: dashList(recipientsOf(input)), sizePt: input.sizes.kinhGui };
+}
+
 function typeAndSubject(input: PartyTitleInput): string[] {
   const { sizes } = input;
   return [
@@ -88,7 +95,7 @@ export function buildPartyTitleBody(input: PartyTitleInput): string {
   const problems = validatePartyTitle(input);
   if (problems.length > 0) throw new Error(problems.join(" "));
   const parts = input.variant === "congVan" ? [] : typeAndSubject(input);
-  if (input.variant !== "coTenLoai") parts.push(...recipientList(input));
+  if (input.variant === "toTrinh") parts.push(...recipientList(input));
   parts.push(...basisList(input));
   return parts.join("");
 }

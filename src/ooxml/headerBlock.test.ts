@@ -194,3 +194,41 @@ describe("buildHeaderBlock: hàng số và địa danh (T8)", () => {
     expect(buildHeaderBlock(withRow)).toContain('xml:space="preserve">Số:        /CCTL-ĐĐPCTT<');
   });
 });
+
+describe("buildHeaderBlock: hàng Kính gửi (nhãn canh phải ở ô trái, nơi nhận canh trái ở ô phải)", () => {
+  const withRow: HeaderBlockInput = {
+    ...base,
+    numberRow: { so: "Số: 05/UBND-VP", placeDate: "Cần Thơ, ngày 05 tháng 10 năm 2026" },
+    subjectRow: { text: "V/v cử công chức" },
+    recipientsRow: { label: "Kính gửi:", lines: ["- Bộ Nội vụ;", "- Bộ Tài chính."], sizePt: 14 },
+  };
+
+  it("là hàng thứ tư của bảng, ngay dưới ô V/v", () => {
+    const t = table(withRow);
+    expect(t.rows).toHaveLength(4);
+    expect(t.rows[2][0][0].text).toBe("V/v cử công chức");
+  });
+
+  it("cả hai ô bắt đầu từ dòng thứ hai: dòng đầu để trống", () => {
+    const [left, right] = table(withRow).rows[3];
+    expect(left.map((p) => p.text)).toEqual(["", "Kính gửi:"]);
+    expect(right.map((p) => p.text)).toEqual(["", "- Bộ Nội vụ;", "- Bộ Tài chính."]);
+  });
+
+  it("nhãn canh phải 14 pt; nơi nhận canh trái 14 pt, xuống dòng thẳng hàng sau dấu gạch", () => {
+    const [left, right] = table(withRow).rows[3];
+    expect(left[1]).toMatchObject({ align: "right", sizePt: 14 });
+    expect(right[1]).toMatchObject({ align: "left", sizePt: 14 });
+    expect(right[1].leftIndentMm).toBeGreaterThan(0);
+  });
+
+  it("một nơi nhận không có gạch đầu dòng, không thụt treo", () => {
+    const [, right] = table({ ...withRow, recipientsRow: { label: "Kính gửi:", lines: ["Sở Nông nghiệp"], sizePt: 14 } }).rows[3];
+    expect(right[1].text).toBe("Sở Nông nghiệp");
+    expect(right[1].leftIndentMm).toBeUndefined();
+  });
+
+  it("golden", () => {
+    expectMatchesGolden("header-block-recipients.xml", buildHeaderBlock(withRow).replace(/></g, ">\n<"));
+  });
+});

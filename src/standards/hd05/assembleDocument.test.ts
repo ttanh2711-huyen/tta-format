@@ -13,6 +13,7 @@ const letter: PartyAssembleInput = {
     sizes: { title: 15, parent: 14, issuer: 14, so: 14, placeDate: 14 },
     numberRow: { so: "Số 05-CV/BTCTU", placeDate: "Đồng Tháp, ngày 03 tháng 02 năm 2026" },
     subjectRow: { text: "về việc cử cán bộ dự hội nghị", sizePt: 12 },
+    recipientsRow: { label: "Kính gửi:", italicLabel: true, lines: ["- Ban Thường vụ Tỉnh ủy."], sizePt: 14 },
     textWidthMm: 165,
   },
   title: { variant: "congVan", subject: "cử cán bộ dự hội nghị", recipients: ["Ban Thường vụ Tỉnh ủy"], basis: [], sizes, lineExactPt: 20, textWidthMm: 165 },
@@ -36,12 +37,11 @@ function modelOf(input: PartyAssembleInput, body = {}): DocModel {
 }
 
 describe("assemblePartyDocumentBody", () => {
-  it("công văn: khối đầu, Kính gửi và danh sách, chỗ nội dung, khối cuối, đoạn đệm", () => {
+  it("công văn: khối đầu (đã gồm về việc và Kính gửi), chỗ nội dung, khối cuối, đoạn đệm", () => {
     const blocks = modelOf(letter).blocks;
-    expect(blocks.map((b) => b.kind)).toEqual(["table", "paragraph", "paragraph", "paragraph", "table", "paragraph"]);
-    expect((blocks[1] as ParagraphModel).text).toBe("Kính gửi:");
-    expect((blocks[3] as ParagraphModel).text).toBe(BODY_MARKER);
-    expect((blocks[0] as TableModel).rows).toHaveLength(3);
+    expect(blocks.map((b) => b.kind)).toEqual(["table", "paragraph", "table", "paragraph"]);
+    expect((blocks[1] as ParagraphModel).text).toBe(BODY_MARKER);
+    expect((blocks[0] as TableModel).rows).toHaveLength(4);
   });
 
   it("chỗ đánh dấu nội dung xuất hiện đúng một lần", () => {
@@ -51,7 +51,7 @@ describe("assemblePartyDocumentBody", () => {
   it("có thể loại và căn cứ: thể loại, trích yếu, 5 dấu gạch nối, căn cứ rồi chỗ nội dung", () => {
     const named: PartyAssembleInput = {
       ...letter,
-      header: { ...letter.header, subjectRow: undefined },
+      header: { ...letter.header, subjectRow: undefined, recipientsRow: undefined },
       title: { ...letter.title!, variant: "coTenLoai", typeName: "Quyết định", subject: "Về việc ban hành Quy chế", recipients: [], basis: ["Căn cứ Điều lệ Đảng", "Căn cứ Quy định 399-QĐ/TW"] },
     };
     const texts = modelOf(named).blocks.slice(1, 7).map((b) => (b as ParagraphModel).text);
@@ -59,14 +59,14 @@ describe("assemblePartyDocumentBody", () => {
   });
 
   it("không có phần thể loại thì chèn một đoạn trống để hai bảng không dính nhau", () => {
-    const kinds = modelOf({ ...letter, title: undefined, header: { ...letter.header, subjectRow: undefined } }).blocks.map((b) => b.kind);
+    const kinds = modelOf({ ...letter, title: undefined, header: { ...letter.header, subjectRow: undefined, recipientsRow: undefined } }).blocks.map((b) => b.kind);
     expect(kinds).toEqual(["table", "paragraph", "paragraph", "table", "paragraph"]);
   });
 
   it("đoạn chỗ nội dung gắn style và Exactly nếu được yêu cầu", () => {
     const xml = assemblePartyDocumentBody(letter, { styleId: "HD05NoiDung", exactPt: 20 });
     expect(xml).toContain('<w:pStyle w:val="HD05NoiDung"/><w:spacing w:line="400" w:lineRule="exact"/>');
-    const marker = modelOf(letter, { styleId: "HD05NoiDung", exactPt: 20 }).blocks[3] as ParagraphModel;
+    const marker = modelOf(letter, { styleId: "HD05NoiDung", exactPt: 20 }).blocks[1] as ParagraphModel;
     expect(marker.lineExactPt).toBe(20);
   });
 

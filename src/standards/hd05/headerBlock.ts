@@ -1,5 +1,5 @@
 import { mmToTwips } from "../../ooxml/flatOpc";
-import { borderlessTable, cell, LEFT_COLUMN_RATIO, textParagraph } from "../../ooxml/headerBlock";
+import { borderlessTable, cell, LEFT_COLUMN_RATIO, recipientsRowXml, textParagraph, type RecipientsRow } from "../../ooxml/headerBlock";
 import { lineShapeRun } from "../../ooxml/lineShape";
 import { textWidthMm } from "../../ooxml/textWidth";
 import type { FormatValues } from "../../settings/formatOptions";
@@ -25,6 +25,8 @@ export interface PartyHeaderInput {
   numberRow?: { so: string; placeDate: string };
   /** Hàng thứ ba của công văn: dòng "về việc ..." (nghiêng) ở ô trái, ô phải để trống (TD3). */
   subjectRow?: { text: string; sizePt: number };
+  /** Hàng "Kính gửi" của công văn (nhãn canh phải ở ô trái, nơi nhận canh trái ở ô phải). */
+  recipientsRow?: RecipientsRow;
   /** Bề rộng vùng chữ (mm) mà bảng phải vừa. */
   textWidthMm: number;
 }
@@ -70,14 +72,14 @@ export function buildPartyHeaderBlock(input: PartyHeaderInput): string {
   const subjectRow = input.subjectRow
     ? `<w:tr>${cell(leftWidth, [textParagraph(input.subjectRow.text, input.subjectRow.sizePt, { italic: true, beforePt: 6 })])}${cell(rightWidth, [textParagraph("", input.subjectRow.sizePt)])}</w:tr>`
     : "";
-  return borderlessTable(total, leftWidth, `<w:tr>${cell(leftWidth, left)}${cell(rightWidth, right)}</w:tr>${numberRow}${subjectRow}`);
+  return borderlessTable(total, leftWidth, `<w:tr>${cell(leftWidth, left)}${cell(rightWidth, right)}</w:tr>${numberRow}${subjectRow}${input.recipientsRow ? recipientsRowXml(input.recipientsRow, leftWidth, rightWidth) : ""}`);
 }
 
 /** Dựng thông số khối đầu chuẩn Đảng từ Tuỳ chọn nhanh: cỡ chữ và bề rộng vùng chữ theo lề đang chọn. */
 export function partyHeaderFromOptions(
   profile: StandardProfile,
   values: FormatValues,
-  text: { parentLines: readonly string[]; issuerLines: readonly string[]; numberRow?: { so: string; placeDate: string }; subjectRow?: { text: string; sizePt: number } },
+  text: { parentLines: readonly string[]; issuerLines: readonly string[]; numberRow?: { so: string; placeDate: string }; subjectRow?: { text: string; sizePt: number }; recipientsRow?: RecipientsRow },
 ): PartyHeaderInput {
   const num = (id: string, fallback: number): number => (typeof values[id] === "number" ? (values[id] as number) : fallback);
   const fixed = profile.pageDefaults.marginsMm;

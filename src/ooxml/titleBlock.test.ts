@@ -5,11 +5,10 @@ import { extractDocModel, type DocModel, type ParagraphModel, type TableModel } 
 import { expectMatchesGolden } from "./__golden__/golden";
 import { buildHeaderBlock, type HeaderBlockInput } from "./headerBlock";
 import { textWidthMm } from "./textWidth";
-import { buildTitleBody, subjectLine, validateTitleInput, type TitleBlockInput } from "./titleBlock";
+import { buildTitleBody, recipientsRowOf, subjectLine, validateTitleInput, type TitleBlockInput } from "./titleBlock";
 
 const fixture = JSON.parse(readFileSync(join(__dirname, "..", "..", "fixtures", "congvan-mau.json"), "utf8")) as DocModel;
 const fixtureHead = fixture.blocks[0] as TableModel;
-const fixtureKinhGui = fixture.blocks[2] as ParagraphModel;
 
 const sizes = { tenLoai: 14, trichYeu: 14, kinhGui: 14 };
 
@@ -60,30 +59,22 @@ describe("buildTitleBody: có tên loại", () => {
   });
 });
 
-describe("buildTitleBody: công văn (Kính gửi)", () => {
-  it("một nơi nhận: một dòng căn giữa, giãn trước và sau 12 pt, khớp fixture", () => {
-    const blocks = paragraphs(letter);
-    expect(blocks).toHaveLength(1);
-    expect(blocks[0].text).toBe("Kính gửi: Sở Nông nghiệp và Môi trường thành phố Cần Thơ");
-    expect(compareToFixture({ page: fixture.page, blocks: [blocks[0]] }, { page: fixture.page, blocks: [fixtureKinhGui] }, { ignore: [/\.text$/] })).toEqual([]);
+describe("công văn: Kính gửi nằm trong hàng của bảng đầu văn bản", () => {
+  it("phần thân sau bảng không còn dòng Kính gửi", () => {
+    expect(buildTitleBody(letter)).toBe("");
   });
 
-  it("nhiều nơi nhận: dòng 'Kính gửi:' rồi mỗi nơi một dòng gạch đầu dòng, chấm phẩy, cuối cùng chấm", () => {
-    const blocks = paragraphs({ ...letter, recipients: ["Bộ Nội vụ", "Bộ Tài chính", "UBND các tỉnh"] });
-    expect(blocks.map((b) => b.text)).toEqual(["Kính gửi:", "- Bộ Nội vụ;", "- Bộ Tài chính;", "- UBND các tỉnh."]);
-    expect(blocks[0].align).toBe("center");
-    expect(blocks[1].align).toBe("left");
-    expect(blocks[1].leftIndentMm).toBeGreaterThan(0);
+  it("một nơi nhận: ghi nguyên tên; nhiều nơi nhận: gạch đầu dòng, chấm phẩy, dòng cuối chấm", () => {
+    expect(recipientsRowOf(letter)).toEqual({ label: "Kính gửi:", lines: ["Sở Nông nghiệp và Môi trường thành phố Cần Thơ"], sizePt: 14 });
+    expect(recipientsRowOf({ ...letter, recipients: ["Bộ Nội vụ", "Bộ Tài chính", "UBND các tỉnh"] })?.lines).toEqual(["- Bộ Nội vụ;", "- Bộ Tài chính;", "- UBND các tỉnh."]);
   });
 
-  it("bỏ dòng nơi nhận trống, bỏ dấu câu thừa người dùng gõ cuối dòng", () => {
-    const blocks = paragraphs({ ...letter, recipients: ["", " Bộ Nội vụ; ", "Bộ Tài chính."] });
-    expect(blocks.map((b) => b.text)).toEqual(["Kính gửi:", "- Bộ Nội vụ;", "- Bộ Tài chính."]);
+  it("bỏ dòng trống và dấu câu người dùng đã gõ", () => {
+    expect(recipientsRowOf({ ...letter, recipients: ["", " Bộ Nội vụ; ", "Bộ Tài chính."] })?.lines).toEqual(["- Bộ Nội vụ;", "- Bộ Tài chính."]);
   });
 
-  it("golden: công văn một nơi nhận và nhiều nơi nhận", () => {
-    expectMatchesGolden("title-letter.xml", buildTitleBody(letter).replace(/></g, ">\n<"));
-    expectMatchesGolden("title-letter-multi.xml", buildTitleBody({ ...letter, recipients: ["Bộ Nội vụ", "Bộ Tài chính"] }).replace(/></g, ">\n<"));
+  it("biến thể có tên loại không có hàng Kính gửi", () => {
+    expect(recipientsRowOf(named)).toBeUndefined();
   });
 });
 

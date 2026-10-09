@@ -18,6 +18,7 @@ const sample: AssembleInput = {
     textWidthMm: 160,
     numberRow: { so: "Số:        /CCTL-ĐĐPCTT", placeDate: "Cần Thơ, ngày      tháng 10 năm 2026" },
     subjectRow: { text: subjectLine("cử công chức tham dự Hội nghị tập huấn") },
+    recipientsRow: { label: "Kính gửi:", lines: ["Sở Nông nghiệp và Môi trường thành phố Cần Thơ"], sizePt: 14 },
   },
   title: {
     variant: "letter",
@@ -55,10 +56,12 @@ const asDoc = (blocks: Block[]): DocModel => ({ page: fixture.page, blocks });
 describe("assembleDocumentBody: thứ tự các khối", () => {
   const blocks = modelOf(sample).blocks;
 
-  it("khối đầu, Kính gửi, chỗ nội dung, khối cuối, đoạn đệm", () => {
-    expect(blocks.map((b) => b.kind)).toEqual(["table", "paragraph", "paragraph", "table", "paragraph"]);
-    expect((blocks[1] as ParagraphModel).text).toContain("Kính gửi:");
-    expect((blocks[2] as ParagraphModel).text).toBe(BODY_MARKER);
+  it("công văn: khối đầu (đã gồm hàng Kính gửi), chỗ nội dung, khối cuối, đoạn đệm", () => {
+    expect(blocks.map((b) => b.kind)).toEqual(["table", "paragraph", "table", "paragraph"]);
+    expect((blocks[1] as ParagraphModel).text).toBe(BODY_MARKER);
+    const header = blocks[0] as TableModel;
+    expect(header.rows).toHaveLength(4);
+    expect(header.rows[3][0].map((p) => p.text)).toEqual(["", "Kính gửi:"]);
   });
 
   it("chỗ đánh dấu nội dung xuất hiện đúng một lần", () => {
@@ -66,14 +69,14 @@ describe("assembleDocumentBody: thứ tự các khối", () => {
   });
 
   it("không có phần tên loại thì chèn một đoạn trống để hai bảng không dính nhau", () => {
-    const kinds = modelOf({ ...sample, title: undefined, header: { ...sample.header, subjectRow: undefined } }).blocks.map((b) => b.kind);
+    const kinds = modelOf({ ...sample, title: undefined, header: { ...sample.header, subjectRow: undefined, recipientsRow: undefined } }).blocks.map((b) => b.kind);
     expect(kinds).toEqual(["table", "paragraph", "paragraph", "table", "paragraph"]);
   });
 
   it("biến thể có tên loại", () => {
     const named: AssembleInput = {
       ...sample,
-      header: { ...sample.header, subjectRow: undefined },
+      header: { ...sample.header, subjectRow: undefined, recipientsRow: undefined },
       title: { ...sample.title!, variant: "named", typeName: "Quyết định", subject: "Về việc ban hành Quy chế", recipients: [] },
     };
     const kinds = modelOf(named).blocks.map((b) => b.kind);
@@ -92,7 +95,7 @@ describe("công văn nhập đúng nội dung của file mẫu khớp fixture v�
   });
 
   it("khối đầu: từng đoạn có chữ theo thứ tự khớp fixture (bỏ độ rộng cột và đường kẻ nổi của mẫu)", () => {
-    const actual = textParagraphs(blocks[0] as TableModel);
+    const actual = textParagraphs({ ...(blocks[0] as TableModel), rows: (blocks[0] as TableModel).rows.slice(0, 3) });
     const expected = textParagraphs(fixtureHead);
     expect(actual).toHaveLength(expected.length);
     expect(compareToFixture(asDoc(actual), asDoc(expected), { ignore: [/floatingLinesMm/, /\.text$/] })).toEqual([]);
@@ -107,13 +110,8 @@ describe("công văn nhập đúng nội dung của file mẫu khớp fixture v�
     expect(actual).toEqual(["CHI CỤC THỦY LỢI", "Độc lập - Tự do - Hạnh phúc"]);
   });
 
-  it("Kính gửi khớp fixture", () => {
-    const expected = fixture.blocks[2] as ParagraphModel;
-    expect(compareToFixture(asDoc([blocks[1]]), asDoc([expected]), { ignore: [/\.text$/] })).toEqual([]);
-  });
-
   it("khối cuối: nơi nhận và chữ ký khớp fixture (mẫu căn dàn đều ở dòng Nơi nhận)", () => {
-    const actual = textParagraphs(blocks[3] as TableModel);
+    const actual = textParagraphs(blocks[2] as TableModel);
     const expected = textParagraphs(fixtureSign);
     expect(actual).toHaveLength(expected.length);
     expect(compareToFixture(asDoc(actual), asDoc(expected), { ignore: [/\.text$/, /\.align$/] })).toEqual([]);

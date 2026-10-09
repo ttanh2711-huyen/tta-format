@@ -1,6 +1,6 @@
 import type { FormatValues } from "../settings/formatOptions";
 import type { StandardProfile } from "../standards/types";
-import { lineParagraph } from "./headerBlock";
+import { lineParagraph, type RecipientsRow } from "./headerBlock";
 import { mmToTwips } from "./flatOpc";
 import { textWidthMm } from "./textWidth";
 
@@ -12,8 +12,6 @@ import { textWidthMm } from "./textWidth";
 
 const FONT = '<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>';
 const KINH_GUI = "Kính gửi:";
-/** Thụt treo (mm) của dòng nơi nhận để chữ xuống dòng thẳng hàng sau dấu gạch đầu dòng. */
-const DASH_HANGING_MM = 4;
 
 export interface TitleBlockInput {
   variant: "named" | "letter";
@@ -97,25 +95,23 @@ function namedBody(input: TitleBlockInput): string {
   ].join("");
 }
 
-function letterBody(input: TitleBlockInput): string {
+/**
+ * Hàng "Kính gửi" của công văn, đặt trong bảng đầu văn bản (ô dưới dòng V/v): nhãn canh phải ở ô trái, nơi nhận
+ * canh trái ở ô phải. Một nơi nhận ghi nguyên tên; nhiều nơi nhận mỗi nơi một dòng gạch đầu dòng, cuối dòng ";",
+ * dòng cuối ".". Biến thể có tên loại không có hàng này.
+ */
+export function recipientsRowOf(input: TitleBlockInput): RecipientsRow | undefined {
+  if (input.variant !== "letter") return undefined;
   const names = recipientsOf(input);
-  const size = input.sizes.kinhGui;
-  const base = { sizePt: size, lineMultiple: input.lineMultiple };
-  if (names.length === 1) return paragraph(`${KINH_GUI} ${names[0]}`, { ...base, beforePt: 12, afterPt: 12 });
-  // Nhiều nơi nhận: mỗi nơi một dòng, gạch đầu dòng, cuối dòng chấm phẩy, dòng cuối chấm; danh sách thẳng hàng với "Kính gửi:".
-  const left = Math.max(0, (input.textWidthMm - textWidthMm(KINH_GUI, size, false)) / 2);
-  const list = names.map((name, index) => {
-    const last = index === names.length - 1;
-    return paragraph(`- ${name}${last ? "." : ";"}`, { ...base, align: "left", leftMm: left, hangingMm: DASH_HANGING_MM, afterPt: last ? 12 : 0 });
-  });
-  return [paragraph(KINH_GUI, { ...base, beforePt: 12 }), ...list].join("");
+  const lines = names.length === 1 ? names : names.map((name, index) => `- ${name}${index === names.length - 1 ? "." : ";"}`);
+  return { label: KINH_GUI, lines, sizePt: input.sizes.kinhGui };
 }
 
 /** XML thân văn bản (các đoạn) nằm ngay sau bảng đầu văn bản. */
 export function buildTitleBody(input: TitleBlockInput): string {
   const problems = validateTitleInput(input);
   if (problems.length > 0) throw new Error(problems.join(" "));
-  return input.variant === "named" ? namedBody(input) : letterBody(input);
+  return input.variant === "named" ? namedBody(input) : "";
 }
 
 /** Dựng thông số tên loại, trích yếu, "Kính gửi" từ Tuỳ chọn nhanh. */

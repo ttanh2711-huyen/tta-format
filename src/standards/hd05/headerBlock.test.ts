@@ -144,3 +144,21 @@ describe("buildPartyHeaderBlock: hàng \"về việc\" của công văn (TD3)", 
     expect(t.rows[2][1].map((p) => p.text)).toEqual([""]);
   });
 });
+
+describe("buildPartyHeaderBlock: hàng Kính gửi của công văn", () => {
+  it("hàng cuối: nhãn nghiêng canh phải ở ô trái, nơi nhận canh trái ở ô phải, cả hai bắt đầu từ dòng thứ hai", () => {
+    const t = tableOf({
+      ...base,
+      numberRow: { so: "Số 05-CV/VPTW", placeDate: "Hà Nội, ngày 03 tháng 02 năm 2026" },
+      subjectRow: { text: "về việc cử cán bộ", sizePt: 12 },
+      recipientsRow: { label: "Kính gửi:", italicLabel: true, lines: ["- Ban A;", "- Ban B."], sizePt: 14 },
+    });
+    expect(t.rows).toHaveLength(4);
+    const [left, right] = t.rows[3];
+    expect(left.map((p) => p.text)).toEqual(["", "Kính gửi:"]);
+    expect(left[1]).toMatchObject({ align: "right", italic: true, sizePt: 14 });
+    expect(right.map((p) => p.text)).toEqual(["", "- Ban A;", "- Ban B."]);
+    expect(right[1]).toMatchObject({ align: "left", sizePt: 14 });
+    expect(right[1].italic).toBeFalsy();
+  });
+});

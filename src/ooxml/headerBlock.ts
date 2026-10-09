@@ -14,6 +14,26 @@ export const QUOC_HIEU = "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM";
 export const TIEU_NGU = "Độc lập - Tự do - Hạnh phúc";
 export const MAX_PARENT_LINES = 3;
 
+/** Hàng "Kính gửi" trong bảng đầu văn bản: cả hai ô bắt đầu từ dòng thứ hai (dòng đầu để trống). */
+export interface RecipientsRow {
+  label: string;
+  italicLabel?: boolean;
+  /** Mỗi phần tử một dòng nơi nhận, đã có dấu gạch đầu dòng nếu cần. */
+  lines: readonly string[];
+  sizePt: number;
+}
+
+const DASH_HANGING_MM = 4;
+
+export function recipientsRowXml(row: RecipientsRow, leftWidth: number, rightWidth: number): string {
+  const blank = textParagraph("", row.sizePt);
+  const label = textParagraph(row.label, row.sizePt, { italic: row.italicLabel, align: "right", afterPt: 12 });
+  const names = row.lines.map((line, index) =>
+    textParagraph(line, row.sizePt, { align: "left", hangingMm: line.startsWith("- ") ? DASH_HANGING_MM : undefined, afterPt: index === row.lines.length - 1 ? 12 : 0 }),
+  );
+  return `<w:tr>${cell(leftWidth, [blank, label])}${cell(rightWidth, [textParagraph("", row.sizePt), ...names])}</w:tr>`;
+}
+
 /** Tỉ lệ bề rộng cột trái của bảng đầu văn bản (theo file mẫu). */
 export const LEFT_COLUMN_RATIO = 0.45;
 const FONT = '<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/>';
@@ -27,6 +47,8 @@ export interface HeaderBlockInput {
   numberRow?: { so: string; placeDate: string };
   /** Hàng thứ ba của công văn: dòng "V/v ..." ở ô trái, ô phải để trống (T9). */
   subjectRow?: { text: string };
+  /** Hàng "Kính gửi" của công văn: nhãn ở ô trái (canh phải), các nơi nhận ở ô phải (canh trái). */
+  recipientsRow?: RecipientsRow;
   /** Độ dài đường kẻ dưới tên cơ quan so với độ dài dòng chữ. */
   agencyLineRatio: number;
   /** Bề rộng vùng chữ (mm) mà bảng phải vừa. */
@@ -48,11 +70,25 @@ export function validateHeaderInput(input: HeaderBlockInput): string[] {
   return errors;
 }
 
-export function textParagraph(text: string, sizePt: number, style: { bold?: boolean; italic?: boolean; beforePt?: number; shape?: string } = {}): string {
+export interface TextStyle {
+  bold?: boolean;
+  italic?: boolean;
+  beforePt?: number;
+  afterPt?: number;
+  /** Căn lề của đoạn; mặc định căn giữa. */
+  align?: "center" | "left" | "right";
+  /** Thụt treo (mm) cho dòng gạch đầu dòng, để các dòng xuống hàng thẳng hàng sau dấu gạch. */
+  hangingMm?: number;
+  shape?: string;
+}
+
+export function textParagraph(text: string, sizePt: number, style: TextStyle = {}): string {
   const half = sizePt * 2;
   const before = (style.beforePt ?? 0) * 20;
+  const after = (style.afterPt ?? 0) * 20;
+  const indent = style.hangingMm ? `<w:ind w:left="${mmToTwips(style.hangingMm)}" w:hanging="${mmToTwips(style.hangingMm)}"/>` : "";
   return (
-    `<w:p><w:pPr><w:spacing w:before="${before}" w:after="0" w:line="240" w:lineRule="auto"/><w:jc w:val="center"/></w:pPr>` +
+    `<w:p><w:pPr><w:spacing w:before="${before}" w:after="${after}" w:line="240" w:lineRule="auto"/>${indent}<w:jc w:val="${style.align ?? "center"}"/></w:pPr>` +
     `${style.shape ?? ""}<w:r><w:rPr>${FONT}${style.bold ? "<w:b/>" : ""}${style.italic ? "<w:i/>" : ""}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr><w:t xml:space="preserve">${escapeXml(text)}</w:t></w:r></w:p>`
   );
 }
@@ -112,7 +148,7 @@ export function buildHeaderBlock(input: HeaderBlockInput): string {
     ? `<w:tr>${cell(leftWidth, [textParagraph(input.subjectRow.text, input.sizes.subject ?? 13, { beforePt: 6 })])}${cell(rightWidth, [textParagraph("", 12)])}</w:tr>`
     : "";
 
-  return borderlessTable(total, leftWidth, `<w:tr>${cell(leftWidth, left)}${cell(rightWidth, right)}</w:tr>${numberRow}${subjectRow}`);
+  return borderlessTable(total, leftWidth, `<w:tr>${cell(leftWidth, left)}${cell(rightWidth, right)}</w:tr>${numberRow}${subjectRow}${input.recipientsRow ? recipientsRowXml(input.recipientsRow, leftWidth, rightWidth) : ""}`);
 }
 
 
@@ -120,7 +156,7 @@ export function buildHeaderBlock(input: HeaderBlockInput): string {
 export function headerInputFromOptions(
   profile: StandardProfile,
   values: FormatValues,
-  text: { parentLines: readonly string[]; issuer: string; numberRow?: { so: string; placeDate: string }; subjectRow?: { text: string } },
+  text: { parentLines: readonly string[]; issuer: string; numberRow?: { so: string; placeDate: string }; subjectRow?: { text: string }; recipientsRow?: RecipientsRow },
 ): HeaderBlockInput {
   const num = (id: string, fallback: number): number => (typeof values[id] === "number" ? (values[id] as number) : fallback);
   const { widthMm } = profile.page.paper;

@@ -3,7 +3,7 @@ import { textWidthMm } from "../../ooxml/textWidth";
 import { extractDocModel, type DocModel, type ParagraphModel } from "../../rules/docModel";
 import { buildRegistry, defaultValues } from "../../settings/formatOptions";
 import { HD05 } from "./profile";
-import { buildPartyTitleBody, dashList, partySubjectRow, partyTitleFromOptions, validatePartyTitle, type PartyTitleInput } from "./titleBlock";
+import { buildPartyTitleBody, dashList, partyRecipientsRow, partySubjectRow, partyTitleFromOptions, validatePartyTitle, type PartyTitleInput } from "./titleBlock";
 
 const base: PartyTitleInput = {
   variant: "coTenLoai",
@@ -71,13 +71,18 @@ describe("buildPartyTitleBody: có thể loại", () => {
 describe("buildPartyTitleBody: công văn", () => {
   const letter: PartyTitleInput = { ...base, variant: "congVan", typeName: undefined, subject: "cử cán bộ dự hội nghị", recipients: ["Ban Thường vụ Tỉnh ủy", "Các đồng chí Ủy viên Ban Chấp hành"] };
 
-  it("không ghi tên loại, không có 5 dấu gạch nối; có Kính gửi nghiêng 14 pt và danh sách nơi nhận", () => {
-    const result = blocks(letter);
-    expect(result.map((p) => p.text)).toEqual(["Kính gửi:", "- Ban Thường vụ Tỉnh ủy;", "- Các đồng chí Ủy viên Ban Chấp hành."]);
-    expect(result[0]).toMatchObject({ italic: true, sizePt: 14, align: "center" });
-    expect(result[1].align).toBe("left");
-    expect(result[1].italic).toBeFalsy();
-    expect(result[1].lineExactPt).toBe(20);
+  it("không ghi tên loại, không có 5 dấu gạch nối; Kính gửi nằm trong bảng đầu văn bản nên phần thân trống", () => {
+    expect(buildPartyTitleBody(letter)).toBe("");
+  });
+
+  it("hàng Kính gửi: nhãn nghiêng canh phải, nơi nhận dạng danh sách gạch đầu dòng", () => {
+    expect(partyRecipientsRow(letter)).toEqual({
+      label: "Kính gửi:",
+      italicLabel: true,
+      lines: ["- Ban Thường vụ Tỉnh ủy;", "- Các đồng chí Ủy viên Ban Chấp hành."],
+      sizePt: 14,
+    });
+    expect(partyRecipientsRow(base)).toBeUndefined();
   });
 
   it("dòng 'về việc' nằm ở hàng của bảng đầu văn bản, 12 pt nghiêng", () => {
@@ -85,10 +90,6 @@ describe("buildPartyTitleBody: công văn", () => {
     expect(partySubjectRow({ ...letter, subject: "V/v cử cán bộ" })).toEqual({ text: "về việc cử cán bộ", sizePt: 12 });
     expect(partySubjectRow({ ...letter, subject: "Về việc cử cán bộ" })).toEqual({ text: "về việc cử cán bộ", sizePt: 12 });
     expect(partySubjectRow(base)).toBeUndefined();
-  });
-
-  it("golden: công văn", () => {
-    expectMatchesGolden("party-title-letter.xml", buildPartyTitleBody(letter).replace(/></g, ">\n<"));
   });
 });
 

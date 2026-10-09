@@ -1,8 +1,8 @@
 import { insertHeaderBlock, isInsertHeaderSupported, startsWithTable } from "../office/insertHeader";
-import { buildTitleBody, subjectLine, titleInputFromOptions, validateTitleInput, type TitleBlockInput } from "../ooxml/titleBlock";
-import { QUOC_HIEU, buildHeaderBlock, headerInputFromOptions, MAX_PARENT_LINES, validateHeaderInput, type HeaderBlockInput } from "../ooxml/headerBlock";
+import { buildTitleBody, recipientsRowOf, subjectLine, titleInputFromOptions, validateTitleInput, type TitleBlockInput } from "../ooxml/titleBlock";
+import { QUOC_HIEU, buildHeaderBlock, headerInputFromOptions, MAX_PARENT_LINES, validateHeaderInput, type HeaderBlockInput, type RecipientsRow } from "../ooxml/headerBlock";
 import { buildPartyHeaderBlock, MAX_PARENT_LINES as MAX_PARTY_PARENT_LINES, partyHeaderFromOptions, validatePartyHeader, type PartyHeaderInput } from "../standards/hd05/headerBlock";
-import { buildPartyTitleBody, partySubjectRow, partyTitleFromOptions, validatePartyTitle, type PartyTitleInput, type PartyTitleVariant } from "../standards/hd05/titleBlock";
+import { buildPartyTitleBody, partyRecipientsRow, partySubjectRow, partyTitleFromOptions, validatePartyTitle, type PartyTitleInput, type PartyTitleVariant } from "../standards/hd05/titleBlock";
 import { placeDateText, soText } from "../rules/validators";
 import { listAgencies, removeAgency, saveAgency } from "../settings/agencies";
 import type { FormatValues } from "../settings/formatOptions";
@@ -97,6 +97,7 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
         issuerLines: issuer.split(/\r?\n/),
         numberRow,
         subjectRow: partyTitle ? partySubjectRow(partyTitle) : undefined,
+        recipientsRow: partyTitle ? partyRecipientsRow(partyTitle) : undefined,
       });
       const partyProblems = validatePartyHeader(partyInput);
       if (partyProblems.length > 0) return { ok: false, error: partyProblems.join(" ") };
@@ -104,6 +105,7 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       return { ok: true, kind: "dang", input: partyInput, titleInput: partyTitle };
     }
     let subjectRow: { text: string } | undefined;
+    let recipientsRow: RecipientsRow | undefined;
     let titleInput: TitleBlockInput | undefined;
     if (withTitle) {
       titleInput = titleInputFromOptions(profile, deps.values(), {
@@ -115,8 +117,9 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       const titleProblems = validateTitleInput(titleInput);
       if (titleProblems.length > 0) return { ok: false, error: titleProblems.join(" ") };
       if (variant === "letter") subjectRow = { text: subjectLine(title.subject) };
+      recipientsRow = recipientsRowOf(titleInput);
     }
-    const input = headerInputFromOptions(profile, deps.values(), { parentLines: hasParent ? parentLines : [], issuer, numberRow, subjectRow });
+    const input = headerInputFromOptions(profile, deps.values(), { parentLines: hasParent ? parentLines : [], issuer, numberRow, subjectRow, recipientsRow });
     const problems = validateHeaderInput(input);
     if (problems.length > 0) return { ok: false, error: problems.join(" ") };
     if (numberRow) deps.store.set(PLACE_KEY, place.trim());
