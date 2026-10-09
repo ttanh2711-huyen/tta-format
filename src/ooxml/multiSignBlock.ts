@@ -24,6 +24,8 @@ export interface SignParty {
   positionLines: readonly string[];
   /** Họ tên; để trống nếu chưa biết (chừa chỗ). */
   signerName: string;
+  /** Họ tên, chức vụ của người được xác nhận chữ ký ("Xác nhận chữ ký của đồng chí ...", chuẩn Đảng); trống thì bỏ. */
+  confirmation?: string;
 }
 
 export interface MultiSignInput {
@@ -33,6 +35,8 @@ export interface MultiSignInput {
   textWidthMm: number;
   /** Nơi nhận; rỗng thì không có hàng "Nơi nhận". */
   recipients: readonly string[];
+  /** Chữ "Nơi nhận" gạch chân, không đậm, không nghiêng (chuẩn Đảng); không thì đậm nghiêng (chuẩn Chính quyền). */
+  noiNhanUnderline?: boolean;
   luu: string;
 }
 
@@ -51,9 +55,9 @@ export function validateMultiSign(input: MultiSignInput): string[] {
   return errors;
 }
 
-function leftParagraph(text: string, sizePt: number, style: { bold?: boolean; italic?: boolean }): string {
+function leftParagraph(text: string, sizePt: number, style: { bold?: boolean; italic?: boolean; underline?: boolean }): string {
   const half = sizePt * 2;
-  const props = `${FONT}${style.bold ? "<w:b/>" : ""}${style.italic ? "<w:i/>" : ""}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/>`;
+  const props = `${FONT}${style.bold ? "<w:b/>" : ""}${style.italic ? "<w:i/>" : ""}${style.underline ? '<w:u w:val="single"/>' : ""}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/>`;
   return `<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:jc w:val="left"/><w:rPr>${props}</w:rPr></w:pPr><w:r><w:rPr>${props}</w:rPr><w:t xml:space="preserve">${escapeXml(text)}</w:t></w:r></w:p>`;
 }
 
@@ -66,23 +70,27 @@ function cell(width: number, paragraphs: string[], span = 1): string {
 export function multiSignFromOptions(profile: StandardProfile, values: FormatValues, text: Pick<MultiSignInput, "parties" | "recipients" | "luu">): MultiSignInput {
   const num = (id: string, fallback: number): number => (typeof values[id] === "number" ? (values[id] as number) : fallback);
   const fixed = profile.pageDefaults.marginsMm;
+  const party = profile.headerKind === "dang";
   return {
     ...text,
+    noiNhanUnderline: party,
     signGapLines: num("signGap", 6),
-    sizes: { title: num("size.quyenHanChucVu", 14), name: num("size.hoTenNguoiKy", 14), noiNhanTieuDe: num("size.noiNhanTieuDe", 12), noiNhanDanhSach: num("size.noiNhanDanhSach", 11) },
+    sizes: party
+      ? { title: num("size.chucVu", 14), name: num("size.hoTen", 14), noiNhanTieuDe: num("size.noiNhanTu", 14), noiNhanDanhSach: num("size.noiNhanDanhSach", 12) }
+      : { title: num("size.quyenHanChucVu", 14), name: num("size.hoTenNguoiKy", 14), noiNhanTieuDe: num("size.noiNhanTieuDe", 12), noiNhanDanhSach: num("size.noiNhanDanhSach", 11) },
     textWidthMm: profile.page.paper.widthMm - num("marginLeft", fixed.left) - num("marginRight", fixed.right),
   };
 }
 
-/** Đọc các dòng "Tên bên | Chức vụ | Họ tên" thành danh sách bên ký; dòng trống bị bỏ. */
+/** Đọc các dòng "Tên bên | Chức vụ | Họ tên | Xác nhận chữ ký (tuỳ chọn)" thành danh sách bên ký; dòng trống bị bỏ. */
 export function parseSignLines(text: string): SignParty[] {
   return text
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter((line) => line !== "")
     .map((line) => {
-      const [title = "", position = "", name = ""] = line.split("|").map((part) => part.trim());
-      return { title, positionLines: position === "" ? [] : [position], signerName: name };
+      const [title = "", position = "", name = "", confirmation = ""] = line.split("|").map((part) => part.trim());
+      return { title, positionLines: position === "" ? [] : [position], signerName: name, ...(confirmation === "" ? {} : { confirmation }) };
     });
 }
 
@@ -102,6 +110,7 @@ export function buildMultiSignBlock(input: MultiSignInput): string {
       ...lines.map((line) => textParagraph(line, sizes.title, { bold: true })),
       ...Array.from({ length: input.signGapLines }, () => textParagraph("", sizes.title, { bold: true })),
       textParagraph(clean(party.signerName), sizes.name, { bold: true }),
+      ...(clean(party.confirmation ?? "") === "" ? [] : [textParagraph(`Xác nhận chữ ký của đồng chí ${clean(party.confirmation ?? "")}`, sizes.title, { beforePt: 6 })]),
     ];
     return cell(widths[index], paragraphs);
   });
@@ -110,7 +119,7 @@ export function buildMultiSignBlock(input: MultiSignInput): string {
   const recipientsRow =
     lines.length === 0
       ? ""
-      : `<w:tr>${cell(total, [leftParagraph("Nơi nhận:", sizes.noiNhanTieuDe, { bold: true, italic: true }), ...lines.map((line) => leftParagraph(line, sizes.noiNhanDanhSach, {}))], count)}</w:tr>`;
+      : `<w:tr>${cell(total, [leftParagraph("Nơi nhận:", sizes.noiNhanTieuDe, input.noiNhanUnderline ? { underline: true } : { bold: true, italic: true }), ...lines.map((line) => leftParagraph(line, sizes.noiNhanDanhSach, {}))], count)}</w:tr>`;
 
   const tail = `<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/><w:rPr>${FONT}<w:sz w:val="2"/></w:rPr></w:pPr></w:p>`;
   return (

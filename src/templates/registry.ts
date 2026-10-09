@@ -15,9 +15,11 @@ import type { DecisionKind } from "./quyetDinh";
  * - regulation: quy chế, quy định (Chương, Mục, Điều, Khoản đánh số tự động);
  * - minutes: biên bản (các mục đầu, khối ký chủ tọa và thư ký);
  * - agreement: hợp đồng, bản ghi nhớ, bản thỏa thuận (các bên, các Điều, khối ký 2 đến 4 bên);
- * - form: giấy tờ và mẫu nhỏ (giấy mời, giấy giới thiệu, công điện, giấy nghỉ phép, thư công): các mục cần điền.
+ * - form: giấy tờ và mẫu nhỏ (giấy mời, giấy giới thiệu, công điện, giấy nghỉ phép, thư công): các mục cần điền;
+ * - congress: văn bản đại hội của Đảng (tên đại hội trên thể loại, ký hiệu ĐH);
+ * - joint: văn bản liên cơ quan của Đảng (hai khối ký).
  */
-export type TemplateFamily = "congVan" | "titled" | "toTrinh" | "decision" | "regulation" | "minutes" | "agreement" | "form";
+export type TemplateFamily = "congVan" | "titled" | "toTrinh" | "decision" | "regulation" | "minutes" | "agreement" | "form" | "congress" | "joint";
 
 export interface TemplateEntry {
   /** Khoá duy nhất trong ô chọn; thường là mã loại, loại có hai biến thể thì kèm hậu tố. */
@@ -56,6 +58,7 @@ const FAMILIES: Record<Headers, Record<string, FamilySpec>> = {
   dang: {
     "cong-van": { family: "congVan" },
     "co-ten-loai": { family: "titled" },
+    "giay-to": { family: "form" },
   },
 };
 
@@ -79,6 +82,7 @@ const BY_ID: Record<Headers, Record<string, FamilySpec>> = {
     "quyet-dinh": { family: "regulation" },
     "quy-dinh": { family: "regulation" },
     "quy-che": { family: "regulation" },
+    "bien-ban": { family: "minutes" },
   },
 };
 
@@ -108,11 +112,20 @@ function entryFor(type: DocType, spec: FamilySpec | undefined): TemplateEntry[] 
   return [{ ...base, key: type.id, label: type.name, family: spec.family, supported: true }];
 }
 
-/** Mọi loại của chuẩn, theo thứ tự trong `docTypes`; mỗi loại có đúng một mục (quyết định cá biệt có hai biến thể). */
+/** Mục không đi theo một loại trong `docTypes` (văn bản đại hội, văn bản liên cơ quan của Đảng). */
+const EXTRAS: Record<Headers, TemplateEntry[]> = {
+  quocHieu: [],
+  dang: [
+    { key: "van-ban-dai-hoi", docTypeId: "van-ban-dai-hoi", label: "Văn bản đại hội (ký hiệu ĐH)", typeName: "", abbr: "ĐH", templateRef: null, family: "congress", supported: true },
+    { key: "lien-co-quan", docTypeId: "lien-co-quan", label: "Văn bản liên cơ quan (hai khối ký)", typeName: "", abbr: null, templateRef: null, family: "joint", supported: true },
+  ],
+};
+
+/** Mọi loại của chuẩn, theo thứ tự trong `docTypes`, rồi các mục thêm; mỗi loại có đúng một mục (quyết định cá biệt có hai biến thể). */
 export function templatesFor(profile: StandardProfile): TemplateEntry[] {
   const byLayout = FAMILIES[profile.headerKind];
   const byId = BY_ID[profile.headerKind];
-  return profile.docTypes.flatMap((type) => entryFor(type, byId[type.id] ?? byLayout[type.layout]));
+  return [...profile.docTypes.flatMap((type) => entryFor(type, byId[type.id] ?? byLayout[type.layout])), ...EXTRAS[profile.headerKind]];
 }
 
 export function findTemplate(profile: StandardProfile, key: string): TemplateEntry | undefined {

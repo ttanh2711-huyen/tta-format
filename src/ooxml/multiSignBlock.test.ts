@@ -86,6 +86,20 @@ describe("bố cục", () => {
   });
 });
 
+describe("xác nhận chữ ký (chuẩn Đảng)", () => {
+  it("có xác nhận thì thêm dòng dưới họ tên, không đậm; không có thì không thêm", () => {
+    const withConfirm = table(buildMultiSignBlock(base([{ ...A, confirmation: "Trần Văn B, Bí thư" }, B])));
+    const column = withConfirm.rows[0][0];
+    expect(column[column.length - 1]).toMatchObject({ text: "Xác nhận chữ ký của đồng chí Trần Văn B, Bí thư", align: "center" });
+    expect(column[column.length - 1].bold).not.toBe(true);
+    expect(withConfirm.rows[0][1].some((p) => p.text.startsWith("Xác nhận"))).toBe(false);
+  });
+
+  it("đọc cột thứ tư của dòng nhập là xác nhận", () => {
+    expect(parseSignLines("Người ghi | | Nguyễn A | Trần B, Bí thư")[0]).toEqual({ title: "Người ghi", positionLines: [], signerName: "Nguyễn A", confirmation: "Trần B, Bí thư" });
+  });
+});
+
 describe("đọc các dòng nhập", () => {
   it("Tên bên | Chức vụ | Họ tên, bỏ dòng trống", () => {
     expect(parseSignLines("Đại diện bên A | Giám đốc | Nguyễn A\n\nChủ tọa | |\nThư ký")).toEqual([

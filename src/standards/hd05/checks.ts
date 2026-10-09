@@ -15,6 +15,7 @@ const AUTHORITY_ABBR = /^(T\/M|K\/T|T\/L|Q\.)(?=\s|$)/;
 /** Quyền hạn theo cách viết của Chính quyền và cách viết tương ứng của Đảng. */
 const AUTHORITY_GOV: Record<string, string> = { TM: "T/M", KT: "K/T", TL: "T/L" };
 const FIRST_TITLE_PARAGRAPHS = 6;
+const CONGRESS_NAME = /^ĐẠI HỘI(?=\s|$)/;
 
 type Range = { min: number; max: number };
 type FontPatch = Omit<Extract<Fix, { kind: "font" }>, "kind" | "index" | "label">;
@@ -137,11 +138,14 @@ function checkTitleBlock(doc: CheckDocument, profile: StandardProfile): Issue[] 
   const body = doc.paragraphs.filter((p) => !p.inTable && p.resolved.text.trim() !== "");
   const theLoai = profile.elements.theLoai;
   const trichYeu = profile.elements.trichYeu;
-  const at = body.slice(0, FIRST_TITLE_PARAGRAPHS).findIndex((p) => {
+  const isCandidate = (p: CheckParagraph): boolean => {
     const text = p.resolved.text.trim();
     return p.resolved.align === "center" && text.length >= 3 && text === text.toUpperCase() && text !== text.toLowerCase() && !/^-+$/.test(text);
-  });
+  };
+  let at = body.slice(0, FIRST_TITLE_PARAGRAPHS).findIndex(isCandidate);
   if (at < 0) return issues;
+  // Văn bản đại hội có dòng tên đại hội (in hoa, giữa) ngay trên thể loại: thể loại là dòng kế tiếp.
+  while (CONGRESS_NAME.test(body[at].resolved.text.trim()) && body[at + 1] && isCandidate(body[at + 1])) at += 1;
   const type = body[at];
   if (!inRange(type.resolved.sizePt, theLoai.sizePt)) {
     issues.push(paragraphIssue(type, { ruleId: "title.theLoai.size", severity: "error", message: `Thể loại cỡ ${type.resolved.sizePt} pt; phải từ ${theLoai.sizePt.min} đến ${theLoai.sizePt.max} pt.`, reference: theLoai.source, fix: sizeFix(type, theLoai.sizePt) }));

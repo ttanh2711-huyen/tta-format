@@ -2,6 +2,7 @@ import { STANDARDS } from "../standards";
 import { HD05 } from "../standards/hd05/profile";
 import { ND30 } from "../standards/nd30/profile";
 import { findTemplate, templatesFor } from "./registry";
+import { findSmallForm } from "./smallForms";
 
 describe("registry loại văn bản", () => {
   it.each(STANDARDS.map((profile) => [profile.name, profile] as const))("%s: mọi loại đều có mục hợp lệ hoặc cờ chưa hỗ trợ kèm lý do", (_name, profile) => {
@@ -56,8 +57,20 @@ describe("registry loại văn bản", () => {
     expect(templatesFor(ND30).filter((entry) => !entry.supported)).toEqual([]);
   });
 
-  it("loại chưa có họ mẫu hiện kèm lý do, không bị ẩn", () => {
-    const entry = findTemplate(HD05, "giay-chung-nhan");
+  it("chuẩn Đảng: biên bản, giấy tờ, văn bản đại hội, liên cơ quan đều có họ mẫu", () => {
+    expect(findTemplate(HD05, "bien-ban")?.family).toBe("minutes");
+    for (const id of ["giay-chung-nhan", "giay-di-duong", "giay-nghi-phep", "giay-moi", "phieu-chuyen", "phieu-gui", "giay-gioi-thieu", "thu-cong"]) expect(findTemplate(HD05, id)?.family).toBe("form");
+    expect(findTemplate(HD05, "van-ban-dai-hoi")).toMatchObject({ family: "congress", abbr: "ĐH" });
+    expect(findTemplate(HD05, "lien-co-quan")?.family).toBe("joint");
+    expect(templatesFor(HD05).filter((entry) => !entry.supported)).toEqual([]);
+  });
+
+  it("mọi giấy tờ có họ mẫu form đều có cấu hình mục cần điền", () => {
+    for (const profile of [ND30, HD05]) for (const entry of templatesFor(profile).filter((e) => e.family === "form")) expect(findSmallForm(entry.docTypeId)).toBeDefined();
+  });
+
+  it("loại chưa có họ mẫu hiện kèm lý do, không bị ẩn (cơ chế)", () => {
+    const entry = findTemplate({ ...ND30, docTypes: [...ND30.docTypes, { id: "x", name: "X", abbr: null, layout: "la", template: null }] } as typeof ND30, "x");
     expect(entry).toMatchObject({ supported: false, family: null });
     expect(entry?.reason).toContain("chưa có mẫu");
   });

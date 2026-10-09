@@ -40,9 +40,9 @@ function paragraphsOf(xml: string): ParagraphModel[] {
 
 describe("giấy tờ và mẫu nhỏ", () => {
   it("năm mẫu, mỗi mẫu có trong registry với đúng họ mẫu và ghi rõ nguồn bố cục", () => {
-    expect(SMALL_FORMS.map((form) => form.docTypeId).sort()).toEqual(["cong-dien", "giay-gioi-thieu", "giay-moi", "giay-nghi-phep", "thu-cong"]);
+    const nd30Forms = SMALL_FORMS.filter((form) => findTemplate(ND30, form.docTypeId)?.family === "form");
+    expect(nd30Forms.map((form) => form.docTypeId).sort()).toEqual(["cong-dien", "giay-gioi-thieu", "giay-moi", "giay-nghi-phep", "thu-cong"]);
     for (const form of SMALL_FORMS) {
-      expect(findTemplate(ND30, form.docTypeId)).toMatchObject({ family: "form", supported: true });
       expect(form.source).not.toBe("");
       expect(findSmallForm(form.docTypeId)).toBe(form);
     }
@@ -57,7 +57,7 @@ describe("giấy tờ và mẫu nhỏ", () => {
     expect(buildSmallFormBody(form, "ND30_").split(BODY_MARKER)).toHaveLength(2);
   });
 
-  it.each(SMALL_FORMS.map((form) => [form.docTypeId, form] as const))("%s: văn bản đầy đủ cho 0 lỗi và khớp golden", (id, form) => {
+  it.each(SMALL_FORMS.filter((form) => findTemplate(ND30, form.docTypeId)?.family === "form").map((form) => [form.docTypeId, form] as const))("%s: văn bản đầy đủ cho 0 lỗi và khớp golden", (id, form) => {
     expectMatchesGolden(`smallForm-${id}.xml`, buildSmallFormBody(form, "ND30_"));
     const type = findTemplate(ND30, id)!;
     const xml = `<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${assembleSmallFormBody(input(type.typeName), form, "ND30_").replace(BODY_MARKER, "")}</w:body></w:document>`;

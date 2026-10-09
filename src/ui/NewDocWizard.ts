@@ -12,7 +12,8 @@ import { assembleMinutesBody, defaultMinutesParties } from "../templates/bienBan
 import { agreementNumberingXml, assembleAgreementBody, defaultAgreementParties, MAX_ARTICLES as MAX_AGREEMENT_ARTICLES, validateAgreement } from "../templates/hopDong";
 import { partyRegulationFromOptions, assemblePartyRegulationBody, partyRegulationNumberingXml, validatePartyRegulation } from "../standards/hd05/templates/regulations";
 import type { PartyNumbering, PartyTopLevel } from "../standards/hd05/numbering";
-import { assembleSmallFormBody, findSmallForm } from "../templates/smallForms";
+import { assemblePartyCongressBody, assemblePartyFormBody, assemblePartyJointBody, assemblePartyMinutesBody } from "../standards/hd05/templates/documents";
+import { assembleSmallFormBody, findSmallForm, formSource } from "../templates/smallForms";
 import { assembleRegulationBody, MAX_ARTICLES_PER_CHAPTER, MAX_CHAPTERS, regulationInputFromOptions, regulationNumberingXml, validateRegulation } from "../templates/quyChe";
 import { assembleDecisionBody, decisionInputFromOptions, decisionKindInfo, decisionNumberingXml, MAX_ARTICLES, validateDecision } from "../templates/quyetDinh";
 import { assemblePartyDocumentBody } from "../standards/hd05/assembleDocument";
@@ -69,6 +70,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
   const decision = { authority: "", basis: "", articles: "3" };
   const regulation = { chapters: "3", articles: "2", sections: false, attached: "" };
   const signed = { lines: "", recipients: "", articles: "5" };
+  const congress = { name: "" };
   const partyReg: { top: PartyTopLevel; numbering: PartyNumbering } = { top: "Chương", numbering: "roman" };
   const note = create("p", { className: "note" });
   const formBox = create("div", { id: "nw-form" });
@@ -129,15 +131,24 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
       };
     if (entry?.family === "form") {
       const smallForm = findSmallForm(entry.docTypeId);
-      formBox.append(create("p", { className: "note", textContent: `Khối đầu đã chuyển sang "Văn bản có tên loại"; nhập trích yếu. Add-in dựng các mục cần điền (${smallForm?.fields.join(" ")}) rồi khối cuối. Lưu ý: ${smallForm?.source ?? ""}.` }));
+      formBox.append(create("p", { className: "note", textContent: `Khối đầu đã chuyển sang thể loại và trích yếu; nhập trích yếu. Add-in dựng các mục cần điền (${smallForm?.fields.join(" ")}) rồi khối cuối. Lưu ý: ${smallForm ? formSource(smallForm, profile.headerKind) : ""}.` }));
       return;
     }
-    if (entry?.family === "minutes" || entry?.family === "agreement") {
-      if (signed.lines.trim() === "") signed.lines = (entry.family === "minutes" ? defaultMinutesParties() : defaultAgreementParties(2)).map((p) => `${p.title} | |`).join("\n");
-      const lines = create("textarea", { id: "nw-sign-lines", rows: 4, value: signed.lines, placeholder: "Mỗi bên một dòng: Tên bên | Chức vụ | Họ tên (2 đến 4 bên)" });
+    if (entry?.family === "congress") {
+      formBox.append(
+        create("p", { className: "note", textContent: 'Khối đầu đã chuyển sang thể loại và trích yếu; nhập thể loại (ví dụ Nghị quyết) và trích yếu. Add-in thêm dòng tên đại hội in hoa đậm trên thể loại và gợi ý ký hiệu "ĐH". Quyền hạn ký thường là T/M Đoàn chủ tịch; dòng xác nhận chữ ký nhập ở Khối cuối.' }),
+        field(create("input", { type: "text", id: "nw-congress", value: congress.name, placeholder: "Tên đại hội, ví dụ Đại hội đại biểu Đảng bộ tỉnh lần thứ XI" }), (v) => (congress.name = v)),
+      );
+      return;
+    }
+    if (entry?.family === "minutes" || entry?.family === "agreement" || entry?.family === "joint") {
+      const party = profile.headerKind === "dang";
+      const defaults = entry.family === "agreement" ? defaultAgreementParties(2) : entry.family === "joint" ? [{ title: "T/M cơ quan thứ nhất" }, { title: "T/M cơ quan thứ hai" }] : party ? [{ title: "Người ghi biên bản" }, { title: "Chủ trì hội nghị" }] : defaultMinutesParties();
+      if (signed.lines.trim() === "") signed.lines = defaults.map((p) => `${p.title} | |`).join("\n");
+      const lines = create("textarea", { id: "nw-sign-lines", rows: 4, value: signed.lines, placeholder: party ? "Mỗi bên một dòng: Tên bên | Chức vụ | Họ tên | Xác nhận chữ ký (nếu không đóng dấu)" : "Mỗi bên một dòng: Tên bên | Chức vụ | Họ tên (2 đến 4 bên)" });
       const recipients = create("textarea", { id: "nw-sign-recipients", rows: 3, value: signed.recipients, placeholder: "Nơi nhận, mỗi nơi một dòng (bỏ trống nếu không cần)" });
       formBox.append(
-        create("p", { className: "note", textContent: entry.family === "minutes" ? 'Khối đầu đã chuyển sang "Văn bản có tên loại"; nhập trích yếu (ví dụ "Về việc ..."). Add-in dựng các mục Thời gian, Địa điểm, Thành phần, Chủ trì, Thư ký, Nội dung và khối ký nhiều bên.' : 'Khối đầu đã chuyển sang "Văn bản có tên loại"; nhập trích yếu. Phụ lục III không có mẫu cho loại này: add-in dùng bố cục đề xuất (các bên, các Điều, khối ký nhiều bên, không có "Nơi nhận" cố định); hãy đối chiếu trước khi dùng.' }),
+        create("p", { className: "note", textContent: entry.family === "joint" ? "Khối đầu: nhập mỗi cơ quan ban hành một dòng và nối chữ viết tắt cơ quan bằng dấu gạch nối. Add-in dựng thể loại, trích yếu, chỗ nội dung và đúng hai khối ký." : entry.family === "minutes" ? 'Khối đầu đã chuyển sang thể loại hoặc tên loại; nhập trích yếu (ví dụ "Về việc ..."). Add-in dựng các mục Thời gian, Địa điểm, Thành phần, Chủ trì, Thư ký, Nội dung và khối ký nhiều bên.' : 'Khối đầu đã chuyển sang "Văn bản có tên loại"; nhập trích yếu. Phụ lục III không có mẫu cho loại này: add-in dùng bố cục đề xuất (các bên, các Điều, khối ký nhiều bên, không có "Nơi nhận" cố định); hãy đối chiếu trước khi dùng.' }),
         field(lines, (v) => (signed.lines = v)),
         field(recipients, (v) => (signed.recipients = v)),
       );
@@ -214,7 +225,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
     const profile = deps.currentStandard();
     const entry = findTemplate(profile, entryKey);
     // Biên bản và văn bản nhiều bên ký có khối ký riêng nên không dùng Khối cuối.
-    const multiSign = entry?.family === "minutes" || entry?.family === "agreement";
+    const multiSign = entry?.family === "minutes" || entry?.family === "agreement" || entry?.family === "joint";
     if (!header.ok || (!multiSign && !footer.ok)) {
       show("error", [header.ok ? "" : `Khối đầu: ${header.error}`, footer.ok ? "" : `Khối cuối: ${footer.error}`].filter(Boolean).join(" "));
       return;
@@ -244,8 +255,42 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
         }
         parts = { buildBody: () => assembleAgreementBody(document, agreement, sign), headText: QUOC_HIEU, signerName: "", numberingXml: agreementNumberingXml(agreement) };
       }
+    } else if (multiSign && header.ok && header.kind === "dang") {
+      if (!header.titleInput || header.titleInput.variant === "congVan") {
+        show("error", "Ở Khối đầu hãy chọn thể loại (không phải công văn) và nhập trích yếu.");
+        return;
+      }
+      const sign = multiSignFromOptions(profile, deps.values(), { parties: parseSignLines(signed.lines), recipients: signed.recipients.split(/\r?\n/), luu: "" });
+      const signProblems = validateMultiSign(sign);
+      if (signProblems.length > 0) {
+        show("error", signProblems.join(" "));
+        return;
+      }
+      const document = { header: header.input, title: { ...header.titleInput, typeName: entry.family === "joint" ? header.titleInput.typeName : entry.typeName } };
+      if (entry.family === "joint") parts = { buildBody: (body) => assemblePartyJointBody(document, sign, body), headText: profile.identifyingTitle, signerName: "" };
+      else parts = { buildBody: () => assemblePartyMinutesBody(document, profile.styles.prefix, sign), headText: profile.identifyingTitle, signerName: "" };
     } else if (!footer.ok) {
       return;
+    } else if (header.kind === "dang" && footer.kind === "dang" && entry?.family === "congress") {
+      if (!header.titleInput || header.titleInput.variant === "congVan") {
+        show("error", "Ở Khối đầu hãy chọn thể loại (không phải công văn) và nhập trích yếu.");
+        return;
+      }
+      if (congress.name.trim() === "") {
+        show("error", "Hãy nhập tên đại hội.");
+        return;
+      }
+      const document = { header: header.input, title: header.titleInput, footer: footer.input };
+      const size = typeof deps.values().fontSize === "number" ? (deps.values().fontSize as number) : profile.styles.defaults.fontSizePt;
+      parts = { buildBody: (body) => assemblePartyCongressBody(document, congress.name, size, body), headText: profile.identifyingTitle, signerName: footer.input.signerName };
+    } else if (header.kind === "dang" && footer.kind === "dang" && entry?.family === "form") {
+      const smallForm = findSmallForm(entry.docTypeId);
+      if (!smallForm || !header.titleInput || header.titleInput.variant === "congVan") {
+        show("error", "Ở Khối đầu hãy chọn thể loại (không phải công văn) và nhập trích yếu.");
+        return;
+      }
+      const document = { header: header.input, title: { ...header.titleInput, typeName: entry.typeName }, footer: footer.input };
+      parts = { buildBody: () => assemblePartyFormBody(document, smallForm, profile.styles.prefix), headText: profile.identifyingTitle, signerName: footer.input.signerName };
     } else if (header.kind === "quocHieu" && footer.kind === "quocHieu" && entry?.family === "form") {
       const smallForm = findSmallForm(entry.docTypeId);
       if (!smallForm || header.titleInput?.variant !== "named") {

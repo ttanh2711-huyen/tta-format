@@ -19,11 +19,14 @@ export interface SmallForm {
   fields: readonly string[];
   /** Câu kết (chữ thường), trống thì bỏ. */
   closing: string;
-  /** Nguồn bố cục, hiện cho người dùng. */
+  /** Nguồn bố cục của chuẩn Chính quyền, hiện cho người dùng. */
   source: string;
+  /** Ghi chú cho chuẩn Đảng (Hướng dẫn 05 không có mẫu riêng cho giấy tờ); bỏ trống thì dùng `source`. */
+  sourceParty?: string;
 }
 
 const UNVERIFIED = "bố cục theo cách trình bày thông dụng, chưa đối chiếu nguyên văn";
+const PARTY_NOTE = "Hướng dẫn 05 không có mẫu riêng cho giấy tờ này: bố cục đề xuất, cần bạn duyệt";
 
 export const SMALL_FORMS: readonly SmallForm[] = [
   { docTypeId: "giay-moi", fields: ["Kính mời:", "Đến dự:", "Thời gian:", "Địa điểm:", "Nội dung:"], closing: "Rất mong sự có mặt của quý vị.", source: `Mẫu 1.7, ${UNVERIFIED} Phụ lục III` },
@@ -31,7 +34,16 @@ export const SMALL_FORMS: readonly SmallForm[] = [
   { docTypeId: "cong-dien", fields: ["Kính gửi:", "Nội dung:"], closing: "", source: `Mẫu 1.6, ${UNVERIFIED} Phụ lục III` },
   { docTypeId: "giay-nghi-phep", fields: ["Cấp cho ông (bà):", "Chức vụ:", "Đơn vị công tác:", "Được nghỉ phép từ ngày … đến ngày …:", "Nơi nghỉ phép:"], closing: "", source: `Mẫu 1.10, ${UNVERIFIED} Phụ lục III` },
   { docTypeId: "thu-cong", fields: ["Kính gửi:", "Nội dung:"], closing: "Trân trọng.", source: "Phụ lục III không có mẫu: bố cục đề xuất, cần bạn duyệt" },
+  { docTypeId: "giay-chung-nhan", fields: ["Chứng nhận ông (bà):", "Chức vụ, đơn vị:", "Nội dung chứng nhận:"], closing: "", source: "Chỉ dùng cho chuẩn Đảng", sourceParty: PARTY_NOTE },
+  { docTypeId: "giay-di-duong", fields: ["Cấp cho ông (bà):", "Chức vụ, đơn vị:", "Được cử đi công tác tại:", "Thời gian từ ngày … đến ngày …:", "Phương tiện:"], closing: "", source: "Chỉ dùng cho chuẩn Đảng", sourceParty: PARTY_NOTE },
+  { docTypeId: "phieu-chuyen", fields: ["Kính gửi:", "Chuyển kèm theo:", "Nội dung đề nghị:"], closing: "", source: "Chỉ dùng cho chuẩn Đảng", sourceParty: PARTY_NOTE },
+  { docTypeId: "phieu-gui", fields: ["Kính gửi:", "Gửi kèm theo:", "Nội dung:"], closing: "", source: "Chỉ dùng cho chuẩn Đảng", sourceParty: PARTY_NOTE },
 ];
+
+/** Nguồn bố cục hiện cho người dùng, theo kiểu khối đầu của chuẩn đang chọn. */
+export function formSource(form: SmallForm, headerKind: "quocHieu" | "dang"): string {
+  return headerKind === "dang" ? (form.sourceParty ?? PARTY_NOTE) : form.source;
+}
 
 export function findSmallForm(docTypeId: string): SmallForm | undefined {
   return SMALL_FORMS.find((form) => form.docTypeId === docTypeId);

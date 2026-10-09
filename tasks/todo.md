@@ -590,13 +590,14 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 ### TD7: Đảng: các thể loại còn lại theo Quy định 399-QĐ/TW
 **Mô tả:** Dựa trên danh sách thể loại đọc ở T2B, bổ sung các họ mẫu còn lại vào registry T17: nghị quyết, chỉ thị, kết luận, thông tri, chương trình, kế hoạch, biên bản (hội nghị cấp uỷ: người ghi biên bản và chủ trì hội nghị ký, có dòng xác nhận chữ ký khi không đóng dấu), văn bản đại hội (tên đại hội, đoàn chủ tịch/đoàn thư ký/ban thẩm tra tư cách đại biểu/ban kiểm phiếu, ký hiệu "ĐH"), văn bản liên cơ quan (hai khối ký, tên cơ quan nối bằng gạch nối). Loại nào quá phức tạp thì tách thành task riêng sau khi duyệt.
 **Tiêu chí nghiệm thu:**
-- [ ] Mỗi thể loại trong danh sách T2B hoặc có mẫu đúng thể thức hoặc ghi rõ "chưa hỗ trợ" và lý do trong giao diện
-- [ ] Biên bản, văn bản đại hội và văn bản liên cơ quan có khối ký đúng như ví dụ ở mục 7 của HD 05
-- [ ] Ký hiệu loại gợi ý đúng (NQ, CT, KL, QC, BC, QĐ, CTr, TT, TTr, CV, ...)
+- [x] Mỗi thể loại trong danh sách T2B hoặc có mẫu đúng thể thức hoặc ghi rõ "chưa hỗ trợ" và lý do trong giao diện
+- [x] Biên bản, văn bản đại hội và văn bản liên cơ quan có khối ký đúng như ví dụ ở mục 7 của HD 05
+- [x] Ký hiệu loại gợi ý đúng (NQ, CT, KL, QC, BC, QĐ, CTr, TT, TTr, CV, ...)
 **Kiểm chứng:**
-- [ ] `npm test`: golden từng mẫu; test registry (mọi thể loại đều có cấu hình hoặc cờ "chưa hỗ trợ")
+- [x] `npm test`: golden từng mẫu; test registry (mọi thể loại đều có cấu hình hoặc cờ "chưa hỗ trợ")
 - [ ] Thủ công: tạo từng mẫu, in PDF, đối chiếu ví dụ trong HD 05
 **Phụ thuộc:** T17, TD5
+**Trạng thái:** mã và test xong (`src/standards/hd05/templates/documents.ts`; `multiSignBlock` thêm dòng "Xác nhận chữ ký của đồng chí ..." và kiểu "Nơi nhận" gạch chân của Đảng; `smallForms` thêm giấy chứng nhận, giấy đi đường, phiếu chuyển, phiếu gửi cho Đảng; golden `partyForm-giay-chung-nhan.xml`; 1042 test); `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Registry chuẩn Đảng nay không còn loại nào "chưa hỗ trợ": các thể loại có tên loại (chỉ thị, kết luận, thông tri, chương trình, kế hoạch, báo cáo… ký hiệu NQ, CT, KL, QC, BC, QĐ, CTr, TT, TTr) dùng họ `titled`; nghị quyết, quyết định, quy định, quy chế dùng cấu trúc Phần/Chương (TD6); **biên bản** (hai chữ ký "Người ghi biên bản", "Chủ trì hội nghị", dòng xác nhận chữ ký nhập ở cột thứ tư khi không đóng dấu); **văn bản đại hội** (dòng tên đại hội in hoa đậm trên thể loại, gợi ý ký hiệu ĐH, ký T/M Đoàn chủ tịch qua Khối cuối); **văn bản liên cơ quan** (đúng hai khối ký, nhiều dòng cơ quan ban hành và ký hiệu nối bằng gạch nối ở Khối đầu); 8 giấy tờ (họ `form`). Bộ kiểm tra nhận ra dòng tên đại hội, không nhầm với thể loại. **Cần bạn duyệt**: tôi chưa có nguyên văn mục 7 của HD 05 nên bố cục khối ký biên bản, đại hội, liên cơ quan và các mục của giấy tờ là đề xuất; cũng chưa tách riêng "ban thẩm tra tư cách đại biểu", "ban kiểm phiếu".
 **File dự kiến:** `src/standards/hd05/templates/*.ts`, `src/standards/hd05/signatureForms.ts`, `src/templates/registry.ts`, `src/standards/hd05/templates/templates.test.ts`
 **Kích cỡ:** M
 
