@@ -7,6 +7,8 @@ import { mountFooterForm } from "../ui/FooterForm";
 import { mountFormatPanel } from "../ui/FormatPanel";
 import { mountPageSetupPanel } from "../ui/PageSetupPanel";
 import { mountNewDocWizard } from "../ui/NewDocWizard";
+import { watchControls } from "../ui/a11y";
+import { mountEnvironmentPanel } from "../ui/EnvironmentPanel";
 import { mountInsertPanel } from "../ui/InsertPanel";
 import { mountSettingsPanel } from "../ui/SettingsPanel";
 import { mountReportPanel } from "../ui/ReportPanel";
@@ -33,6 +35,13 @@ async function onInsertSample(): Promise<void> {
   }
 }
 
+/** Lỗi không ai bắt: hiện lên dòng trạng thái thay vì im lặng. */
+function describeError(reason: unknown): string {
+  return reason instanceof Error ? reason.message : String(reason);
+}
+window.addEventListener("error", (event) => setStatus(`Có lỗi ngoài dự kiến: ${event.message}. Hãy tải lại add-in; nếu còn lỗi, báo kèm nội dung này.`));
+window.addEventListener("unhandledrejection", (event) => setStatus(`Có thao tác không hoàn tất: ${describeError(event.reason)}. Tài liệu có thể chưa thay đổi; hãy kiểm tra lại.`));
+
 Office.onReady((info) => {
   if (info.host !== Office.HostType.Word) {
     setStatus("Add-in này chỉ chạy trong Microsoft Word.");
@@ -42,6 +51,7 @@ Office.onReady((info) => {
     void onInsertSample();
   });
 
+  const environmentEl = document.getElementById("environment");
   const switcherEl = document.getElementById("standard-switcher");
   const fixAllEl = document.getElementById("fix-all");
   const quickEl = document.getElementById("quick-options");
@@ -53,11 +63,12 @@ Office.onReady((info) => {
   const reportEl = document.getElementById("report");
   const extrasEl = document.getElementById("insert-extras");
   const settingsEl = document.getElementById("settings-panel");
-  if (!switcherEl || !fixAllEl || !quickEl || !pageEl || !formatEl || !headerEl || !footerEl || !wizardEl || !reportEl || !extrasEl || !settingsEl) {
+  if (!environmentEl || !switcherEl || !fixAllEl || !quickEl || !pageEl || !formatEl || !headerEl || !footerEl || !wizardEl || !reportEl || !extrasEl || !settingsEl) {
     setStatus("Thiếu vùng hiển thị trong trang; hãy tải lại add-in.");
     return;
   }
 
+  mountEnvironmentPanel(environmentEl);
   const store = browserStore();
   const documentSupported = isDocumentStandardSupported();
   const switcher = mountStandardSwitcher(switcherEl, {
@@ -108,6 +119,7 @@ Office.onReady((info) => {
   mountFixAllButton(fixAllEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs, behavior: quick.behavior });
   mountPageSetupPanel(pageEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs });
   mountFormatPanel(formatEl, { currentStandard: switcher.currentStandard, behavior: quick.behavior, styleSpecs: quick.styleSpecs });
+  watchControls(document.body);
   setStatus("Sẵn sàng.");
   void switcher.start().then(() => settings.applyDefault());
 });

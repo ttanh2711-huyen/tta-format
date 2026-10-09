@@ -1,4 +1,5 @@
 import { insertFooterBlock } from "../office/insertFooter";
+import { isInsertHeaderSupported } from "../office/insertHeader";
 import { buildPartyFooterBlock, partyFooterFromOptions, validatePartyFooter, type PartyFooterInput } from "../standards/hd05/footerBlock";
 import { MAX_POSITION_LINES, buildFooterBlock, findAcademicTitle, footerInputFromOptions, validateFooterInput, type FooterBlockInput } from "../ooxml/footerBlock";
 import type { FormatValues } from "../settings/formatOptions";
@@ -172,7 +173,12 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
       );
       body.append(box);
     }
-    body.append(button("Chèn khối cuối", () => void insert(false), { id: "ff-insert" }));
+    const insertButton = button("Chèn khối cuối", () => void insert(false), { id: "ff-insert" });
+    if (!isInsertHeaderSupported()) {
+      insertButton.disabled = true;
+      show("error", "Chèn khối cuối cần Microsoft 365 bản có WordApi 1.3 trở lên.");
+    }
+    body.append(insertButton);
   }
 
   render();
