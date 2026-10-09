@@ -14,7 +14,10 @@ export const QUOC_HIEU = "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM";
 export const TIEU_NGU = "Độc lập - Tự do - Hạnh phúc";
 export const MAX_PARENT_LINES = 3;
 
-/** Hàng "Kính gửi" trong bảng đầu văn bản: cả hai ô bắt đầu từ dòng thứ hai (dòng đầu để trống). */
+/**
+ * Hàng "Kính gửi" trong bảng đầu văn bản: cả hai ô bắt đầu từ dòng thứ hai (dòng đầu để trống). Một nơi nhận nằm ngang
+ * hàng với nhãn; từ hai nơi nhận trở lên, danh sách nằm ngay dưới dòng của nhãn.
+ */
 export interface RecipientsRow {
   label: string;
   italicLabel?: boolean;
@@ -26,12 +29,14 @@ export interface RecipientsRow {
 const DASH_HANGING_MM = 4;
 
 export function recipientsRowXml(row: RecipientsRow, leftWidth: number, rightWidth: number): string {
-  const blank = textParagraph("", row.sizePt);
+  const blank = () => textParagraph("", row.sizePt);
   const label = textParagraph(row.label, row.sizePt, { italic: row.italicLabel, align: "right", afterPt: 12 });
   const names = row.lines.map((line, index) =>
     textParagraph(line, row.sizePt, { align: "left", hangingMm: line.startsWith("- ") ? DASH_HANGING_MM : undefined, afterPt: index === row.lines.length - 1 ? 12 : 0 }),
   );
-  return `<w:tr>${cell(leftWidth, [blank, label])}${cell(rightWidth, [textParagraph("", row.sizePt), ...names])}</w:tr>`;
+  // Một nơi nhận đứng cùng dòng với nhãn; từ hai nơi nhận trở lên thì danh sách bắt đầu ở dòng ngay dưới nhãn.
+  const gap = row.lines.length >= 2 ? [blank()] : [];
+  return `<w:tr>${cell(leftWidth, [blank(), label])}${cell(rightWidth, [blank(), ...gap, ...names])}</w:tr>`;
 }
 
 /** Tỉ lệ bề rộng cột trái của bảng đầu văn bản (theo file mẫu). */

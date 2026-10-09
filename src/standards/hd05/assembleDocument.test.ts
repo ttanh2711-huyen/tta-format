@@ -13,7 +13,7 @@ const letter: PartyAssembleInput = {
     sizes: { title: 15, parent: 14, issuer: 14, so: 14, placeDate: 14 },
     numberRow: { so: "Số 05-CV/BTCTU", placeDate: "Đồng Tháp, ngày 03 tháng 02 năm 2026" },
     subjectRow: { text: "về việc cử cán bộ dự hội nghị", sizePt: 12 },
-    recipientsRow: { label: "Kính gửi:", italicLabel: true, lines: ["- Ban Thường vụ Tỉnh ủy."], sizePt: 14 },
+    recipientsRow: { label: "Kính gửi:", italicLabel: true, lines: ["Ban Thường vụ Tỉnh ủy"], sizePt: 14 },
     textWidthMm: 165,
   },
   title: { variant: "congVan", subject: "cử cán bộ dự hội nghị", recipients: ["Ban Thường vụ Tỉnh ủy"], basis: [], sizes, lineExactPt: 20, textWidthMm: 165 },

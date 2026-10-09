@@ -85,6 +85,10 @@ describe("buildPartyTitleBody: công văn", () => {
     expect(partyRecipientsRow(base)).toBeUndefined();
   });
 
+  it("một nơi nhận ghi nguyên tên, không gạch đầu dòng, để nằm ngang hàng với nhãn", () => {
+    expect(partyRecipientsRow({ ...letter, recipients: ["Ban Thường vụ Tỉnh ủy"] })?.lines).toEqual(["Ban Thường vụ Tỉnh ủy"]);
+  });
+
   it("dòng 'về việc' nằm ở hàng của bảng đầu văn bản, 12 pt nghiêng", () => {
     expect(partySubjectRow(letter)).toEqual({ text: "về việc cử cán bộ dự hội nghị", sizePt: 12 });
     expect(partySubjectRow({ ...letter, subject: "V/v cử cán bộ" })).toEqual({ text: "về việc cử cán bộ", sizePt: 12 });

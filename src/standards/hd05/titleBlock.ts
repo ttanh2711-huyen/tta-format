@@ -65,7 +65,9 @@ export function partySubjectRow(input: PartyTitleInput): { text: string; sizePt:
 /** Hàng "Kính gửi" của công văn trong bảng đầu văn bản: nhãn nghiêng canh phải ở ô trái, nơi nhận canh trái ở ô phải. */
 export function partyRecipientsRow(input: PartyTitleInput): RecipientsRow | undefined {
   if (input.variant !== "congVan") return undefined;
-  return { label: "Kính gửi:", italicLabel: true, lines: dashList(recipientsOf(input)), sizePt: input.sizes.kinhGui };
+  const names = recipientsOf(input);
+  // Một nơi nhận ghi nguyên tên, cùng dòng với nhãn; từ hai nơi nhận trở lên thì gạch đầu dòng.
+  return { label: "Kính gửi:", italicLabel: true, lines: names.length === 1 ? names : dashList(names), sizePt: input.sizes.kinhGui };
 }
 
 function typeAndSubject(input: PartyTitleInput): string[] {

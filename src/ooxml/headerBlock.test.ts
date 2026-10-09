@@ -209,17 +209,23 @@ describe("buildHeaderBlock: hàng Kính gửi (nhãn canh phải ở ô trái, n
     expect(t.rows[2][0][0].text).toBe("V/v cử công chức");
   });
 
-  it("cả hai ô bắt đầu từ dòng thứ hai: dòng đầu để trống", () => {
+  it("cả hai ô bắt đầu từ dòng thứ hai (dòng đầu để trống); từ hai nơi nhận trở lên, danh sách nằm dưới dòng của nhãn một dòng", () => {
     const [left, right] = table(withRow).rows[3];
     expect(left.map((p) => p.text)).toEqual(["", "Kính gửi:"]);
-    expect(right.map((p) => p.text)).toEqual(["", "- Bộ Nội vụ;", "- Bộ Tài chính."]);
+    expect(right.map((p) => p.text)).toEqual(["", "", "- Bộ Nội vụ;", "- Bộ Tài chính."]);
+  });
+
+  it("một nơi nhận: nằm ngang hàng với nhãn Kính gửi", () => {
+    const [left, right] = table({ ...withRow, recipientsRow: { label: "Kính gửi:", lines: ["Sở Nông nghiệp"], sizePt: 14 } }).rows[3];
+    expect(left.map((p) => p.text)).toEqual(["", "Kính gửi:"]);
+    expect(right.map((p) => p.text)).toEqual(["", "Sở Nông nghiệp"]);
   });
 
   it("nhãn canh phải 14 pt; nơi nhận canh trái 14 pt, xuống dòng thẳng hàng sau dấu gạch", () => {
     const [left, right] = table(withRow).rows[3];
     expect(left[1]).toMatchObject({ align: "right", sizePt: 14 });
-    expect(right[1]).toMatchObject({ align: "left", sizePt: 14 });
-    expect(right[1].leftIndentMm).toBeGreaterThan(0);
+    expect(right[2]).toMatchObject({ align: "left", sizePt: 14 });
+    expect(right[2].leftIndentMm).toBeGreaterThan(0);
   });
 
   it("một nơi nhận không có gạch đầu dòng, không thụt treo", () => {

@@ -157,8 +157,8 @@ describe("buildPartyHeaderBlock: hàng Kính gửi của công văn", () => {
     const [left, right] = t.rows[3];
     expect(left.map((p) => p.text)).toEqual(["", "Kính gửi:"]);
     expect(left[1]).toMatchObject({ align: "right", italic: true, sizePt: 14 });
-    expect(right.map((p) => p.text)).toEqual(["", "- Ban A;", "- Ban B."]);
-    expect(right[1]).toMatchObject({ align: "left", sizePt: 14 });
-    expect(right[1].italic).toBeFalsy();
+    expect(right.map((p) => p.text)).toEqual(["", "", "- Ban A;", "- Ban B."]);
+    expect(right[2]).toMatchObject({ align: "left", sizePt: 14 });
+    expect(right[2].italic).toBeFalsy();
   });
 });
