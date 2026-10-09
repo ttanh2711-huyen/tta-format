@@ -43,6 +43,7 @@ describe("registry loại văn bản", () => {
     expect(findTemplate(HD05, "to-trinh")?.family).toBe("toTrinh");
     expect(findTemplate(HD05, "cong-van")?.family).toBe("congVan");
     expect(findTemplate(HD05, "bao-cao")?.family).toBe("titled");
+    for (const id of ["nghi-quyet", "quyet-dinh", "quy-dinh", "quy-che"]) expect(findTemplate(HD05, id)?.family).toBe("regulation");
   });
 
   it("biên bản và các văn bản nhiều bên ký có họ mẫu riêng", () => {

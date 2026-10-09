@@ -10,6 +10,8 @@ import { findTemplate, templatesFor, type TemplateEntry } from "../templates/reg
 import { multiSignFromOptions, parseSignLines, validateMultiSign } from "../ooxml/multiSignBlock";
 import { assembleMinutesBody, defaultMinutesParties } from "../templates/bienBan";
 import { agreementNumberingXml, assembleAgreementBody, defaultAgreementParties, MAX_ARTICLES as MAX_AGREEMENT_ARTICLES, validateAgreement } from "../templates/hopDong";
+import { partyRegulationFromOptions, assemblePartyRegulationBody, partyRegulationNumberingXml, validatePartyRegulation } from "../standards/hd05/templates/regulations";
+import type { PartyNumbering, PartyTopLevel } from "../standards/hd05/numbering";
 import { assembleSmallFormBody, findSmallForm } from "../templates/smallForms";
 import { assembleRegulationBody, MAX_ARTICLES_PER_CHAPTER, MAX_CHAPTERS, regulationInputFromOptions, regulationNumberingXml, validateRegulation } from "../templates/quyChe";
 import { assembleDecisionBody, decisionInputFromOptions, decisionKindInfo, decisionNumberingXml, MAX_ARTICLES, validateDecision } from "../templates/quyetDinh";
@@ -67,6 +69,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
   const decision = { authority: "", basis: "", articles: "3" };
   const regulation = { chapters: "3", articles: "2", sections: false, attached: "" };
   const signed = { lines: "", recipients: "", articles: "5" };
+  const partyReg: { top: PartyTopLevel; numbering: PartyNumbering } = { top: "Chương", numbering: "roman" };
   const note = create("p", { className: "note" });
   const formBox = create("div", { id: "nw-form" });
   const create_ = button("Tạo công văn", () => void onCreate(false), { id: "nw-create" });
@@ -141,6 +144,32 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
       if (entry.family === "agreement") {
         formBox.append(field(create("input", { type: "text", id: "nw-agreement-articles", value: signed.articles, placeholder: `Số Điều (1 đến ${MAX_AGREEMENT_ARTICLES})`, inputMode: "numeric" }), (v) => (signed.articles = v)));
       }
+      return;
+    }
+    if (entry?.family === "regulation" && profile.headerKind === "dang") {
+      const sections = create("input", { type: "checkbox", id: "nw-sections", checked: regulation.sections });
+      sections.addEventListener("change", () => {
+        regulation.sections = sections.checked;
+      });
+      const top = create("select", { id: "nw-party-top" });
+      for (const value of ["Chương", "Phần"] as const) top.append(create("option", { value, textContent: value }));
+      top.value = partyReg.top;
+      top.addEventListener("change", () => {
+        partyReg.top = top.value as PartyTopLevel;
+      });
+      const numbering = create("select", { id: "nw-party-numbering" });
+      numbering.append(create("option", { value: "roman", textContent: "Số La Mã (Chương I)" }), create("option", { value: "words", textContent: "Số bằng chữ (Chương thứ hai)" }));
+      numbering.value = partyReg.numbering;
+      numbering.addEventListener("change", () => {
+        partyReg.numbering = numbering.value as PartyNumbering;
+      });
+      formBox.append(
+        create("p", { className: "note", textContent: `Khối đầu đã chuyển sang thể loại và trích yếu. Add-in dựng các Phần hoặc Chương (nhãn tự đánh số, tên in hoa đậm ở dòng dưới), Mục, Điều (số chạy liên tục) và Khoản; con trỏ ở tên Phần hoặc Chương thứ nhất. Căn cứ nhập ở Khối đầu.` }),
+        create("div", {}, create("label", {}, "Cấp cao nhất ", top), " ", create("label", {}, "Cách ghi số ", numbering)),
+        field(create("input", { type: "text", id: "nw-chapters", value: regulation.chapters, placeholder: `Số Phần hoặc Chương (1 đến ${MAX_CHAPTERS})`, inputMode: "numeric" }), (v) => (regulation.chapters = v)),
+        field(create("input", { type: "text", id: "nw-reg-articles", value: regulation.articles, placeholder: `Số Điều mỗi Phần hoặc Chương (1 đến ${MAX_ARTICLES_PER_CHAPTER})`, inputMode: "numeric" }), (v) => (regulation.articles = v)),
+        create("label", {}, sections, " Mỗi Phần hoặc Chương có một Mục"),
+      );
       return;
     }
     if (entry?.family === "regulation") {
@@ -261,6 +290,25 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
     } else if (header.kind === "quocHieu" && footer.kind === "quocHieu") {
       const document = { header: header.input, title: header.titleInput, footer: footer.input };
       parts = { buildBody: (body) => assembleDocumentBody(document, body), headText: QUOC_HIEU, signerName: footer.input.signerName };
+    } else if (header.kind === "dang" && footer.kind === "dang" && entry?.family === "regulation") {
+      if (!header.titleInput || header.titleInput.variant === "congVan") {
+        show("error", "Ở Khối đầu hãy chọn thể loại (không phải công văn) và nhập trích yếu.");
+        return;
+      }
+      const reg = partyRegulationFromOptions(profile, deps.values(), { chapters: Number(regulation.chapters), articlesPerChapter: Number(regulation.articles), withSections: regulation.sections, top: partyReg.top, numbering: partyReg.numbering });
+      const regProblems = validatePartyRegulation(reg);
+      if (regProblems.length > 0) {
+        show("error", regProblems.join(" "));
+        return;
+      }
+      const document = { header: header.input, title: { ...header.titleInput, typeName: entry.typeName }, footer: footer.input };
+      parts = {
+        buildBody: () => assemblePartyRegulationBody(document, reg),
+        headText: profile.identifyingTitle,
+        signerName: footer.input.signerName,
+        numberingXml: partyRegulationNumberingXml(reg),
+        markerStyle: `${profile.styles.prefix}TenPhanChuong`,
+      };
     } else if (header.kind === "dang" && footer.kind === "dang") {
       const document = { header: header.input, title: header.titleInput, footer: footer.input };
       parts = { buildBody: (body) => assemblePartyDocumentBody(document, body), headText: profile.identifyingTitle, signerName: footer.input.signerName };

@@ -73,7 +73,13 @@ const BY_ID: Record<Headers, Record<string, FamilySpec>> = {
     "giay-nghi-phep": { family: "form" },
     "thu-cong": { family: "form" },
   },
-  dang: { "to-trinh": { family: "toTrinh" } },
+  dang: {
+    "to-trinh": { family: "toTrinh" },
+    "nghi-quyet": { family: "regulation" },
+    "quyet-dinh": { family: "regulation" },
+    "quy-dinh": { family: "regulation" },
+    "quy-che": { family: "regulation" },
+  },
 };
 
 const DECISION_LABEL: Record<DecisionKind, string> = {

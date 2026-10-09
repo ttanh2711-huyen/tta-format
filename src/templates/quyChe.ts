@@ -3,7 +3,7 @@ import { BODY_MARKER } from "../ooxml/documentAssembler";
 import { buildFooterBlock } from "../ooxml/footerBlock";
 import { mmToTwips } from "../ooxml/flatOpc";
 import { buildHeaderBlock, escapeXml } from "../ooxml/headerBlock";
-import { multilevelNumberingXml, numberedParagraph, regulationLevels } from "../ooxml/numbering";
+import { multilevelNumberingXml, numberedParagraph, regulationLevels, type LevelSpec } from "../ooxml/numbering";
 import { styleIdFromName } from "../ooxml/styleXml";
 import { buildTitleBody } from "../ooxml/titleBlock";
 import type { FormatValues } from "../settings/formatOptions";
@@ -62,6 +62,46 @@ function attachedParagraph(text: string, sizePt: number): string {
   return `<w:p><w:pPr><w:keepNext/><w:spacing w:before="0" w:after="120"/><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:i/><w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr><w:t xml:space="preserve">${escapeXml(text)}</w:t></w:r></w:p>`;
 }
 
+/** Tên style của từng thành phần cấu trúc (mỗi chuẩn một bộ). */
+export interface StructureStyles {
+  chuong: string;
+  tenChuong: string;
+  muc: string;
+  tenMuc: string;
+  dieu: string;
+  khoan: string;
+}
+
+export interface StructureSpec {
+  chapters: number;
+  articlesPerChapter: number;
+  withSections: boolean;
+  levels: readonly LevelSpec[];
+  styles: StructureStyles;
+  /** Dòng đặt trước cấu trúc (đã có ngoặc đơn); trống thì bỏ. */
+  attached?: { text: string; sizePt: number };
+}
+
+/** Dựng cấu trúc Chương, Mục, Điều, Khoản theo bộ cấp và bộ style cho trước. Tên Chương thứ nhất mang chữ đánh dấu chỗ nội dung. */
+export function buildStructureBody(spec: StructureSpec): string {
+  const id = (name: string) => styleIdFromName(name);
+  const parts: string[] = [];
+  if (spec.attached && spec.attached.text !== "") parts.push(attachedParagraph(spec.attached.text, spec.attached.sizePt));
+  for (let chapter = 0; chapter < spec.chapters; chapter += 1) {
+    parts.push(numberedParagraph(spec.levels, "chuong", id(spec.styles.chuong), ""));
+    parts.push(`<w:p><w:pPr><w:pStyle w:val="${id(spec.styles.tenChuong)}"/></w:pPr>${chapter === 0 ? MARKER_RUN : ""}</w:p>`);
+    if (spec.withSections) {
+      parts.push(numberedParagraph(spec.levels, "muc", id(spec.styles.muc), ""));
+      parts.push(`<w:p><w:pPr><w:pStyle w:val="${id(spec.styles.tenMuc)}"/></w:pPr></w:p>`);
+    }
+    for (let article = 0; article < spec.articlesPerChapter; article += 1) {
+      parts.push(numberedParagraph(spec.levels, "dieu", id(spec.styles.dieu), ""));
+      parts.push(numberedParagraph(spec.levels, "khoan", id(spec.styles.khoan), ""));
+    }
+  }
+  return parts.join("");
+}
+
 /**
  * XML thân dưới tên loại và trích yếu: dòng ban hành kèm theo, các Chương (mỗi Chương: nhãn, tên, tuỳ chọn Mục, các
  * Điều, mỗi Điều một Khoản trống). Tên Chương thứ nhất mang chữ đánh dấu chỗ nội dung nên con trỏ đặt ở đó.
@@ -69,24 +109,15 @@ function attachedParagraph(text: string, sizePt: number): string {
 export function buildRegulationBody(input: RegulationInput): string {
   const problems = validateRegulation(input);
   if (problems.length > 0) throw new Error(problems.join(" "));
-  const levels = regulationLevels(mmToTwips(input.firstLineIndentMm));
-  const id = (element: string) => styleIdFromName(`${input.stylePrefix}${element}`);
-  const parts: string[] = [];
-  const attached = attachedText(input.attachedLine);
-  if (attached !== "") parts.push(attachedParagraph(attached, input.sizePt));
-  for (let chapter = 0; chapter < input.chapters; chapter += 1) {
-    parts.push(numberedParagraph(levels, "chuong", id("PhanChuong"), ""));
-    parts.push(`<w:p><w:pPr><w:pStyle w:val="${id("TieuDePhanChuong")}"/></w:pPr>${chapter === 0 ? MARKER_RUN : ""}</w:p>`);
-    if (input.withSections) {
-      parts.push(numberedParagraph(levels, "muc", id("MucTieuMuc"), ""));
-      parts.push(`<w:p><w:pPr><w:pStyle w:val="${id("TieuDeMucTieuMuc")}"/></w:pPr></w:p>`);
-    }
-    for (let article = 0; article < input.articlesPerChapter; article += 1) {
-      parts.push(numberedParagraph(levels, "dieu", id("Dieu"), ""));
-      parts.push(numberedParagraph(levels, "khoan", id("Khoan"), ""));
-    }
-  }
-  return parts.join("");
+  const prefix = input.stylePrefix;
+  return buildStructureBody({
+    chapters: input.chapters,
+    articlesPerChapter: input.articlesPerChapter,
+    withSections: input.withSections,
+    levels: regulationLevels(mmToTwips(input.firstLineIndentMm)),
+    styles: { chuong: `${prefix}PhanChuong`, tenChuong: `${prefix}TieuDePhanChuong`, muc: `${prefix}MucTieuMuc`, tenMuc: `${prefix}TieuDeMucTieuMuc`, dieu: `${prefix}Dieu`, khoan: `${prefix}Khoan` },
+    attached: { text: attachedText(input.attachedLine), sizePt: input.sizePt },
+  });
 }
 
 /** Dựng thông số từ Tuỳ chọn nhanh. */

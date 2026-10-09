@@ -576,13 +576,14 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 ### TD6: Đảng: Phần/Chương/Mục/Điều/Khoản/Điểm (nghị quyết, quyết định, quy định, quy chế)
 **Mô tả:** Cấu trúc nội dung theo HD 05: "Phần"/"Chương" và số (La Mã hoặc chữ, ví dụ "Phần I", "Chương thứ hai") cùng dòng, giữa trang, in thường đậm 14–15 pt, tên phần/chương in hoa đậm ở dòng dưới; "Mục" + số Ả Rập đậm, tên mục in hoa đậm; "Điều 1. ..." in thường đậm, số Ả Rập có dấu chấm; Khoản "1." và Điểm "a)" in thường đứng. Đánh số tự động bằng multilevel list gắn style `HD05_*`. Mẫu cho nghị quyết, quyết định, quy định, quy chế (có phần "Căn cứ" từ TD3).
 **Tiêu chí nghiệm thu:**
-- [ ] Các cấp đánh số tự động đúng, đúng kiểu chữ theo mục 6B; thêm/xoá Điều thì số tự cập nhật
-- [ ] Bốn thể loại sinh đúng thể thức; bộ kiểm tra T14B nhận biết các cấp
-- [ ] Số La Mã và số bằng chữ cho Phần/Chương chọn được
+- [x] Các cấp đánh số tự động đúng, đúng kiểu chữ theo mục 6B; thêm/xoá Điều thì số tự cập nhật
+- [x] Bốn thể loại sinh đúng thể thức; bộ kiểm tra T14B nhận biết các cấp
+- [x] Số La Mã và số bằng chữ cho Phần/Chương chọn được
 **Kiểm chứng:**
-- [ ] `npm test`: golden OOXML numbering nhiều cấp
+- [x] `npm test`: golden OOXML numbering nhiều cấp
 - [ ] Thủ công: in PDF, so bảng Phụ lục 2 mục 6
 **Phụ thuộc:** TD5
+**Trạng thái:** mã và test xong (`src/standards/hd05/numbering.ts`, `src/standards/hd05/templates/regulations.ts`, `src/standards/hd05/structureChecks.ts`; `src/checker/structureRules.ts` dùng chung với chuẩn Chính quyền; `buildStructureBody` tách khỏi `templates/quyChe.ts`; golden `partyRegulation-*.xml`); `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Bốn thể loại Đảng (nghị quyết, quyết định, quy định, quy chế) có họ mẫu `regulation`: khối đầu, thể loại + trích yếu + 5 gạch nối + căn cứ (TD3), rồi Phần hoặc Chương (chọn; số La Mã hoặc số bằng chữ "Chương thứ hai"), tên Phần/Chương in hoa đậm ở dòng dưới, Mục "Mục 1" (tuỳ chọn) + tên, Điều "Điều N." (đậm, số chạy liên tục), Khoản "1.", Điểm "a)"; con trỏ ở tên Phần/Chương đầu. Kiểm tra `structure.*`: tên Phần/Chương/Mục in hoa đậm, Điều đậm (có nút Sửa). **Rủi ro chưa thử**: số bằng chữ dùng định dạng `vietnameseCounting` của Word, kết quả hiển thị (chữ hoa hay thường, "Hai" hay "hai") cần xem trên máy thật; nếu không đẹp thì chuyển sang gõ tay hoặc chỉ dùng La Mã. Cấp Điểm "đ" gõ tay.
 **File dự kiến:** `src/standards/hd05/numbering.ts`, `src/standards/hd05/templates/regulations.ts`, `src/standards/hd05/checks.ts`, `src/standards/hd05/numbering.test.ts`
 **Kích cỡ:** M
 
