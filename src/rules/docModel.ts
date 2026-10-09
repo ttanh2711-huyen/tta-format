@@ -22,6 +22,10 @@ export interface ParagraphModel extends RunProps {
   lineAtLeastPt?: number;
   firstLineIndentMm?: number;
   leftIndentMm?: number;
+  /** Thụt treo (mm) của dòng gạch đầu dòng. */
+  hangingIndentMm?: number;
+  /** Mã style của đoạn (w:pStyle); đoạn không khai báo thì dùng style mặc định của tài liệu. */
+  styleId?: string;
   /** Độ dài (mm) của các đường thẳng nổi neo trong đoạn. */
   floatingLinesMm?: number[];
   borderBottom?: boolean;
@@ -135,13 +139,17 @@ function stripFallback(xml: string): string {
   return xml.replace(/<mc:Fallback>[\s\S]*?<\/mc:Fallback>/g, "");
 }
 
-function readParagraph(raw: string): ParagraphModel {
+export function readParagraph(raw: string): ParagraphModel {
   const xml = stripFallback(raw);
   const model: ParagraphModel = { kind: "paragraph", text: "" };
   const pPr = /<w:pPr>([\s\S]*?)<\/w:pPr>/.exec(xml)?.[1] ?? "";
   // Phần dấu đoạn (rPr trong pPr) tách riêng để không lẫn với thuộc tính của run.
   const markRPr = /<w:rPr>([\s\S]*?)<\/w:rPr>/.exec(pPr)?.[1] ?? "";
   const pPrOnly = pPr.replace(/<w:rPr>[\s\S]*?<\/w:rPr>/, "");
+
+  const styleTag = firstTag(pPrOnly, "pStyle");
+  const styleId = styleTag ? attr(styleTag, "val") : undefined;
+  if (styleId) model.styleId = styleId;
 
   const jc = firstTag(pPrOnly, "jc");
   const align = jc ? attr(jc, "val") : undefined;
@@ -168,6 +176,8 @@ function readParagraph(raw: string): ParagraphModel {
     const left = attr(ind, "left") ?? attr(ind, "start");
     if (first !== undefined) model.firstLineIndentMm = twipsToMm(Number(first));
     if (left !== undefined) model.leftIndentMm = twipsToMm(Number(left));
+    const hanging = attr(ind, "hanging");
+    if (hanging !== undefined) model.hangingIndentMm = twipsToMm(Number(hanging));
   }
 
   if (/<w:pBdr>[\s\S]*?<w:bottom\b(?![^>]*w:val="(?:none|nil)")[^>]*>/.test(pPrOnly)) model.borderBottom = true;

@@ -7,6 +7,7 @@ import { mountFooterForm } from "../ui/FooterForm";
 import { mountFormatPanel } from "../ui/FormatPanel";
 import { mountPageSetupPanel } from "../ui/PageSetupPanel";
 import { mountNewDocWizard } from "../ui/NewDocWizard";
+import { mountReportPanel } from "../ui/ReportPanel";
 import { mountQuickOptions } from "../ui/QuickOptions";
 import { mountStandardSwitcher } from "../ui/StandardSwitcher";
 
@@ -47,7 +48,8 @@ Office.onReady((info) => {
   const headerEl = document.getElementById("header-form");
   const footerEl = document.getElementById("footer-form");
   const wizardEl = document.getElementById("new-doc");
-  if (!switcherEl || !fixAllEl || !quickEl || !pageEl || !formatEl || !headerEl || !footerEl || !wizardEl) {
+  const reportEl = document.getElementById("report");
+  if (!switcherEl || !fixAllEl || !quickEl || !pageEl || !formatEl || !headerEl || !footerEl || !wizardEl || !reportEl) {
     setStatus("Thiếu vùng hiển thị trong trang; hãy tải lại add-in.");
     return;
   }
@@ -72,7 +74,9 @@ Office.onReady((info) => {
     collectFooter: footer.collect,
     writeStandard: documentSupported ? writeDocumentStandard : undefined,
   });
+  const report = mountReportPanel(reportEl, { currentStandard: switcher.currentStandard });
   switcher.onChange(() => {
+    report.refresh();
     quick.refresh();
     header.refresh();
     footer.refresh();

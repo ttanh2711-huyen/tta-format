@@ -99,6 +99,39 @@
       #fa-message.error {
         color: #a00000;
       }
+      #report {
+        margin-top: 16px;
+        border-top: 1px solid #ccc;
+        padding-top: 8px;
+      }
+      #report h2 {
+        font-size: 14px;
+        margin: 0 0 6px;
+      }
+      #report ol {
+        padding-left: 20px;
+      }
+      #report li {
+        margin: 6px 0;
+      }
+      #report li.error strong {
+        color: #a00000;
+      }
+      #report li.warning strong {
+        color: #8a5a00;
+      }
+      #report .note {
+        color: #777;
+      }
+      #rp-summary.ok {
+        color: #1a6b1a;
+      }
+      #rp-summary.warning {
+        color: #8a5a00;
+      }
+      #rp-summary.error {
+        color: #a00000;
+      }
       #new-doc {
         margin-top: 16px;
         border-top: 1px solid #ccc;
@@ -346,6 +379,7 @@
     <button id="btn-sample" type="button">Chèn văn bản thử nghiệm</button>
     <p><a href="spike.html">Kiểm tra khả thi Office.js (T3)</a></p>
     <p id="status" role="status" aria-live="polite">Đang khởi động…</p>
+    <section id="report"></section>
     <section id="new-doc"></section>
     <section id="header-form"></section>
     <section id="footer-form"></section>

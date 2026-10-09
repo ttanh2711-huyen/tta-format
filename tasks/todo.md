@@ -419,14 +419,15 @@ Dùng lại bảng quy tắc ở mục 6B của `plan.md`, bộ style `HD05_*` (
 ### T13: Engine kiểm tra và quy tắc cấp trang/phông
 **Mô tả:** Engine nhận `StandardProfile` (chuẩn tự nhận diện ở T6B), đọc cấu trúc tài liệu (trang, đoạn, phông) và đối chiếu bảng quy tắc của chuẩn đó, trả về danh sách lỗi (rule id, vị trí, mức độ, giá trị hiện tại/mong đợi). Task pane hiện báo cáo, bấm vào lỗi thì nhảy tới vị trí.
 **Tiêu chí nghiệm thu:**
-- [ ] Phát hiện đúng sai khổ giấy, lề, phông, cỡ chữ, căn lề, thụt dòng, giãn đoạn
-- [ ] Mỗi lỗi nêu quy tắc và điều khoản tham chiếu bằng tiếng Việt
-- [ ] Văn bản chuẩn từ T12 cho 0 lỗi
+- [x] Phát hiện đúng sai khổ giấy, hướng trang, lề, khoảng cách số trang, phông, cỡ chữ, căn lề, thụt dòng đầu, giãn đoạn, giãn dòng (kể cả Single thay vì Exactly của chuẩn Đảng); chạy theo chuẩn đang chọn
+- [x] Mỗi lỗi nêu quy tắc (mã), mô tả tiếng Việt, giá trị hiện tại và mong đợi, điều khoản tham chiếu lấy từ bảng quy tắc của chuẩn
+- [x] Văn bản dựng từ trình tạo (công văn và quyết định chuẩn Chính quyền, văn bản có thể loại và căn cứ chuẩn Đảng, kèm style của bộ chuẩn) cho 0 lỗi trong test
 **Kiểm chứng:**
-- [ ] `npm test`: engine chạy trên mô hình tài liệu giả; bộ ca có lỗi và không lỗi
-- [ ] Thủ công: tài liệu cố ý sai từng quy tắc
+- [x] `npm test`: 721 test; riêng bộ kiểm tra 42 ca có lỗi và không lỗi, 8 ca giải style
+- [ ] Thủ công: **chờ bạn thử** tài liệu cố ý sai từng quy tắc
 **Phụ thuộc:** T2, T2B, T5, T6B
-**File dự kiến:** `src/checker/engine.ts`, `src/checker/pageRules.ts`, `src/office/readDocument.ts`, `src/ui/ReportPanel.ts`, `src/checker/engine.test.ts`
+**Trạng thái:** mã, bảng "Kiểm tra văn bản" (nút kiểm tra, danh sách lỗi, nút "Đến vị trí") và test xong; `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Cách làm: đọc OOXML của thân + `PageSetup` từng phần, **giải style** (`ooxml/styleResolver.ts`: mặc định tài liệu, chuỗi basedOn, định dạng trực tiếp) để biết định dạng hiệu lực, vì nội dung dựng từ style không có định dạng trực tiếp. Chỉ kiểm các đoạn **ngoài bảng**; đoạn căn giữa/phải, đoạn có thụt (gạch đầu dòng), đoạn trống bị bỏ; căn lề, thụt dòng đầu, giãn đoạn, giãn dòng chỉ kiểm cho "văn xuôi" (đoạn từ 40 ký tự trở lên hoặc style `*_NoiDung`) để tránh báo sai; đoạn dùng style của chuẩn (ví dụ `ND30_Dieu`) kiểm cỡ chữ theo thành phần của style. Giãn đoạn tính tổng trước + sau ≥ 6 pt. **Giới hạn**: bảng lồng nhau và khối `w:sdt` làm lệch chỉ số đoạn khi nhảy tới vị trí; style cài bằng JSON của chuẩn Đảng ra giãn dòng "tối thiểu" nên đoạn chỉ dùng style (chưa ghi Exactly trực tiếp) sẽ bị báo, đúng thực tế; chưa kiểm khối đầu/cuối (T14, T14B), màu chữ, đánh số trang.
+**File thực tế:** `src/checker/{types,documentModel,pageRules,paragraphRules,engine}.ts` (+ test), `src/ooxml/styleResolver.ts` (+ test), `src/office/readDocument.ts`, `src/ui/ReportPanel.ts`; `docModel.ts` thêm `styleId`, `hangingIndentMm`
 **Kích cỡ:** M
 
 ### T14: Kiểm tra khối đầu/cuối và mẫu văn bản (chuẩn Chính quyền)
