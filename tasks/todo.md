@@ -379,12 +379,13 @@ Dùng lại bảng quy tắc ở mục 6B của `plan.md`, bộ style `HD05_*` (
 **Tiêu chí nghiệm thu:**
 - [x] Bốn quyền hạn (T/M, K/T, T/L, Q.) và tổ hợp chức vụ hai dòng ("K/T TRƯỞNG BAN" / "PHÓ TRƯỞNG BAN") sinh đúng; quyền hạn đậm, chức vụ in hoa không đậm, họ tên đậm (kiểm tra từng run)
 - [x] "Nơi nhận" gạch chân, danh sách đúng dấu câu; họ tên có "TS.", "GS." thì cảnh báo "Vẫn chèn / Sửa lại" (dùng chung hàm của T10)
-- [ ] Dòng xác nhận chữ ký bật/tắt được; **vị trí (ngay dưới họ tên, cùng ô chữ ký) là giả định cần bạn xác nhận**
+- [x] Dòng xác nhận chữ ký bật/tắt được, đặt ngay dưới họ tên, cùng ô chữ ký, cỡ 14 pt (bạn đã xác nhận 09/10/2026)
 **Kiểm chứng:**
 - [x] `npm test`: 655 test; golden `party-footer-block.xml`; hàm phát hiện học hàm, học vị dùng chung với T10
 - [ ] Thủ công: in PDF, so ô 7a–7c, 9a, 12 của Phụ lục 1 và Phụ lục 2
 **Phụ thuộc:** T2B, T5, T6A
-**Trạng thái:** mã, giao diện (form Khối cuối đổi theo chuẩn) và test xong; `typecheck`, `lint`, `build` sạch; đã thử trong trình duyệt giả lập; **chưa thử trong Word**. Bảng 2 cột 50%/50% không viền; "Nơi nhận:" 14 pt đứng gạch chân (gạch chân của chữ, chưa vẽ đường kẻ riêng), danh sách 12 pt; ký hiệu người soạn và số bản 11 pt là ô nhập tay ở cuối nơi nhận (không có quy tắc tự sinh); dòng xác nhận "Xác nhận chữ ký của đồng chí ..." 14 pt đặt dưới họ tên, cỡ này và vị trí là giả định. Danh sách quyền hạn lấy từ `signAuthority` của chuẩn. Chưa có mục "Nơi nhận" riêng cho tờ trình ("theo mục Kính trình"): người dùng tự nhập. Dùng lại `recipientLines` và `findAcademicTitle` của T10 (file `signatureForms.ts` không cần).
+**Đã chốt với bạn (09/10/2026):** (1) dòng xác nhận chữ ký ngay dưới họ tên, cùng ô, 14 pt; (2) "Nơi nhận" gạch chân bằng gạch chân của chữ; (3) hai cột 50/50; (4) tờ trình không có quy tắc riêng "nơi nhận theo mục Kính trình", người dùng tự nhập danh sách.
+**Trạng thái:** mã, giao diện (form Khối cuối đổi theo chuẩn) và test xong; `typecheck`, `lint`, `build` sạch; đã thử trong trình duyệt giả lập; **chưa thử trong Word**. Bảng 2 cột 50%/50% không viền; "Nơi nhận:" 14 pt đứng gạch chân (gạch chân của chữ, chưa vẽ đường kẻ riêng), danh sách 12 pt; ký hiệu người soạn và số bản 11 pt là ô nhập tay ở cuối nơi nhận (không có quy tắc tự sinh); dòng xác nhận "Xác nhận chữ ký của đồng chí ..." 14 pt đặt dưới họ tên. Danh sách quyền hạn lấy từ `signAuthority` của chuẩn. Chưa có mục "Nơi nhận" riêng cho tờ trình ("theo mục Kính trình"): người dùng tự nhập. Dùng lại `recipientLines` và `findAcademicTitle` của T10 (file `signatureForms.ts` không cần).
 **File thực tế:** `src/standards/hd05/footerBlock.ts` (+ test, golden), `src/ui/FooterForm.ts` (kết quả `collect()` có thêm `kind`), `src/ui/NewDocWizard.ts`
 **Kích cỡ:** M
 
