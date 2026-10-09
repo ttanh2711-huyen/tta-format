@@ -1,4 +1,4 @@
-import { applyFix, isFormatOnly } from "../../checker/fixes";
+import { applyFix, fixIndex, isFormatOnly } from "../../checker/fixes";
 import { runChecks } from "../../checker/engine";
 import type { CheckDocument, CheckParagraph, Issue } from "../../checker/types";
 import { buildCheckDocument } from "../../checker/documentModel";
@@ -40,9 +40,9 @@ function expectFixWorks(d: CheckDocument, ruleId: string): void {
   const issue = run(d).find((i) => i.ruleId === ruleId);
   expect(issue?.fix).toBeDefined();
   const fixed = applyFix(d, issue!.fix!);
-  expect(run(fixed).filter((i) => i.ruleId === ruleId && i.location.kind === "paragraph" && i.location.index === issue!.fix!.index)).toEqual([]);
+  expect(run(fixed).filter((i) => i.ruleId === ruleId && i.location.kind === "paragraph" && i.location.index === fixIndex(issue!.fix!))).toEqual([]);
   fixed.paragraphs.forEach((p, i) => {
-    if (i !== issue!.fix!.index) expect(p).toBe(d.paragraphs[i]);
+    if (i !== fixIndex(issue!.fix!)) expect(p).toBe(d.paragraphs[i]);
   });
 }
 
@@ -269,7 +269,7 @@ describe("cách sửa", () => {
   it("mọi lỗi sửa được đều chỉ trỏ vào đúng đoạn có lỗi", () => {
     const d = doc([{ text: QH }, { text: "Số: 5/QĐ", col: 1 }, { text: "Hà Nội, ngày 5 tháng 1 năm 2020", col: 1, row: 1 }]);
     for (const issue of run(d)) {
-      if (issue.fix && issue.location.kind === "paragraph") expect(issue.fix.index).toBe(issue.location.index);
+      if (issue.fix && issue.location.kind === "paragraph") expect(fixIndex(issue.fix)).toBe(issue.location.index);
     }
   });
 });

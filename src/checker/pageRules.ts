@@ -33,6 +33,7 @@ export function checkPage(page: PageInfo, section: number, profile: StandardProf
       actual: `${vn(page.widthMm)} × ${vn(page.heightMm)} mm`,
       expected: `${widthMm} × ${heightMm} mm`,
       location,
+      fix: { kind: "page", section, paper: "A4", label: `Đặt khổ giấy ${profile.page.paper.name}, trang đứng` },
     });
   }
   if (landscape) {
@@ -54,6 +55,7 @@ export function checkPage(page: PageInfo, section: number, profile: StandardProf
     const value = page.marginsMm[side];
     if (isMarginValid(profile, side, value)) continue;
     const range = profile.page.marginsMm[side];
+    const target = Math.min(range.max, Math.max(range.min, profile.pageDefaults.marginsMm[side]));
     issues.push({
       ruleId: `page.margin.${side}`,
       severity: "error",
@@ -62,6 +64,7 @@ export function checkPage(page: PageInfo, section: number, profile: StandardProf
       actual: `${vn(value)} mm`,
       expected: rangeText(range.min, range.max),
       location,
+      fix: { kind: "page", section, marginsMm: { [side]: target }, label: `Đặt lề ${SIDE_NAME[side]} ${vn(target)} mm` },
     });
   }
 
@@ -75,6 +78,7 @@ export function checkPage(page: PageInfo, section: number, profile: StandardProf
       actual: `${vn(page.headerDistanceMm)} mm`,
       expected: `${vn(wanted)} mm`,
       location,
+      fix: { kind: "page", section, headerDistanceMm: wanted, label: `Đặt khoảng cách header ${vn(wanted)} mm` },
     });
   }
   return issues;

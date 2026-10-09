@@ -42,7 +42,7 @@ function chunks<T>(items: readonly T[], size: number): T[][] {
  * nên đây là cách duy nhất. Mỗi đoạn được đọc OOXML rồi thay thế; bình luận hoặc đánh dấu gắn trong
  * đoạn có thể mất.
  */
-async function rewriteWithExact(context: Word.RequestContext, paragraphs: readonly Word.Paragraph[], pt: number): Promise<void> {
+export async function rewriteWithExact(context: Word.RequestContext, paragraphs: readonly Word.Paragraph[], pt: number): Promise<void> {
   for (const chunk of chunks(paragraphs, CHUNK)) {
     const ooxmls = chunk.map((paragraph) => paragraph.getOoxml());
     await context.sync();

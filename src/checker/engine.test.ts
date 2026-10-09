@@ -9,6 +9,7 @@ import { ND30 } from "../standards/nd30/profile";
 import type { StandardProfile } from "../standards/types";
 import { buildCheckDocument } from "./documentModel";
 import { runChecks, summarizeIssues } from "./engine";
+import { applyFix, fixIndex } from "./fixes";
 import type { CheckDocument, CheckParagraph, PageInfo } from "./types";
 
 const pageOf = (profile: StandardProfile, over: Partial<PageInfo> = {}): PageInfo => ({
@@ -263,5 +264,43 @@ describe("văn bản dựng từ trình tạo cho 0 lỗi", () => {
   it("văn bản chuẩn Chính quyền không bị báo lỗi theo luật Đảng ở phần chung với tài liệu rỗng đoạn", () => {
     // Tài liệu của chuẩn này kiểm theo chuẩn kia chỉ nên báo lệch về lề và cỡ; ở đây chỉ kiểm tra không ném lỗi.
     expect(() => runChecks(docFrom(assembleDocumentBody(nd30), ND30), HD05)).not.toThrow();
+  });
+});
+
+describe("sửa lỗi trang và đoạn bằng cách sửa đi kèm", () => {
+  const BAD: Partial<ParagraphModel> = {
+    align: "left",
+    firstLineIndentMm: 0,
+    spaceBeforePt: 0,
+    spaceAfterPt: 0,
+    lineMultiple: 2,
+    lineExactPt: undefined,
+    fontName: "Arial",
+    sizePt: 9,
+  };
+
+  it.each([
+    ["Chính quyền", ND30, NORMAL_ND30],
+    ["Đảng", HD05, NORMAL_HD05],
+  ])("áp mọi cách sửa thì hết lỗi (%s) và không đụng đoạn khác", (_name, profile, good) => {
+    const paragraphs = [paragraph({ text: LONG, ...BAD }), paragraph({ text: LONG, ...good })];
+    const pages = [pageOf(profile, { widthMm: 200, heightMm: 280, marginsMm: { top: 5, bottom: 5, left: 5, right: 5 }, headerDistanceMm: 30 })];
+    let doc: CheckDocument = { pages, paragraphs: paragraphs.map((q, index) => ({ ...q, index })) };
+    const untouched = doc.paragraphs[1];
+    const first = runChecks(doc, profile);
+    expect(first.length).toBeGreaterThan(5);
+    expect(first.every((i) => i.fix !== undefined)).toBe(true);
+    for (const issue of first) {
+      const index = fixIndex(issue.fix!);
+      if (index !== undefined) expect(index).toBe(issue.location.kind === "paragraph" ? issue.location.index : -1);
+      doc = applyFix(doc, issue.fix!);
+    }
+    expect(runChecks(doc, profile)).toEqual([]);
+    expect(doc.paragraphs[1]).toEqual(untouched);
+  });
+
+  it("trang ngang không có cách sửa tự động", () => {
+    const issues = runChecks({ pages: [pageOf(ND30, { widthMm: 297, heightMm: 210 })], paragraphs: [] }, ND30);
+    expect(issues.filter((i) => i.ruleId === "page.orientation").every((i) => i.fix === undefined)).toBe(true);
   });
 });
