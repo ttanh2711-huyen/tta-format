@@ -44,7 +44,16 @@ export type HeaderCollect =
   | { ok: true; kind: "dang"; input: PartyHeaderInput; titleInput: PartyTitleInput | undefined }
   | { ok: false; error: string };
 
-export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): { refresh: () => void; collect: () => HeaderCollect } {
+/** Đặt sẵn dạng khối đầu theo loại văn bản người dùng chọn ở trình tạo (T17). */
+export interface HeaderPreset {
+  form: "congVan" | "titled" | "toTrinh";
+  /** Tên loại điền sẵn (bỏ qua với công văn). */
+  typeName?: string;
+  /** Chữ viết tắt loại gợi ý cho ký hiệu; null hoặc bỏ trống thì giữ nguyên ô đang nhập. */
+  abbr?: string | null;
+}
+
+export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): { refresh: () => void; collect: () => HeaderCollect; preset: (preset: HeaderPreset) => void } {
   let hasParent = false;
   let parentLines = [""];
   let issuer = "";
@@ -428,5 +437,14 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       render();
     },
     collect,
+    preset: (preset) => {
+      withTitle = true;
+      if (deps.currentStandard().headerKind === "dang") partyVariant = preset.form === "congVan" ? "congVan" : preset.form === "toTrinh" ? "toTrinh" : "coTenLoai";
+      else variant = preset.form === "congVan" ? "letter" : "named";
+      if (preset.form !== "congVan" && preset.typeName !== undefined) title.typeName = preset.typeName;
+      if (preset.abbr) number.typeAbbr = preset.abbr;
+      show("", "");
+      render();
+    },
   };
 }

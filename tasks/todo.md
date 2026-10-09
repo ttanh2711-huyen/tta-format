@@ -506,13 +506,14 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 ### T17: Registry loại văn bản và nhóm "tên loại + trích yếu"
 **Mô tả:** Dựng registry cấu hình (mỗi loại khai báo khối đầu/cuối, trường bắt buộc, ký hiệu viết tắt) và đưa vào wizard bước chọn loại. Làm nhóm dùng Mẫu 1.4 (có tên loại + trích yếu), gồm 17 loại: chỉ thị, quy chế, quy định, thông cáo, thông báo, hướng dẫn, chương trình, kế hoạch, phương án, đề án, dự án, báo cáo, tờ trình, giấy ủy quyền, phiếu gửi, phiếu chuyển, phiếu báo (đọc từ `layout: "co-ten-loai"` trong `src/rules/docTypes.ts`). Quy chế và quy định có thêm cấu trúc Chương/Điều ở T18.
 **Tiêu chí nghiệm thu:**
-- [ ] Thêm một loại mới chỉ cần thêm một mục cấu hình, không sửa wizard
-- [ ] Các loại trong nhóm sinh đúng thể thức so với mẫu
-- [ ] Ký hiệu viết tắt gợi ý đúng cho từng loại
+- [x] Thêm một loại mới chỉ cần thêm một mục cấu hình, không sửa wizard
+- [x] Các loại trong nhóm sinh đúng thể thức so với mẫu
+- [x] Ký hiệu viết tắt gợi ý đúng cho từng loại
 **Kiểm chứng:**
-- [ ] `npm test`: golden cho từng loại; test registry (mọi loại ở `docTypes.ts` đều có cấu hình hợp lệ hoặc được đánh dấu "chưa hỗ trợ")
+- [x] `npm test`: golden cho từng loại; test registry (mọi loại ở `docTypes.ts` đều có cấu hình hợp lệ hoặc được đánh dấu "chưa hỗ trợ")
 - [ ] Thủ công: tạo từng loại, in PDF, đối chiếu mẫu
 **Phụ thuộc:** T12
+**Trạng thái:** mã và test xong (`src/templates/registry.ts`, `registry.test.ts`, `titledDocs.test.ts`); `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Registry gán họ mẫu cho mọi loại trong `docTypes` của chuẩn đang chọn (theo kiểu khối đầu và họ bố cục, ngoại lệ theo mã loại); thêm loại mới là thêm một mục vào `FAMILIES`/`BY_ID`, không sửa wizard. Wizard có ô "Loại văn bản" liệt kê mọi loại (loại chưa có họ mẫu hiện mờ kèm lý do "chưa hỗ trợ", không bị ẩn); chọn loại thì Khối đầu tự chuyển dạng (công văn / có tên loại / tờ trình), điền tên loại và gợi ý chữ viết tắt (`HeaderForm.preset`). 17 loại của Mẫu 1.4 (Chính quyền) và các thể loại có tên loại của chuẩn Đảng đều có test dựng văn bản và kiểm tra 0 lỗi. **Giới hạn**: quy chế và quy định chưa có cấu trúc Chương/Mục/Điều (T18); biên bản, hợp đồng, bản ghi nhớ, bản thỏa thuận, giấy tờ nhỏ hiện "chưa hỗ trợ" (T19, T20, TD7).
 **File dự kiến:** `src/templates/registry.ts`, `src/templates/titledDocs.ts`, `src/ui/NewDocWizard.ts`, `src/templates/registry.test.ts`
 **Kích cỡ:** M
 

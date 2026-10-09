@@ -71,6 +71,7 @@ Office.onReady((info) => {
     styleSpecs: quick.styleSpecs,
     behavior: quick.behavior,
     collectHeader: header.collect,
+    presetHeader: header.preset,
     collectFooter: footer.collect,
     writeStandard: documentSupported ? writeDocumentStandard : undefined,
   });

@@ -6,11 +6,12 @@ import type { FormatValues } from "../settings/formatOptions";
 import type { StyleSpec } from "../ooxml/styleSpecs";
 import { assembleDocumentBody } from "../ooxml/documentAssembler";
 import { QUOC_HIEU } from "../ooxml/headerBlock";
-import { assembleDecisionBody, DECISION_KINDS, decisionInputFromOptions, decisionKindInfo, decisionNumberingXml, MAX_ARTICLES, validateDecision, type DecisionKind } from "../templates/quyetDinh";
+import { findTemplate, templatesFor, type TemplateEntry } from "../templates/registry";
+import { assembleDecisionBody, decisionInputFromOptions, decisionKindInfo, decisionNumberingXml, MAX_ARTICLES, validateDecision } from "../templates/quyetDinh";
 import { assemblePartyDocumentBody } from "../standards/hd05/assembleDocument";
 import type { StandardId, StandardProfile } from "../standards/types";
 import type { FooterCollect } from "./FooterForm";
-import type { HeaderCollect } from "./HeaderForm";
+import type { HeaderCollect, HeaderPreset } from "./HeaderForm";
 
 export interface NewDocWizardDeps {
   currentStandard: () => StandardProfile;
@@ -18,14 +19,14 @@ export interface NewDocWizardDeps {
   styleSpecs: () => StyleSpec[];
   behavior: () => { localFormatting: "keep" | "clear" };
   collectHeader: () => HeaderCollect;
+  /** Đặt sẵn Khối đầu theo loại văn bản được chọn. */
+  presetHeader?: (preset: HeaderPreset) => void;
   collectFooter: () => FooterCollect;
   /** Ghi chuẩn vào thuộc tính tài liệu sau khi tạo xong; bỏ trống nếu Word không hỗ trợ. */
   writeStandard?: (id: StandardId) => Promise<void>;
 }
 
 type DocumentParts = Pick<LetterContext, "buildBody" | "headText" | "signerName" | "numberingXml">;
-
-type FormKind = "congVan" | DecisionKind;
 
 function create<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -57,7 +58,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
   let busy = false;
   let snapshot: DocumentSnapshot | null = null;
 
-  let form: FormKind = "congVan";
+  let entryKey = "cong-van";
   const decision = { authority: "", basis: "", articles: "3" };
   const note = create("p", { className: "note" });
   const formBox = create("div", { id: "nw-form" });
@@ -83,40 +84,53 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
     const profile = deps.currentStandard();
     const party = profile.headerKind === "dang";
     note.textContent = `Điền Khối đầu và Khối cuối bên dưới rồi bấm: add-in thiết lập trang${party ? " (lề đối xứng nếu bật in hai mặt)" : ""}, cài style, dựng khối đầu, ${party ? "thể loại hoặc Kính gửi, căn cứ" : "Kính gửi"}, chỗ nội dung, khối cuối và đánh số trang. Sau đó bạn gõ nội dung vào chỗ con trỏ.`;
-    create_.textContent = party ? "Tạo văn bản Đảng" : form === "congVan" ? "Tạo công văn" : `Tạo ${decisionKindInfo(form).label.toLowerCase()}`;
-    renderForm(party);
+    if (!findTemplate(profile, entryKey)?.supported) entryKey = "cong-van";
+    const entry = findTemplate(profile, entryKey);
+    create_.textContent = party ? "Tạo văn bản Đảng" : entry?.family === "congVan" || !entry ? "Tạo công văn" : `Tạo ${entry.label.toLowerCase()}`;
+    renderForm(profile);
     panel.replaceChildren();
     show("", "");
   }
 
-  /** Chọn dạng văn bản (chuẩn Chính quyền) và các ô riêng của nghị quyết, quyết định cá biệt. */
-  function renderForm(party: boolean): void {
+  /** Chọn loại văn bản từ registry (T17) và các ô riêng của nghị quyết, quyết định cá biệt. */
+  function renderForm(profile: StandardProfile): void {
     formBox.replaceChildren();
-    if (party) {
-      form = "congVan";
-      return;
-    }
+    const entries = templatesFor(profile);
     const select = create("select", { id: "nw-form-kind" });
-    select.append(create("option", { value: "congVan", textContent: "Công văn" }));
-    for (const info of DECISION_KINDS) select.append(create("option", { value: info.kind, textContent: `${info.label} (${info.template})` }));
-    select.value = form;
+    for (const entry of entries) {
+      const option = create("option", { value: entry.key, textContent: entry.supported ? entry.label : `${entry.label} — chưa hỗ trợ: ${entry.reason ?? ""}` });
+      option.disabled = !entry.supported;
+      select.append(option);
+    }
+    select.value = entryKey;
     select.addEventListener("change", () => {
-      form = select.value as FormKind;
+      const chosen = findTemplate(profile, select.value);
+      if (!chosen?.supported) return;
+      entryKey = chosen.key;
+      applyPreset(chosen);
       refresh();
     });
-    formBox.append(create("label", {}, "Dạng văn bản ", select));
-    if (form === "congVan") return;
-    const info = decisionKindInfo(form);
-    const field = (id: string, el: HTMLInputElement | HTMLTextAreaElement, onInput: (v: string) => void): HTMLElement => {
+    formBox.append(create("label", {}, "Loại văn bản ", select));
+    const entry = findTemplate(profile, entryKey);
+    if (entry?.family !== "decision" || !entry.decisionKind) return;
+    const info = decisionKindInfo(entry.decisionKind);
+    const field = (el: HTMLInputElement | HTMLTextAreaElement, onInput: (v: string) => void): HTMLElement => {
       el.addEventListener("input", () => onInput(el.value));
       return create("div", {}, el);
     };
     formBox.append(
-      create("p", { className: "note", textContent: `Ở Khối đầu hãy chọn "Văn bản có tên loại" và nhập trích yếu (ví dụ "Về việc ..."); add-in tự ghi tên loại "${info.typeName.toUpperCase()}". Phần dưới tạo thẩm quyền ban hành, căn cứ, dòng "${info.verdict}" và các Điều đánh số tự động.` }),
-      field("nw-authority", create("input", { type: "text", id: "nw-authority", value: decision.authority, placeholder: "Thẩm quyền ban hành, ví dụ Chủ tịch Ủy ban nhân dân thành phố" }), (v) => (decision.authority = v)),
-      field("nw-basis", create("textarea", { id: "nw-basis", rows: 4, value: decision.basis, placeholder: "Căn cứ, mỗi căn cứ một dòng" }), (v) => (decision.basis = v)),
-      field("nw-articles", create("input", { type: "text", id: "nw-articles", value: decision.articles, placeholder: `Số Điều (1 đến ${MAX_ARTICLES})`, inputMode: "numeric" }), (v) => (decision.articles = v)),
+      create("p", { className: "note", textContent: `Khối đầu đã chuyển sang "Văn bản có tên loại"; nhập trích yếu (ví dụ "Về việc ..."). Add-in tự ghi tên loại "${info.typeName.toUpperCase()}". Phần dưới tạo thẩm quyền ban hành, căn cứ, dòng "${info.verdict}" và các Điều đánh số tự động.` }),
+      field(create("input", { type: "text", id: "nw-authority", value: decision.authority, placeholder: "Thẩm quyền ban hành, ví dụ Chủ tịch Ủy ban nhân dân thành phố" }), (v) => (decision.authority = v)),
+      field(create("textarea", { id: "nw-basis", rows: 4, value: decision.basis, placeholder: "Căn cứ, mỗi căn cứ một dòng" }), (v) => (decision.basis = v)),
+      field(create("input", { type: "text", id: "nw-articles", value: decision.articles, placeholder: `Số Điều (1 đến ${MAX_ARTICLES})`, inputMode: "numeric" }), (v) => (decision.articles = v)),
     );
+  }
+
+  /** Đưa loại vừa chọn vào Khối đầu: dạng khối, tên loại, chữ viết tắt gợi ý. */
+  function applyPreset(entry: TemplateEntry): void {
+    const form = entry.family === "congVan" ? "congVan" : entry.family === "toTrinh" ? "toTrinh" : "titled";
+    const typeName = entry.family === "decision" && entry.decisionKind ? decisionKindInfo(entry.decisionKind).typeName : entry.typeName;
+    deps.presetHeader?.({ form, typeName, abbr: entry.abbr });
   }
 
   async function hasContent(): Promise<boolean> {
@@ -133,13 +147,14 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
     }
     const profile = deps.currentStandard();
     let parts: DocumentParts;
-    if (header.kind === "quocHieu" && footer.kind === "quocHieu" && form !== "congVan") {
+    const entry = findTemplate(profile, entryKey);
+    if (header.kind === "quocHieu" && footer.kind === "quocHieu" && entry?.family === "decision" && entry.decisionKind) {
       if (header.titleInput?.variant !== "named") {
         show("error", "Ở Khối đầu hãy chọn \"Văn bản có tên loại\" và nhập trích yếu.");
         return;
       }
-      const info = decisionKindInfo(form);
-      const decisionInput = decisionInputFromOptions(profile, deps.values(), { kind: form, authority: decision.authority, basis: decision.basis.split(/\r?\n/), articleCount: Number(decision.articles) });
+      const info = decisionKindInfo(entry.decisionKind);
+      const decisionInput = decisionInputFromOptions(profile, deps.values(), { kind: entry.decisionKind, authority: decision.authority, basis: decision.basis.split(/\r?\n/), articleCount: Number(decision.articles) });
       const decisionProblems = validateDecision(decisionInput);
       if (decisionProblems.length > 0) {
         show("error", decisionProblems.join(" "));
