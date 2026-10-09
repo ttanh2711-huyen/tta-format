@@ -618,7 +618,10 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 ### Checkpoint 5 – Phủ loại văn bản
 - [ ] Đối chiếu `docTypes` của từng chuẩn với Điều 7 NĐ 30 và Quy định 399-QĐ/TW: mỗi loại hoặc có mẫu đúng thể thức hoặc ghi rõ lý do chưa hỗ trợ
 - [ ] Mỗi họ mẫu có ít nhất một văn bản mẫu được duyệt trực quan
-- [ ] Test, build, lint xanh
+- [x] Test, build, lint xanh
+
+
+**Trạng thái (tự động):** `registry.test.ts` bảo đảm mọi loại trong `docTypes` của cả hai chuẩn có họ mẫu hoặc cờ "chưa hỗ trợ" kèm lý do; hiện **cả hai chuẩn không còn loại nào chưa hỗ trợ** (Chính quyền: 29 loại, Đảng: 33 loại + văn bản đại hội + liên cơ quan). Ba loại của Chính quyền không có mẫu ở Phụ lục III (hợp đồng, bản ghi nhớ, bản thỏa thuận) và thư công là bố cục đề xuất; giấy mời, giấy giới thiệu, công điện, giấy nghỉ phép và toàn bộ giấy tờ của Đảng là bố cục theo cách trình bày thông dụng, chưa đối chiếu nguyên văn. **Còn chờ bạn**: duyệt trực quan từng họ mẫu (tạo mẫu trong Word, in PDF, đối chiếu Phụ lục III và HD 05) và đối chiếu danh sách loại với Điều 7 NĐ 30 và Quy định 399-QĐ/TW.
 
 ---
 
