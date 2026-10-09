@@ -32,7 +32,7 @@ export function normalizeTitle(text: string): string {
     .trim();
 }
 
-function editDistance(a: string, b: string): number {
+export function editDistance(a: string, b: string): number {
   let previous = Array.from({ length: b.length + 1 }, (_, j) => j);
   for (let i = 1; i <= a.length; i += 1) {
     const current = [i];

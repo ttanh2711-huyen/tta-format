@@ -9,20 +9,27 @@ import type { CheckDocument, CheckParagraph, PageInfo } from "./types";
  */
 export function buildCheckDocument(model: DocModel, styles: StyleTable, pages: PageInfo[]): CheckDocument {
   const paragraphs: CheckParagraph[] = [];
-  const add = (paragraph: ParagraphModel, inTable: boolean): void => {
+  const add = (paragraph: ParagraphModel, inTable: boolean, table?: CheckParagraph["table"]): void => {
     const resolved = resolveParagraph(paragraph, styles);
     paragraphs.push({
       index: paragraphs.length,
       inTable,
+      table,
       styleName: styleNameOf(paragraph.styleId ?? styles.defaultParagraphStyle ?? "", styles),
       resolved,
     });
   };
+  let tableIndex = -1;
   for (const block of model.blocks) {
     if (block.kind === "paragraph") {
       add(block, false);
     } else {
-      for (const row of block.rows) for (const cell of row) for (const paragraph of cell) add(paragraph, true);
+      tableIndex += 1;
+      block.rows.forEach((row, rowIndex) =>
+        row.forEach((cell, colIndex) => {
+          for (const paragraph of cell) add(paragraph, true, { index: tableIndex, row: rowIndex, col: colIndex });
+        }),
+      );
     }
   }
   return { pages, paragraphs };

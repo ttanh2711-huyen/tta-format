@@ -1,4 +1,9 @@
 import { formatBody, isFormatBodySupported, previewFormatBody } from "../office/formatBody";
+import { applyFixes } from "../office/applyFix";
+import { readCheckDocument } from "../office/readDocument";
+import { runChecks } from "../checker/engine";
+import { isFormatOnly } from "../checker/fixes";
+import { headerFooterRules } from "../checker/ruleSets";
 import { applyPageNumbers, isPageNumberSupported, planPageNumberDocument } from "../office/pageNumber";
 import { formatTables, surveyTables } from "../office/formatTables";
 import { installStyles, isStyleInstallSupported, planStyleInstall } from "../office/installStyles";
@@ -98,6 +103,39 @@ const tableStep: PipelineStep<FixAllContext> = {
   },
 };
 
+/** Lỗi khối đầu, khối cuối của chuẩn đang chọn, đọc lại từ tài liệu. */
+async function headerFooterIssues(profile: StandardProfile) {
+  const rules = headerFooterRules(profile);
+  return rules.length === 0 ? [] : runChecks(await readCheckDocument(), profile, rules).filter((issue) => issue.ruleId.startsWith("header.") || issue.ruleId.startsWith("footer."));
+}
+
+export const headerFooterStep: PipelineStep<FixAllContext> = {
+  id: "headerFooter",
+  label: "5. Chuẩn hoá khối đầu, khối cuối",
+  order: 45,
+  async plan(ctx) {
+    if (headerFooterRules(ctx.profile).length === 0) return unsupported(`chưa có bộ kiểm tra khối đầu, khối cuối cho chuẩn ${ctx.profile.name}.`);
+    if (!isPageNumberSupported()) return unsupported("Word chưa hỗ trợ đọc tài liệu (cần Microsoft 365 bản 2507 trở lên).");
+    const issues = await headerFooterIssues(ctx.profile);
+    const formatFixes = issues.filter((issue) => issue.fix && isFormatOnly(issue.fix));
+    const manual = issues.length - formatFixes.length;
+    if (formatFixes.length === 0) {
+      return { willRun: false, lines: [], skipReason: manual > 0 ? `không có lỗi định dạng tự sửa được; còn ${manual} lỗi về chữ cần bạn xem ở mục Kiểm tra văn bản.` : "khối đầu, khối cuối đã đúng định dạng." };
+    }
+    const lines = [`Sửa định dạng (đậm, nghiêng, cỡ chữ) ở ${formatFixes.length} chỗ trong khối đầu, khối cuối.`];
+    if (manual > 0) lines.push(`Không tự sửa chữ: ${manual} lỗi còn lại để bạn xem ở mục Kiểm tra văn bản.`);
+    return { willRun: true, lines };
+  },
+  async run(ctx) {
+    const issues = await headerFooterIssues(ctx.profile);
+    const fixes = issues.flatMap((issue) => (issue.fix && isFormatOnly(issue.fix) ? [issue.fix] : []));
+    const result = await applyFixes(fixes);
+    const manual = issues.length - fixes.length;
+    const text = `Đã sửa định dạng ${result.applied} chỗ.${manual > 0 ? ` Còn ${manual} lỗi về chữ, xem ở mục Kiểm tra văn bản.` : ""}`;
+    return result.skipped.length > 0 ? { status: "done", kind: "warning", text: `${text} Không sửa được: ${result.skipped.join("; ")}.` } : { status: "done", kind: manual > 0 ? "warning" : "ok", text };
+  },
+};
+
 function pageNumberOptions(ctx: FixAllContext): { sizePt: number; hideFirst: boolean } {
   return {
     sizePt: typeof ctx.values.pageNumberSize === "number" ? ctx.values.pageNumberSize : 14,
@@ -107,7 +145,7 @@ function pageNumberOptions(ctx: FixAllContext): { sizePt: number; hideFirst: boo
 
 export const pageNumberStep: PipelineStep<FixAllContext> = {
   id: "pageNumber",
-  label: "5. Đánh số trang",
+  label: "6. Đánh số trang",
   order: 50,
   async plan(ctx) {
     if (!isPageNumberSupported()) return unsupported("Word chưa hỗ trợ đánh số trang (cần Microsoft 365 bản 2507 trở lên).");
@@ -128,6 +166,6 @@ export const pageNumberStep: PipelineStep<FixAllContext> = {
  */
 export function createFixAllRegistry(): StepRegistry<FixAllContext> {
   const registry = new StepRegistry<FixAllContext>();
-  for (const step of [pageStep, styleStep, bodyStep, tableStep, pageNumberStep]) registry.register(step);
+  for (const step of [pageStep, styleStep, bodyStep, tableStep, headerFooterStep, pageNumberStep]) registry.register(step);
   return registry;
 }

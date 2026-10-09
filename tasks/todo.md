@@ -433,15 +433,16 @@ Dùng lại bảng quy tắc ở mục 6B của `plan.md`, bộ style `HD05_*` (
 ### T14: Kiểm tra khối đầu/cuối và mẫu văn bản (chuẩn Chính quyền)
 **Mô tả:** Thêm quy tắc nhận diện và kiểm tra: quốc hiệu/tiêu ngữ đúng chữ, "Số: ./." đúng mẫu, ngày tháng đúng quy cách, nơi nhận đúng cấu trúc, chức vụ in hoa, họ tên không học hàm. Mỗi lỗi có nút "Sửa".
 **Tiêu chí nghiệm thu:**
-- [ ] Phát hiện đúng các lỗi phổ biến (thiếu số 0, tiêu ngữ viết sai, thiếu gạch nối, quyền hạn sai)
-- [ ] Nút "Sửa" sửa đúng một lỗi mà không đụng chỗ khác
-- [ ] Tỷ lệ báo sai (false positive) trên bộ văn bản chuẩn = 0
-- [ ] Đăng ký bước "Chuẩn hoá khối đầu/cuối (Chính quyền)" vào "Chỉnh toàn bộ" (T6C): nhận diện bảng đầu văn bản, khối ký và nơi nhận có sẵn rồi **chỉ sửa định dạng**, không đổi chữ; phần không nhận diện chắc chắn thì bỏ qua và báo
+- [x] Phát hiện đúng các lỗi phổ biến: quốc hiệu và tiêu ngữ viết sai (kể cả dấu gạch dài, thiếu dấu, viết thường) hoặc không đậm, sai cỡ; số và ký hiệu (thiếu số 0, thiếu dấu hai chấm, khoảng trắng thừa quanh "/" và "-"); ngày tháng (thiếu số 0 ở ngày < 10 và tháng 1, 2, thừa số 0, ngày không tồn tại, năm không đủ 4 chữ số); nơi nhận (dấu cuối mục, gạch đầu dòng, cỡ chữ, định dạng "Nơi nhận"); chức vụ (in hoa, đậm, cỡ), quyền hạn thiếu dấu chấm; họ tên (học hàm, học vị, in hoa toàn bộ, không đậm)
+- [x] Nút "Sửa" sửa đúng một lỗi: mỗi cách sửa chỉ trỏ vào một đoạn, test kiểm tra áp cách sửa thì lỗi đó hết và các đoạn khác nguyên vẹn; lỗi về chữ không thể sửa chắc chắn (ngày không tồn tại, học hàm, họ tên in hoa) không có nút Sửa
+- [x] Tỷ lệ báo sai trên bộ văn bản chuẩn = 0 trong test: công văn dựng từ trình tạo (nhiều nơi nhận, để trống số và ngày, sáu kiểu quyền hạn)
+- [x] Đăng ký bước 5 "Chuẩn hoá khối đầu, khối cuối" vào "Chỉnh toàn bộ" (T6C): chỉ chạy các cách sửa **định dạng** (đậm, nghiêng, cỡ chữ), không đổi chữ; lỗi về chữ được đếm và báo để xem ở mục Kiểm tra văn bản. Nhận diện theo nội dung chữ ("Nơi nhận:", quốc hiệu, tiêu ngữ, số, ngày) trong các bảng; chuẩn Đảng chưa có (T14B). Đánh số trang đổi thành bước 6
 **Kiểm chứng:**
-- [ ] `npm test`: bộ ca mẫu có/không lỗi (tối thiểu 30 ca)
-- [ ] Thủ công: 5 văn bản thật (đã ẩn thông tin) từ người dùng văn thư
+- [x] `npm test`: 55 ca riêng cho khối đầu, khối cuối (có/không lỗi, cách sửa, không báo nhầm), tổng 776 test
+- [ ] Thủ công: **chờ bạn thử** 5 văn bản thật (đã ẩn thông tin) từ người dùng văn thư
 **Phụ thuộc:** T7–T10, T13
-**File dự kiến:** `src/checker/headerRules.ts`, `src/checker/footerRules.ts`, `src/checker/fixes.ts`, `src/checker/headerRules.test.ts`
+**Trạng thái:** mã, nút "Sửa" trong bảng Kiểm tra văn bản và bước trong "Chỉnh toàn bộ" xong; `typecheck`, `lint`, `build` sạch; **chưa thử trong Word**. Quy tắc nằm ở `src/standards/nd30/checks.ts` (dùng chung khung engine T13; chuẩn Đảng sẽ có `src/standards/hd05/checks.ts`), chọn bộ quy tắc theo `headerKind` ở `checker/ruleSets.ts`. Chỉ xét đoạn trong bảng nên không đụng phần thân. Cách sửa: thay chữ (tìm chữ trong đúng đoạn, giữ định dạng) hoặc đặt đậm, nghiêng, cỡ chữ cho cả đoạn (`office/applyFix.ts`, một lần Word.run). **Giới hạn**: cách nhận diện khối ký dựa vào ô cùng hàng với "Nơi nhận:" nên khối ký không đi kèm "Nơi nhận:" thì không được kiểm; không kiểm khoảng trắng chỗ ký, vị trí đường kẻ, "V/v" và Kính gửi; ký hiệu chỉ kiểm cách viết, không biết đúng chữ viết tắt hay không.
+**File thực tế:** `src/standards/nd30/checks.ts` (+ test), `src/checker/{fixes,ruleSets}.ts`, `src/office/applyFix.ts`, mở rộng `src/ui/ReportPanel.ts`, `src/pipeline/steps.ts`
 **Kích cỡ:** M
 
 ### T14B: Kiểm tra lỗi thể thức theo chuẩn Đảng (HD 05)
