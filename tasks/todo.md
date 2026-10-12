@@ -670,6 +670,22 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 **File dự kiến:** `manifest.xml`, `docs/huong-dan-cai-dat.md`, `docs/privacy.md`, `README.md`
 **Kích cỡ:** S
 
+### T25: Giao diện TTA-Format (tab, mục xổ ra, tên mới)
+**Mô tả:** Đổi tên add-in thành **TTA-Format** và làm lại giao diện: bốn tab riêng **Nghị định 30**, **Hướng dẫn 05**, **Kiểm tra**, **Cơ quan**; các mục có nhiều tuỳ chọn gom lại, bấm vào mới xổ ra (mục xổ ra nhớ trạng thái mở); phong cách hiện đại (thẻ bo góc, màu nhấn, nút chính/phụ), vẫn đạt tương phản và dùng được bằng bàn phím.
+**Tiêu chí nghiệm thu:**
+- [ ] Tên TTA-Format ở manifest (tên hiển thị, thẻ ribbon, nút), tiêu đề trang, tài liệu
+- [ ] Chọn tab Nghị định 30 hoặc Hướng dẫn 05 thì đổi chuẩn đang dùng (thay ô chọn chuẩn cũ); tab Kiểm tra gồm kiểm tra văn bản, sửa, chỉnh toàn bộ; tab Cơ quan gồm hồ sơ cơ quan, xuất nhập cấu hình, môi trường
+- [ ] Mỗi nhóm tuỳ chọn nằm trong mục xổ ra; trạng thái mở nhớ theo máy
+- [ ] Tab dùng được bằng bàn phím (mũi tên, Home, End) và có ARIA đúng; tương phản chữ ≥ 4,5:1
+- [ ] Mọi chức năng cũ vẫn có đủ trong giao diện mới
+**Kiểm chứng:**
+- [ ] `npm test`: logic tab và mục xổ ra, tương phản từ biến màu, tên add-in
+- [ ] Xem trước trên trình duyệt với Office giả (`preview.html`): chụp màn hình bốn tab
+- [ ] Thủ công trong Word
+**Phụ thuộc:** T22, T23
+**File dự kiến:** `src/ui/Tabs.ts`, `src/ui/Accordion.ts`, `src/taskpane/taskpane.css`, `src/taskpane/taskpane.html`, `src/taskpane/taskpane.ts`, `src/ui/StandardSwitcher.ts`, `manifest.xml`
+**Kích cỡ:** M
+
 ### Checkpoint cuối
 - [ ] Mọi tiêu chí nghiệm thu đạt; ma trận kiểm thử hoàn thành
 - [ ] Bạn dùng thử trên văn bản thật và xác nhận

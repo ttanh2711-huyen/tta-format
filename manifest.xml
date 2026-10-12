@@ -8,9 +8,9 @@
 
   <Id>f47a9dbd-3e89-4ae6-a70d-f52558640c57</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>NĐ 30 Add-in</ProviderName>
+  <ProviderName>TTA-Format</ProviderName>
   <DefaultLocale>vi-VN</DefaultLocale>
-  <DisplayName DefaultValue="NĐ 30 - Định dạng văn bản"/>
+  <DisplayName DefaultValue="TTA-Format"/>
   <Description DefaultValue="Soạn thảo và chuẩn hoá văn bản theo Nghị định 30/2020/NĐ-CP và Hướng dẫn 05-HD/VPTW."/>
   <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-80.png"/>
@@ -76,12 +76,12 @@
         <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="Tab.Label" DefaultValue="NĐ 30"/>
+        <bt:String id="Tab.Label" DefaultValue="TTA-Format"/>
         <bt:String id="Group.Label" DefaultValue="Định dạng văn bản"/>
-        <bt:String id="Button.Label" DefaultValue="Mở NĐ 30"/>
+        <bt:String id="Button.Label" DefaultValue="Mở TTA-Format"/>
       </bt:ShortStrings>
       <bt:LongStrings>
-        <bt:String id="Button.Tip" DefaultValue="Mở bảng điều khiển định dạng văn bản theo NĐ 30 và HD 05."/>
+        <bt:String id="Button.Tip" DefaultValue="Mở TTA-Format: soạn, kiểm tra và chuẩn hoá văn bản theo Nghị định 30 và Hướng dẫn 05."/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>

@@ -44,4 +44,11 @@ describe("manifest phát hành", () => {
     expect(() => buildManifest(source, BASE, "abc")).toThrow();
     expect(() => buildManifest("<OfficeApp/>", BASE, "1.0.0")).toThrow();
   });
+
+  it("tên add-in là TTA-Format ở tên hiển thị, thẻ ribbon và nút", () => {
+    expect(source).toContain('<DisplayName DefaultValue="TTA-Format"/>');
+    expect(source).toContain('<bt:String id="Tab.Label" DefaultValue="TTA-Format"/>');
+    expect(source).toContain('<bt:String id="Button.Label" DefaultValue="Mở TTA-Format"/>');
+    expect(source).not.toMatch(/NĐ 30 -|Mở NĐ 30|DefaultValue="NĐ 30"/);
+  });
 });

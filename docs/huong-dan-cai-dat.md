@@ -1,6 +1,6 @@
 # Hướng dẫn cài đặt và sử dụng
 
-Add-in "NĐ 30 - Định dạng văn bản" chạy trong Microsoft Word 365 trên Windows. Add-in định dạng văn bản theo hai chuẩn: Chính quyền (Nghị định 30/2020/NĐ-CP) và Đảng (Hướng dẫn 05-HD/VPTW). Cần Microsoft 365 bản **2507 trở lên** để dùng đủ tính năng (mục "Môi trường Word" ở đầu add-in cho biết tính năng nào chạy được trên máy bạn).
+Add-in "TTA-Format" chạy trong Microsoft Word 365 trên Windows. Add-in định dạng văn bản theo hai chuẩn: Chính quyền (Nghị định 30/2020/NĐ-CP) và Đảng (Hướng dẫn 05-HD/VPTW). Cần Microsoft 365 bản **2507 trở lên** để dùng đủ tính năng (mục "Môi trường Word" ở đầu add-in cho biết tính năng nào chạy được trên máy bạn).
 
 Add-in là các file tĩnh đặt trên GitHub Pages; máy bạn chỉ cần file **manifest.xml** để Word biết nạp add-in từ đâu. Không cài thêm phần mềm nào khác.
 
@@ -21,10 +21,10 @@ Word đọc add-in từ "danh mục tin cậy" (một thư mục chia sẻ). Là
 ## 3. Thêm add-in vào Word
 
 1. Chọn **Insert > Add-ins > My Add-ins** (hoặc **Get Add-ins > My Add-ins**).
-2. Chọn thẻ **SHARED FOLDER**, chọn **NĐ 30 - Định dạng văn bản**, bấm **Add**.
-3. Trên thanh công cụ có thẻ **NĐ 30**, nhóm **Định dạng văn bản**; bấm nút trong nhóm để mở bảng add-in ở bên phải.
+2. Chọn thẻ **SHARED FOLDER**, chọn **TTA-Format**, bấm **Add**.
+3. Trên thanh công cụ có thẻ **TTA-Format**, nhóm **Định dạng văn bản**; bấm nút trong nhóm để mở bảng add-in ở bên phải.
 
-Add-in nhớ bạn đã thêm: lần sau mở Word chỉ cần bấm nút trong thẻ **NĐ 30**.
+Add-in nhớ bạn đã thêm: lần sau mở Word chỉ cần bấm nút trong thẻ **TTA-Format**.
 
 ## 4. Dùng hằng ngày
 

@@ -1,4 +1,4 @@
-# NĐ 30 – Add-in Word định dạng văn bản
+# TTA-Format – Add-in Word định dạng văn bản
 
 Add-in Microsoft Word 365 (Office.js, TypeScript) soạn và chuẩn hoá văn bản theo hai chuẩn, dùng cá nhân:
 

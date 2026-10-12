@@ -36,7 +36,7 @@ npm start
 ```
 
    Lần đầu Windows hỏi cài chứng chỉ tin cậy cho `localhost`; bấm đồng ý.
-3. Trong Word: tab **NĐ 30** > **Mở NĐ 30** > liên kết **Kiểm tra khả thi Office.js (T3)**.
+3. Trong Word: tab **TTA-Format** > **Mở TTA-Format** > liên kết **Kiểm tra khả thi Office.js (T3)**.
 4. Đánh dấu "Đây là tài liệu thử", bấm **Chạy tất cả**. Phép thử p14 và p15 cần bạn bấm Ctrl+Z để đếm số lần.
 5. Báo cáo tự lưu vào `docs/spike-results.json` và `docs/spike-results.md`. Nếu thông báo không lưu được, bấm **Sao chép báo cáo** rồi dán cho mình.
 6. Với p07, p08, p12 (cần nhìn bằng mắt): bấm **Chạy riêng** từng mục, xem tài liệu và cho mình biết đường kẻ và bảng trông thế nào.

@@ -1,6 +1,6 @@
 # Tuyên bố quyền riêng tư
 
-Add-in "NĐ 30 - Định dạng văn bản" dùng cá nhân, chạy trong Microsoft Word. Tóm tắt: **nội dung văn bản của bạn không rời khỏi máy; add-in không có thống kê, theo dõi hay báo cáo lỗi gửi đi.**
+Add-in "TTA-Format" dùng cá nhân, chạy trong Microsoft Word. Tóm tắt: **nội dung văn bản của bạn không rời khỏi máy; add-in không có thống kê, theo dõi hay báo cáo lỗi gửi đi.**
 
 ## Add-in đọc và ghi gì
 
