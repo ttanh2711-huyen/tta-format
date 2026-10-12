@@ -38,9 +38,11 @@ describe("không gọi mạng", () => {
     expect(hits).toEqual([]);
   });
 
-  it("trang chỉ nạp một script ngoài: Office.js của Microsoft", () => {
+  it("trang không tự nạp script ngoài; bản build chỉ chèn Office.js của Microsoft", () => {
     const html = readFileSync(join(__dirname, "taskpane", "taskpane.html"), "utf8");
-    const scripts = [...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map((m) => m[1]);
-    expect(scripts).toEqual(["https://appsforoffice.microsoft.com/lib/1/hosted/office.js"]);
+    expect([...html.matchAll(/<script[^>]+src=/g)]).toEqual([]);
+    const webpackConfig = readFileSync(join(__dirname, "..", "webpack.config.js"), "utf8");
+    const urls = [...webpackConfig.matchAll(/https?:\/\/[a-z0-9.-]+[^"'\s<>]*/gi)].map((m) => m[0]);
+    expect(urls).toEqual(["https://appsforoffice.microsoft.com/lib/1/hosted/office.js"]);
   });
 });

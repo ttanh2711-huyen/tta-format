@@ -22,6 +22,7 @@ export const HD05: StandardProfile = {
     "Hướng dẫn số 05-HD/VPTW ngày 27/5/2026 của Văn phòng Trung ương Đảng về thể thức và kỹ thuật trình bày văn bản của Đảng",
   effectiveDate: "2026-05-27",
   identifyingTitle: HEADER_MARKS.identifyingTitle,
+  tabLabel: "Hướng dẫn 05",
   page: PAGE,
   pageDefaults: {
     marginsMm: { top: 20, bottom: 20, left: 30, right: 15 },

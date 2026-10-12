@@ -28,6 +28,8 @@ Add-in nhớ bạn đã thêm: lần sau mở Word chỉ cần bấm nút trong 
 
 ## 4. Dùng hằng ngày
 
+Bảng TTA-Format có bốn tab ở đầu: **Nghị định 30**, **Hướng dẫn 05**, **Kiểm tra**, **Cơ quan**. Bấm tab Nghị định 30 hoặc Hướng dẫn 05 là chọn chuẩn đang dùng; mỗi tab gồm các mục xổ ra (bấm tiêu đề để mở hoặc đóng, add-in nhớ mục nào bạn đã mở). Dùng phím mũi tên trái, phải, Home, End để chuyển tab.
+
 - **Văn bản mới**: mục **Tạo văn bản mới**, chọn loại văn bản, điền Khối đầu và Khối cuối, bấm tạo. Add-in thiết lập trang, cài style, dựng khối đầu, thân, khối cuối và đánh số trang; sau đó bạn gõ nội dung vào chỗ con trỏ. Dùng **Khôi phục** nếu muốn quay lại bản trước khi tạo.
 - **Văn bản có sẵn**: **Chỉnh toàn bộ** áp dụng các bước (trang, style, thân, bảng, khối đầu và cuối, số trang, lỗi còn lại) có xem trước. Add-in chụp bản trước khi chỉnh để khôi phục.
 - **Kiểm tra văn bản**: liệt kê lỗi thể thức theo chuẩn đang chọn; "Sửa" từng lỗi hoặc "Sửa tất cả" có xem trước và hoàn tác; "Xuất báo cáo" để lưu danh sách lỗi.

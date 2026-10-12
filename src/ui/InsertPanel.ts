@@ -65,7 +65,7 @@ export function mountInsertPanel(container: HTMLElement, deps: InsertPanelDeps):
     return range ? range.min : fallback;
   }
 
-  function renderUrgency(profile: StandardProfile): void {
+  function renderUrgency(profile: StandardProfile, target: HTMLElement): void {
     const marks = profile.urgencyMarks;
     const sizeRange = profile.elements.dauKhan?.sizePt;
     const select = create("select", { id: "ip-mark" });
@@ -81,13 +81,13 @@ export function mountInsertPanel(container: HTMLElement, deps: InsertPanelDeps):
       const clamped = sizeRange ? Math.min(sizeRange.max, Math.max(sizeRange.min, size)) : size;
       void run(() => insertAtSelection(buildUrgencyMark({ text: mark.text, widthMm: mark.widthMm, heightMm: mark.heightMm, sizePt: clamped }), mark.text));
     });
-    body.append(
+    target.append(
       create("p", { className: "note", textContent: "Đặt con trỏ dưới số và ký hiệu (công văn: dưới trích yếu) rồi chèn khung chữ nhật viền đơn, chữ in hoa đậm." }),
       create("div", {}, select, " ", insertMark),
     );
   }
 
-  function renderAppendix(profile: StandardProfile): void {
+  function renderAppendix(profile: StandardProfile, target: HTMLElement): void {
     const prefix = profile.styles.prefix;
     const styled = Boolean(profile.elements.phuLucSo);
     const insertAppendix = button("ip-insert-appendix", "Chèn phụ lục ở cuối tài liệu", () => {
@@ -109,7 +109,7 @@ export function mountInsertPanel(container: HTMLElement, deps: InsertPanelDeps):
         ),
       );
     });
-    body.append(
+    target.append(
       create("p", { className: "note", textContent: 'Phụ lục bắt đầu trang mới, nhãn "Phụ lục I, II..." tự đánh số nối tiếp các phụ lục đã có.' + (styled ? "" : " Đánh số trang riêng cho từng phụ lục: đặt tay trong Word (Chèn > Số trang > Định dạng > Bắt đầu từ 1).") }),
       create("div", {}, input("ip-appendix-title", "Tên phụ lục, ví dụ Danh sách đại biểu", state.appendixTitle, (v) => (state.appendixTitle = v))),
       create("div", {}, input("ip-appendix-ref", "Chỉ dẫn, ví dụ Kèm theo Công văn số ... ngày ...", state.appendixRef, (v) => (state.appendixRef = v))),
@@ -117,13 +117,13 @@ export function mountInsertPanel(container: HTMLElement, deps: InsertPanelDeps):
     );
   }
 
-  function renderPartyExtras(profile: StandardProfile): void {
+  function renderPartyExtras(profile: StandardProfile, target: HTMLElement): void {
     const circulationSize = sizeOf(profile, "phamViLuuHanh", 12);
     const draftSize = sizeOf(profile, "duThao", 14);
     const contactSize = sizeOf(profile, "thongTinLienHe", 10);
     const contact = create("textarea", { id: "ip-contact", rows: 3, value: state.contact, placeholder: "Thông tin liên hệ, mỗi dòng một mục (địa chỉ, điện thoại, thư điện tử)" });
     contact.addEventListener("input", () => (state.contact = contact.value));
-    body.append(
+    target.append(
       create("h3", { textContent: "Thành phần bổ sung" }),
       create("p", { className: "note", textContent: `Chỉ dẫn phạm vi lưu hành (khung ${circulationSize} pt, góc phải trang đầu), chỉ dẫn dự thảo (${draftSize} pt nghiêng, dưới số và ký hiệu), thông tin liên hệ (${contactSize} pt, trang cuối). Đặt con trỏ đúng chỗ trước khi chèn tại con trỏ.` }),
       create("div", {}, input("ip-circulation", "Phạm vi lưu hành, ví dụ XEM XONG TRẢ LẠI", state.circulation, (v) => (state.circulation = v)), " ", button("ip-insert-circulation", "Chèn khung tại con trỏ", () => void run(() => insertAtSelection(buildCirculationMark(state.circulation, circulationSize), NAME_UPPER(state.circulation))))),
@@ -137,12 +137,21 @@ export function mountInsertPanel(container: HTMLElement, deps: InsertPanelDeps):
     );
   }
 
+  /** Mỗi việc nằm trong một nhóm xổ ra (T25). */
+  function section(key: string, title: string, fill: (target: HTMLElement) => void, open = false): HTMLElement {
+    const target = create("div");
+    fill(target);
+    return create("details", { id: `ip-group-${key}`, open }, create("summary", { textContent: title }), target);
+  }
+
   function render(): void {
     const profile = deps.currentStandard();
     body.replaceChildren();
-    renderUrgency(profile);
-    renderAppendix(profile);
-    if (profile.elements.thongTinLienHe) renderPartyExtras(profile);
+    body.append(
+      section("khan", "Dấu chỉ mức độ khẩn", (target) => renderUrgency(profile, target), true),
+      section("phu-luc", "Trang phụ lục", (target) => renderAppendix(profile, target)),
+    );
+    if (profile.elements.thongTinLienHe) body.append(section("bo-sung", "Thành phần bổ sung (phạm vi lưu hành, dự thảo, thông tin liên hệ)", (target) => renderPartyExtras(profile, target)));
   }
 
   if (!isInsertExtrasSupported()) {

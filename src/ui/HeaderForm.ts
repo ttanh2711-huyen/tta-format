@@ -390,24 +390,33 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
     return section;
   }
 
+  /** Nhóm xổ ra (T25): các ô của khối đầu gom theo việc; trạng thái mở giữ lại qua các lần dựng lại. */
+  const openGroups = new Set<string>(["co-quan", "trich-yeu"]);
+  function group(key: string, title: string, ...children: HTMLElement[]): HTMLElement {
+    const details = create("details", { open: openGroups.has(key), id: `hf-group-${key}` }, create("summary", { textContent: title }), ...children);
+    details.addEventListener("toggle", () => {
+      if (details.open) openGroups.add(key);
+      else openGroups.delete(key);
+    });
+    return details;
+  }
+
   function render(): void {
     const profile = deps.currentStandard();
     body.replaceChildren();
     if (profile.headerKind === "dang") {
       body.append(
         create("p", { className: "note", textContent: "Chèn bảng cơ quan cấp trên, cơ quan ban hành (dấu *) và tiêu đề ĐẢNG CỘNG SẢN VIỆT NAM ở đầu tài liệu. Có thêm số, ký hiệu, ngày tháng, thể loại, trích yếu, Kính gửi và căn cứ ban hành." }),
-        parentSection(),
-        issuerSection(profile),
-        numberSection(),
-        partyTitleSection(),
+        group("co-quan", "Cơ quan cấp trên và cơ quan ban hành", parentSection(), issuerSection(profile)),
+        group("so-ngay", "Số, ký hiệu, ngày tháng", numberSection()),
+        group("trich-yeu", "Thể loại, trích yếu, Kính gửi, căn cứ", partyTitleSection()),
       );
     } else {
       body.append(
         create("p", { className: "note", textContent: "Chèn bảng cơ quan, quốc hiệu và tiêu ngữ ở đầu tài liệu. Cỡ chữ, độ dài đường kẻ và lề lấy từ Tuỳ chọn nhanh." }),
-        parentSection(),
-        issuerSection(profile),
-        numberSection(),
-        titleSection(),
+        group("co-quan", "Cơ quan chủ quản và cơ quan ban hành", parentSection(), issuerSection(profile)),
+        group("so-ngay", "Số, ký hiệu, ngày tháng", numberSection()),
+        group("trich-yeu", "Tên loại, trích yếu, Kính gửi", titleSection()),
       );
     }
     if (confirmInsert) {

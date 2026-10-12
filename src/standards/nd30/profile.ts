@@ -20,6 +20,7 @@ export const ND30: StandardProfile = {
   legalBasis: "Nghị định số 30/2020/NĐ-CP ngày 05/3/2020 của Chính phủ về công tác văn thư",
   effectiveDate: "2020-03-05",
   identifyingTitle: "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM",
+  tabLabel: "Nghị định 30",
   page: PAGE,
   pageDefaults: {
     marginsMm: { top: 20, bottom: 20, left: 30, right: 20 },

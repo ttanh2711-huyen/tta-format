@@ -63,24 +63,24 @@ export function mountSettingsPanel(container: HTMLElement, deps: SettingsPanelDe
 
   function editor(profile: StandardProfile): HTMLElement {
     const draft = editing!.draft;
-    const field = (id: string, placeholder: string, key: keyof Draft, multiline = false): HTMLElement => {
+    const field = (id: string, caption: string, placeholder: string, key: keyof Draft, multiline = false): HTMLElement => {
       const el = multiline ? create("textarea", { id, rows: 2, value: draft[key], placeholder }) : create("input", { type: "text", id, value: draft[key], placeholder });
       el.addEventListener("input", () => {
         draft[key] = el.value;
       });
-      return create("div", {}, el);
+      return create("label", { className: "fld" }, create("span", { textContent: caption }), el);
     };
     const party = profile.headerKind === "dang";
     return create(
       "div",
       { className: "hf-box", id: "sp-editor" },
-      field("sp-label", "Tên gợi nhớ, ví dụ Chi cục Thủy lợi", "label"),
-      field("sp-parent", party ? "Cơ quan cấp trên (tối đa 2 dòng), mỗi dòng một cơ quan" : "Cơ quan chủ quản (tối đa 3 dòng), mỗi dòng một cơ quan", "parent", true),
-      field("sp-issuer", party ? "Cơ quan ban hành (tối đa 3 dòng)" : "Cơ quan ban hành (một dòng)", "issuer", true),
-      field("sp-place", "Địa danh", "place"),
-      field("sp-abbrs", "Chữ viết tắt cơ quan, nối bằng gạch nối, ví dụ CCTL-ĐĐPCTT", "abbrs"),
-      field("sp-position", "Chức vụ người ký thường dùng (tối đa 3 dòng)", "position", true),
-      field("sp-signer", "Họ tên người ký thường dùng", "signer"),
+      field("sp-label", "Tên gợi nhớ", "Ví dụ: Chi cục Thủy lợi", "label"),
+      field("sp-parent", party ? "Cơ quan cấp trên (tối đa 2 dòng)" : "Cơ quan chủ quản (tối đa 3 dòng)", "Mỗi dòng một cơ quan", "parent", true),
+      field("sp-issuer", party ? "Cơ quan ban hành (tối đa 3 dòng)" : "Cơ quan ban hành (một dòng)", "Tên cơ quan ban hành", "issuer", true),
+      field("sp-place", "Địa danh", "Ví dụ: Cần Thơ", "place"),
+      field("sp-abbrs", "Chữ viết tắt cơ quan (nối bằng gạch nối)", "Ví dụ: CCTL-ĐĐPCTT", "abbrs"),
+      field("sp-position", "Chức vụ người ký thường dùng (tối đa 3 dòng)", "Mỗi dòng một chức vụ", "position", true),
+      field("sp-signer", "Họ tên người ký thường dùng", "Họ và tên", "signer"),
       button("Lưu hồ sơ", () => {
         const result = saveProfile(deps.store, profile, {
           id: editing?.id,
@@ -175,7 +175,7 @@ export function mountSettingsPanel(container: HTMLElement, deps: SettingsPanelDe
         render();
       }, { id: "sp-add" }));
     }
-    body.append(transfer());
+    body.append(create("details", { id: "sp-transfer-group" }, create("summary", { textContent: "Xuất, nhập cấu hình" }), transfer()));
   }
 
   render();

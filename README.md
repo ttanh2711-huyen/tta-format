@@ -7,6 +7,10 @@ Add-in Microsoft Word 365 (Office.js, TypeScript) soạn và chuẩn hoá văn b
 
 Giao diện tiếng Việt. Không gửi nội dung văn bản ra ngoài (xem [docs/privacy.md](docs/privacy.md)).
 
+## Giao diện
+
+Bốn tab: **Nghị định 30** và **Hướng dẫn 05** (mỗi tab là một chuẩn, bấm tab thì đổi chuẩn đang dùng; gồm tạo văn bản, khối đầu, khối cuối, tuỳ chọn nhanh, trang và style, định dạng nội dung, chèn dấu khẩn và phụ lục), **Kiểm tra** (kiểm tra văn bản, sửa tất cả, chỉnh toàn bộ) và **Cơ quan** (hồ sơ cơ quan, xuất nhập cấu hình, môi trường, văn bản thử nghiệm). Mục nhiều tuỳ chọn gom thành mục xổ ra, nhớ trạng thái mở. Xem thử giao diện ngoài Word: `npm run build:dev` rồi mở `dist/preview.html` qua một máy chủ tĩnh (trang này giả lập Office, không có trong bản phát hành).
+
 ## Tính năng chính
 
 - Thiết lập trang, cài bộ style `ND30_*` / `HD05_*`, định dạng thân và bảng, đánh số trang.

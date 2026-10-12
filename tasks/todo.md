@@ -673,16 +673,17 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 ### T25: Giao diện TTA-Format (tab, mục xổ ra, tên mới)
 **Mô tả:** Đổi tên add-in thành **TTA-Format** và làm lại giao diện: bốn tab riêng **Nghị định 30**, **Hướng dẫn 05**, **Kiểm tra**, **Cơ quan**; các mục có nhiều tuỳ chọn gom lại, bấm vào mới xổ ra (mục xổ ra nhớ trạng thái mở); phong cách hiện đại (thẻ bo góc, màu nhấn, nút chính/phụ), vẫn đạt tương phản và dùng được bằng bàn phím.
 **Tiêu chí nghiệm thu:**
-- [ ] Tên TTA-Format ở manifest (tên hiển thị, thẻ ribbon, nút), tiêu đề trang, tài liệu
-- [ ] Chọn tab Nghị định 30 hoặc Hướng dẫn 05 thì đổi chuẩn đang dùng (thay ô chọn chuẩn cũ); tab Kiểm tra gồm kiểm tra văn bản, sửa, chỉnh toàn bộ; tab Cơ quan gồm hồ sơ cơ quan, xuất nhập cấu hình, môi trường
-- [ ] Mỗi nhóm tuỳ chọn nằm trong mục xổ ra; trạng thái mở nhớ theo máy
-- [ ] Tab dùng được bằng bàn phím (mũi tên, Home, End) và có ARIA đúng; tương phản chữ ≥ 4,5:1
+- [x] Tên TTA-Format ở manifest (tên hiển thị, thẻ ribbon, nút), tiêu đề trang, tài liệu
+- [x] Chọn tab Nghị định 30 hoặc Hướng dẫn 05 thì đổi chuẩn đang dùng (thay ô chọn chuẩn cũ); tab Kiểm tra gồm kiểm tra văn bản, sửa, chỉnh toàn bộ; tab Cơ quan gồm hồ sơ cơ quan, xuất nhập cấu hình, môi trường
+- [x] Mỗi nhóm tuỳ chọn nằm trong mục xổ ra; trạng thái mở nhớ theo máy
+- [x] Tab dùng được bằng bàn phím (mũi tên, Home, End) và có ARIA đúng; tương phản chữ ≥ 4,5:1
 - [ ] Mọi chức năng cũ vẫn có đủ trong giao diện mới
 **Kiểm chứng:**
-- [ ] `npm test`: logic tab và mục xổ ra, tương phản từ biến màu, tên add-in
-- [ ] Xem trước trên trình duyệt với Office giả (`preview.html`): chụp màn hình bốn tab
+- [x] `npm test`: logic tab và mục xổ ra, tương phản từ biến màu, tên add-in
+- [x] Xem trước trên trình duyệt với Office giả (`preview.html`): chụp màn hình bốn tab
 - [ ] Thủ công trong Word
 **Phụ thuộc:** T22, T23
+**Trạng thái:** mã, test và xem trước xong; `typecheck`, `lint`, 1153 test, `build:release` (manifest hợp lệ, `check:release` đạt) sạch; **chưa thử trong Word**. Đã làm: đổi tên TTA-Format (manifest, thẻ ribbon, nút, tiêu đề trang, tài liệu); `src/ui/Tabs.ts` (tablist ARIA, mũi tên/Home/End), `src/ui/Accordion.ts` (mục xổ ra nhớ trạng thái, logic ở `tabsLogic.ts`), `src/taskpane/app.ts` dựng bốn tab, `taskpane.css` (biến màu, thẻ bo góc, nút chính/phụ), `taskpane.html` còn khung tĩnh; ô chọn chuẩn cũ bỏ, thay bằng tab chuẩn (`StandardSwitcher.choose`, vẫn hỏi xác nhận khi tài liệu đã có nội dung theo chuẩn khác); tab Kiểm tra có chọn chuẩn nhanh; nhóm xổ ra trong Khối đầu, Khối cuối, Chèn dấu, Xuất nhập cấu hình; hồ sơ cơ quan có nhãn hiện rõ. Test tương phản nay đọc biến màu từ CSS. Có trang xem trước `preview.html` (Office giả, chỉ ở bản phát triển) và đã chụp, bấm thử cả bốn tab, không lỗi console. **Chưa kiểm**: hành vi trong Word thật (nhất là hộp xác nhận khi đổi chuẩn từ tab), giao diện ở độ rộng bảng khác 380 px, chế độ tương phản cao của Windows, đọc bằng Narrator.
 **File dự kiến:** `src/ui/Tabs.ts`, `src/ui/Accordion.ts`, `src/taskpane/taskpane.css`, `src/taskpane/taskpane.html`, `src/taskpane/taskpane.ts`, `src/ui/StandardSwitcher.ts`, `manifest.xml`
 **Kích cỡ:** M
 

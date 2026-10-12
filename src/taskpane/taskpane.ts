@@ -1,39 +1,4 @@
-import { insertSampleParagraph } from "../office/insertSample";
-import { isDocumentStandardSupported, readDocumentSnapshot, writeDocumentNoAsk, writeDocumentStandard } from "../office/documentStandard";
-import { browserStore } from "../settings/storage";
-import { mountFixAllButton } from "../ui/FixAllButton";
-import { mountHeaderForm } from "../ui/HeaderForm";
-import { mountFooterForm } from "../ui/FooterForm";
-import { mountFormatPanel } from "../ui/FormatPanel";
-import { mountPageSetupPanel } from "../ui/PageSetupPanel";
-import { mountNewDocWizard } from "../ui/NewDocWizard";
-import { watchControls } from "../ui/a11y";
-import { mountEnvironmentPanel } from "../ui/EnvironmentPanel";
-import { mountInsertPanel } from "../ui/InsertPanel";
-import { mountSettingsPanel } from "../ui/SettingsPanel";
-import { mountReportPanel } from "../ui/ReportPanel";
-import { mountQuickOptions } from "../ui/QuickOptions";
-import { mountStandardSwitcher } from "../ui/StandardSwitcher";
-
-function setStatus(message: string): void {
-  const status = document.getElementById("status");
-  if (status) {
-    status.textContent = message;
-  }
-}
-
-async function onInsertSample(): Promise<void> {
-  try {
-    await Word.run(async (context) => {
-      insertSampleParagraph(context.document.body);
-      await context.sync();
-    });
-    setStatus("Đã chèn đoạn văn bản thử nghiệm vào cuối tài liệu.");
-  } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
-    setStatus(`Không chèn được văn bản: ${reason}`);
-  }
-}
+import { mountApp, setStatus } from "./app";
 
 /** Lỗi không ai bắt: hiện lên dòng trạng thái thay vì im lặng. */
 function describeError(reason: unknown): string {
@@ -47,79 +12,9 @@ Office.onReady((info) => {
     setStatus("Add-in này chỉ chạy trong Microsoft Word.");
     return;
   }
-  document.getElementById("btn-sample")?.addEventListener("click", () => {
-    void onInsertSample();
-  });
-
-  const environmentEl = document.getElementById("environment");
-  const switcherEl = document.getElementById("standard-switcher");
-  const fixAllEl = document.getElementById("fix-all");
-  const quickEl = document.getElementById("quick-options");
-  const pageEl = document.getElementById("page-setup-panel");
-  const formatEl = document.getElementById("format-panel");
-  const headerEl = document.getElementById("header-form");
-  const footerEl = document.getElementById("footer-form");
-  const wizardEl = document.getElementById("new-doc");
-  const reportEl = document.getElementById("report");
-  const extrasEl = document.getElementById("insert-extras");
-  const settingsEl = document.getElementById("settings-panel");
-  if (!environmentEl || !switcherEl || !fixAllEl || !quickEl || !pageEl || !formatEl || !headerEl || !footerEl || !wizardEl || !reportEl || !extrasEl || !settingsEl) {
-    setStatus("Thiếu vùng hiển thị trong trang; hãy tải lại add-in.");
-    return;
+  try {
+    mountApp();
+  } catch (error) {
+    setStatus(`Không dựng được giao diện: ${describeError(error)}. Hãy tải lại add-in.`);
   }
-
-  mountEnvironmentPanel(environmentEl);
-  const store = browserStore();
-  const documentSupported = isDocumentStandardSupported();
-  const switcher = mountStandardSwitcher(switcherEl, {
-    store,
-    readSnapshot: documentSupported ? readDocumentSnapshot : undefined,
-    writeStandard: documentSupported ? writeDocumentStandard : undefined,
-    writeNoAsk: documentSupported ? writeDocumentNoAsk : undefined,
-  });
-  const quick = mountQuickOptions(quickEl, { currentStandard: switcher.currentStandard, store });
-  const header = mountHeaderForm(headerEl, { currentStandard: switcher.currentStandard, values: quick.values, store });
-  const footer = mountFooterForm(footerEl, { currentStandard: switcher.currentStandard, values: quick.values });
-  const wizard = mountNewDocWizard(wizardEl, {
-    currentStandard: switcher.currentStandard,
-    values: quick.values,
-    styleSpecs: quick.styleSpecs,
-    behavior: quick.behavior,
-    collectHeader: header.collect,
-    presetHeader: header.preset,
-    collectFooter: footer.collect,
-    writeStandard: documentSupported ? writeDocumentStandard : undefined,
-  });
-  const extras = mountInsertPanel(extrasEl, { currentStandard: switcher.currentStandard, values: quick.values });
-  const settings = mountSettingsPanel(settingsEl, {
-    currentStandard: switcher.currentStandard,
-    store,
-    useProfile: (agency) => {
-      header.applyAgency(agency);
-      footer.applyAgency(agency);
-    },
-    onImported: () => {
-      quick.refresh();
-      header.refresh();
-      footer.refresh();
-      wizard.refresh();
-    },
-  });
-  const report = mountReportPanel(reportEl, { currentStandard: switcher.currentStandard });
-  switcher.onChange(() => {
-    report.refresh();
-    quick.refresh();
-    header.refresh();
-    footer.refresh();
-    wizard.refresh();
-    extras.refresh();
-    settings.refresh();
-    settings.applyDefault();
-  });
-  mountFixAllButton(fixAllEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs, behavior: quick.behavior });
-  mountPageSetupPanel(pageEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs });
-  mountFormatPanel(formatEl, { currentStandard: switcher.currentStandard, behavior: quick.behavior, styleSpecs: quick.styleSpecs });
-  watchControls(document.body);
-  setStatus("Sẵn sàng.");
-  void switcher.start().then(() => settings.applyDefault());
 });

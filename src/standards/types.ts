@@ -174,6 +174,8 @@ export interface StandardProfile {
   effectiveDate: string;
   /** Dòng chữ nhận diện chuẩn ở đầu văn bản (dùng khi tự nhận diện chuẩn của tài liệu). */
   identifyingTitle: string;
+  /** Nhãn của tab chuẩn trong giao diện, ví dụ "Nghị định 30". */
+  tabLabel: string;
   page: PageRules;
   pageDefaults: PageDefaults;
   /** Kiểu khối đầu văn bản: quốc hiệu và tiêu ngữ (Chính quyền) hay tiêu đề Đảng. */

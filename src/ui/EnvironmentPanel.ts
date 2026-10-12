@@ -15,10 +15,10 @@ function create<K extends keyof HTMLElementTagNameMap>(tag: K, props: Partial<HT
 }
 
 /**
- * Mục "Môi trường Word" (T23): liệt kê từng tính năng chạy được hay không trên bản Word đang mở, kèm lý do. Tự mở ra khi có
- * tính năng bị tắt để người dùng không phải đoán vì sao một nút không chạy.
+ * Danh sách "Môi trường Word" (T25): từng tính năng chạy được hay không trên bản Word đang mở, kèm lý do. Trả về dòng tóm tắt để
+ * người gọi đặt làm mô tả của mục xổ ra và cho biết có tính năng nào không chạy được để mở sẵn mục đó.
  */
-export function mountEnvironmentPanel(container: HTMLElement, isSupported: IsSetSupported = officeIsSupported()): { unsupported: number } {
+export function mountEnvironmentPanel(container: HTMLElement, isSupported: IsSetSupported = officeIsSupported()): { unsupported: number; summary: string } {
   const statuses = evaluateFeatures(isSupported);
   const unsupported = statuses.filter((status) => !status.supported).length;
   const degraded = statuses.filter((status) => describeDegraded(status) !== "").length;
@@ -29,8 +29,7 @@ export function mountEnvironmentPanel(container: HTMLElement, isSupported: IsSet
       create("li", { className: status.supported ? (note ? "warning" : "ok") : "error" }, create("strong", { textContent: status.supported ? (note ? "Chạy một phần: " : "Chạy được: ") : "Không chạy được: " }), status.feature.label, note ? create("div", { className: "note", textContent: note }) : ""),
     );
   }
-  const summary = `Phiên bản ${appVersion()} · ${unsupported > 0 ? `Môi trường Word: ${unsupported} tính năng không chạy được` : degraded > 0 ? `Môi trường Word: ${degraded} tính năng chạy một phần` : "Môi trường Word: đủ tính năng"}`;
-  const details = create("details", { id: "env-details", open: unsupported > 0 }, create("summary", { textContent: summary }), list);
-  container.replaceChildren(details);
-  return { unsupported };
+  const summary = `Phiên bản ${appVersion()} · ${unsupported > 0 ? `${unsupported} tính năng không chạy được` : degraded > 0 ? `${degraded} tính năng chạy một phần` : "đủ tính năng"}`;
+  container.replaceChildren(create("p", { className: "note", textContent: summary }), list);
+  return { unsupported, summary };
 }

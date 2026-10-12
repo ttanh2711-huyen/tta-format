@@ -65,6 +65,8 @@ Cần bản có WordApiDesktop 1.3 (Microsoft 365 bản 2507 trở lên). Word t
 | Mục | Tự động | Word thật | Ghi chú |
 | --- | --- | --- | --- |
 | Mọi nút, ô nhập, ô chọn tới được bằng Tab và dùng được bằng Enter, Space | Không | [ ] | Duyệt từ trên xuống dưới, không cần chuột |
+| Bốn tab (Nghị định 30, Hướng dẫn 05, Kiểm tra, Cơ quan): chuyển bằng chuột và bằng mũi tên, Home, End; tab chuẩn đổi chuẩn đang dùng | Có (logic phím, trạng thái; đã xem trên trang xem trước) | [ ] | Đổi từ tab Nghị định 30 sang Hướng dẫn 05 trên tài liệu có nội dung: hộp xác nhận hiện đúng |
+| Mục xổ ra mở, đóng bằng chuột và bàn phím; trạng thái mở còn sau khi đóng mở lại add-in | Có (lưu trạng thái) | [ ] | |
 | Có khung nhìn thấy rõ khi điều khiển đang được chọn | Có (`:focus-visible` có trong CSS) | [ ] | |
 | Tên cho trình đọc màn hình (Narrator) | Có (quy tắc đặt tên) | [ ] | Mở Narrator, nghe vài ô nhập |
 | Tương phản màu chữ ≥ 4,5:1 | Có (tính từ CSS) | [ ] | Thử chế độ tương phản cao của Windows |

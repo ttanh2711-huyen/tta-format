@@ -120,24 +120,36 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
     return section;
   }
 
+  /** Nhóm xổ ra (T25); trạng thái mở giữ lại qua các lần dựng lại. */
+  const openGroups = new Set<string>(["nhan", "ky"]);
+  function group(key: string, title: string, ...children: HTMLElement[]): HTMLElement {
+    const details = create("details", { open: openGroups.has(key), id: `ff-group-${key}` }, create("summary", { textContent: title }), ...children);
+    details.addEventListener("toggle", () => {
+      if (details.open) openGroups.add(key);
+      else openGroups.delete(key);
+    });
+    return details;
+  }
+
   function render(): void {
     const profile = deps.currentStandard();
     body.replaceChildren();
     const party = profile.headerKind === "dang";
+    const signer = create("div");
     const list = create("textarea", { id: "ff-recipients", rows: 3, value: recipients, placeholder: "Nơi nhận, mỗi nơi một dòng" });
     list.addEventListener("input", () => {
       recipients = list.value;
     });
     body.append(
       create("p", { className: "note", textContent: party ? "Chèn bảng nơi nhận (gạch chân) và chữ ký (chức vụ không đậm) ở cuối tài liệu. Add-in tự thêm gạch đầu dòng, dấu ; và dấu . cuối mục." : "Chèn bảng nơi nhận và chữ ký ở cuối tài liệu. Add-in tự thêm gạch đầu dòng, dấu ; và dấu . cuối mục." }),
-      create("div", {}, list),
-      create("div", {}, "Lưu: ", text("ff-luu", "VT, ...", luu, (v) => (luu = v))),
-      authoritySection(profile),
+      group("nhan", "Nơi nhận", create("div", {}, list), create("div", {}, "Lưu: ", text("ff-luu", "VT, ...", luu, (v) => (luu = v)))),
+      group("ky", "Người ký", signer),
     );
+    signer.append(authoritySection(profile));
     positionLines.forEach((line, index) => {
-      body.append(create("div", {}, text(`ff-position-${index}`, `Chức vụ, dòng ${index + 1}`, line, (v) => (positionLines[index] = v))));
+      signer.append(create("div", {}, text(`ff-position-${index}`, `Chức vụ, dòng ${index + 1}`, line, (v) => (positionLines[index] = v))));
     });
-    body.append(
+    signer.append(
       button("Thêm dòng chức vụ", () => {
         if (positionLines.length < MAX_POSITION_LINES) positionLines = [...positionLines, ""];
         render();
@@ -154,11 +166,11 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
         withConfirmation = toggle.checked;
         render();
       });
-      body.append(
+      signer.append(
         create("div", {}, text("ff-drafter", "Ký hiệu người soạn, số bản phát hành (nếu có)", drafter, (v) => (drafter = v))),
         create("div", {}, create("label", {}, toggle, " Có dòng xác nhận chữ ký")),
       );
-      if (withConfirmation) body.append(create("div", {}, text("ff-confirmation", "Họ tên, chức vụ người được xác nhận", confirmation, (v) => (confirmation = v))));
+      if (withConfirmation) signer.append(create("div", {}, text("ff-confirmation", "Họ tên, chức vụ người được xác nhận", confirmation, (v) => (confirmation = v))));
     }
     if (confirmTitle !== null) {
       const box = create("div", { className: "ff-box", id: "ff-confirm" });

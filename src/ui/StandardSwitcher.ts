@@ -18,6 +18,8 @@ export interface StandardSwitcherHandle {
   onChange: (callback: () => void) => void;
   /** Đọc tài liệu, nhận diện chuẩn hoặc hỏi lại. Gọi một lần sau khi dựng các bảng khác. */
   start: () => Promise<void>;
+  /** Người dùng chọn chuẩn (bấm tab chuẩn): đổi ngay, hoặc hỏi xác nhận khi tài liệu đã có nội dung theo chuẩn khác. */
+  choose: (id: StandardId) => void;
 }
 
 const REASON_TEXT: Record<UnsureReason, string> = {
@@ -44,8 +46,8 @@ function button(text: string, onClick: () => void): HTMLButtonElement {
 }
 
 /**
- * Công tắc "Chuẩn văn bản" ở đầu task pane. Chuẩn chỉ đổi khi người dùng chọn hoặc khi tiêu đề ở đầu văn
- * bản rõ ràng; không chắc thì hỏi. Đổi chuẩn không tự sửa nội dung văn bản.
+ * Quản lý "chuẩn văn bản" đang dùng (T25: không còn ô chọn riêng, người dùng chọn bằng tab). Chuẩn chỉ đổi khi người
+ * dùng chọn hoặc khi tiêu đề ở đầu văn bản rõ ràng; không chắc thì hỏi. Đổi chuẩn không tự sửa nội dung văn bản.
  */
 export function mountStandardSwitcher(container: HTMLElement, deps: StandardSwitcherDeps): StandardSwitcherHandle {
   let current = loadDefaultStandard(deps.store);
@@ -54,30 +56,18 @@ export function mountStandardSwitcher(container: HTMLElement, deps: StandardSwit
   let hasContent = false;
   const callbacks: Array<() => void> = [];
 
-  const radios = STANDARDS.map((standard) =>
-    create("input", { type: "radio", name: "ss-standard", id: `ss-standard-${standard.id}`, value: standard.id, checked: standard.id === current.id }),
-  );
-  const group = create("fieldset", { id: "ss-group" }, create("legend", { textContent: "Chuẩn văn bản" }));
-  STANDARDS.forEach((standard, index) => group.append(create("label", {}, radios[index], ` ${standard.name}`)));
   const dialog = create("div", { id: "ss-dialog" });
   const message = create("p", { id: "ss-message" });
   message.setAttribute("role", "status");
-  container.append(group, dialog, message);
+  container.append(dialog, message);
 
   function show(kind: "ok" | "warning" | "error" | "", text: string): void {
     message.className = kind;
     message.textContent = text;
   }
 
-  function syncRadios(): void {
-    radios.forEach((radio, index) => {
-      radio.checked = STANDARDS[index].id === current.id;
-    });
-  }
-
   function select(profile: StandardProfile): void {
     current = profile;
-    syncRadios();
     for (const callback of callbacks) callback();
   }
 
@@ -100,7 +90,6 @@ export function mountStandardSwitcher(container: HTMLElement, deps: StandardSwit
   }
 
   function confirmSwitch(target: StandardProfile): void {
-    syncRadios();
     const from = STANDARDS.find((standard) => standard.id === documentStandard);
     const box = create("div", { className: "ss-box", id: "ss-confirm" });
     box.setAttribute("role", "alert");
@@ -119,20 +108,17 @@ export function mountStandardSwitcher(container: HTMLElement, deps: StandardSwit
     dialog.replaceChildren(box);
   }
 
-  radios.forEach((radio, index) => {
-    radio.addEventListener("change", () => {
-      const target = STANDARDS[index];
-      if (target.id === current.id) return;
-      if (hasContent && documentStandard !== null && documentStandard !== target.id) {
-        confirmSwitch(target);
-      } else {
-        void commit(target);
-      }
-    });
-  });
+  function choose(id: StandardId): void {
+    const target = STANDARDS.find((standard) => standard.id === id);
+    if (!target || target.id === current.id) return;
+    if (hasContent && documentStandard !== null && documentStandard !== target.id) {
+      confirmSwitch(target);
+    } else {
+      void commit(target);
+    }
+  }
 
   function ask(reason: UnsureReason, suggestion: StandardId | undefined): void {
-    syncRadios();
     const noAsk = create("input", { type: "checkbox", id: "ss-no-ask" });
     const box = create("div", { className: "ss-box", id: "ss-ask" });
     box.setAttribute("role", "alert");
@@ -183,5 +169,5 @@ export function mountStandardSwitcher(container: HTMLElement, deps: StandardSwit
     if (resolution.source === "detected") show("ok", `Nhận diện từ tiêu đề đầu văn bản: chuẩn ${profile.name}.`);
   }
 
-  return { currentStandard: () => current, onChange: (callback) => void callbacks.push(callback), start };
+  return { currentStandard: () => current, onChange: (callback) => void callbacks.push(callback), start, choose };
 }
