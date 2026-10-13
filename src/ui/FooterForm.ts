@@ -172,6 +172,8 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
       );
       if (withConfirmation) signer.append(create("div", {}, text("ff-confirmation", "Họ tên, chức vụ người được xác nhận", confirmation, (v) => (confirmation = v))));
     }
+    // Nâng cao (T26): trình tạo văn bản đã dựng trọn khối cuối; nút này chỉ để chèn riêng khối cuối vào tài liệu có sẵn.
+    const advanced: HTMLElement[] = [create("p", { className: "note", textContent: "Chèn riêng khối cuối vào cuối tài liệu đang mở, không tạo cả văn bản. Thường dùng \"Tạo văn bản mới\" ở trên." })];
     if (confirmTitle !== null) {
       const box = create("div", { className: "ff-box", id: "ff-confirm" });
       box.setAttribute("role", "alert");
@@ -183,14 +185,16 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
           render();
         }),
       );
-      body.append(box);
+      advanced.push(box);
     }
     const insertButton = button("Chèn khối cuối", () => void insert(false), { id: "ff-insert" });
     if (!isInsertHeaderSupported()) {
       insertButton.disabled = true;
       show("error", "Chèn khối cuối cần Microsoft 365 bản có WordApi 1.3 trở lên.");
     }
-    body.append(insertButton);
+    advanced.push(insertButton);
+    if (confirmTitle !== null) openGroups.add("nang-cao");
+    body.append(group("nang-cao", "Nâng cao: chèn riêng khối cuối", ...advanced));
   }
 
   render();

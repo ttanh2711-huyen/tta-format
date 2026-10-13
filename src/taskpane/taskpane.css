@@ -224,7 +224,8 @@ main {
 }
 
 /* Tiêu đề riêng của từng bảng đã có trong tiêu đề mục xổ ra */
-.acc-body > div > h2:first-child {
+.acc-body > div > h2:first-child,
+#format-group details > div > h2:first-child {
   display: none;
 }
 

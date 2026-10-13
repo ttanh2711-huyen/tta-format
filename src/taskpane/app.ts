@@ -18,7 +18,7 @@ import { mountReportPanel } from "../ui/ReportPanel";
 import { mountSettingsPanel } from "../ui/SettingsPanel";
 import { mountStandardSwitcher } from "../ui/StandardSwitcher";
 import { mountTabs, tabButtonId, type TabSpec } from "../ui/Tabs";
-import { loadActiveTab, saveActiveTab } from "../ui/tabsLogic";
+import { loadAccordionOpen, loadActiveTab, saveAccordionOpen, saveActiveTab } from "../ui/tabsLogic";
 
 const CHECK_TAB = "check";
 const AGENCY_TAB = "agency";
@@ -93,9 +93,23 @@ export function mountApp(): void {
   acc(panelStandard, { id: "ws.tao", title: "Tạo văn bản mới", hint: "Chọn loại văn bản rồi tạo", defaultOpen: true }, wizardEl);
   acc(panelStandard, { id: "ws.khoi-dau", title: "Khối đầu văn bản", hint: "Cơ quan, số và ký hiệu, ngày tháng, trích yếu", defaultOpen: true }, headerEl);
   acc(panelStandard, { id: "ws.khoi-cuoi", title: "Khối cuối văn bản", hint: "Nơi nhận, quyền hạn, chức vụ, họ tên người ký" }, footerEl);
-  acc(panelStandard, { id: "ws.tuy-chon", title: "Tuỳ chọn nhanh", hint: "Chữ, đoạn, trang, bảng, số trang, preset" }, quickEl);
-  acc(panelStandard, { id: "ws.trang", title: "Trang, style và số trang", hint: "Áp dụng thiết lập vào tài liệu đang mở" }, pageEl);
-  acc(panelStandard, { id: "ws.noi-dung", title: "Định dạng nội dung", hint: "Áp style vào phần thân và bảng biểu" }, formatEl);
+  // Một mục "Định dạng" gom ba bảng chồng nhau (T26): tuỳ chọn nhanh, trang/style/số trang, định dạng nội dung.
+  const formatEls = element("div", "format-group");
+  for (const [key, title, content] of [
+    ["tuy-chon", "Tuỳ chọn nhanh (chữ, đoạn, trang, bảng, preset)", quickEl],
+    ["trang", "Trang, style và số trang", pageEl],
+    ["noi-dung", "Định dạng nội dung", formatEl],
+  ] as const) {
+    const details = document.createElement("details");
+    details.id = `fg-${key}`;
+    details.open = loadAccordionOpen(store, `ws.dinh-dang.${key}`, key === "tuy-chon");
+    details.addEventListener("toggle", () => saveAccordionOpen(store, `ws.dinh-dang.${key}`, details.open));
+    const summary = document.createElement("summary");
+    summary.textContent = title;
+    details.append(summary, content);
+    formatEls.append(details);
+  }
+  acc(panelStandard, { id: "ws.dinh-dang", title: "Định dạng", hint: "Tuỳ chọn nhanh, trang và style, định dạng nội dung" }, formatEls);
   acc(panelStandard, { id: "ws.chen", title: "Dấu khẩn, phụ lục và thành phần bổ sung", hint: "Chèn tại con trỏ hoặc cuối tài liệu" }, extrasEl);
 
   const chipsEl = element("div", "check-standard", { className: "chips" });

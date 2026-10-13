@@ -419,6 +419,8 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
         group("trich-yeu", "Tên loại, trích yếu, Kính gửi", titleSection()),
       );
     }
+    // Nâng cao (T26): trình tạo văn bản đã dựng trọn khối đầu; nút này chỉ để chèn riêng khối đầu vào tài liệu có sẵn.
+    const advanced: HTMLElement[] = [create("p", { className: "note", textContent: "Chèn riêng khối đầu vào đầu tài liệu đang mở, không tạo cả văn bản. Thường dùng \"Tạo văn bản mới\" ở trên." })];
     if (confirmInsert) {
       const box = create("div", { className: "hf-box", id: "hf-confirm" });
       box.setAttribute("role", "alert");
@@ -430,14 +432,16 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
           render();
         }),
       );
-      body.append(box);
+      advanced.push(box);
     }
     const insertButton = button("Chèn khối đầu", () => void insert(false), { id: "hf-insert" });
     if (!isInsertHeaderSupported()) {
       insertButton.disabled = true;
       show("error", "Chèn khối đầu cần Microsoft 365 bản có WordApi 1.3 trở lên.");
     }
-    body.append(insertButton);
+    advanced.push(insertButton);
+    if (confirmInsert) openGroups.add("nang-cao");
+    body.append(group("nang-cao", "Nâng cao: chèn riêng khối đầu", ...advanced));
   }
 
   render();
