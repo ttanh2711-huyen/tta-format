@@ -23,7 +23,7 @@ export interface ConfigFile {
   profiles: AgencyProfile[];
   presets: Preset[];
   defaults: Partial<Record<StandardId, { values: Record<string, unknown>; exceptions: string[] }>>;
-  agencies: Partial<Record<StandardId, { names: string[]; abbrs: string[] }>>;
+  agencies: Partial<Record<StandardId, { names: string[]; abbrs: string[]; recipients: string[] }>>;
 }
 
 function readJson(store: KeyValueStore, key: string): unknown {
@@ -48,7 +48,8 @@ export function exportConfig(store: KeyValueStore, now: Date = new Date()): stri
     }
     const names = strings(readJson(store, agencyKey(standard.id, "names")));
     const abbrs = strings(readJson(store, agencyKey(standard.id, "abbrs")));
-    if (names.length > 0 || abbrs.length > 0) agencies[standard.id] = { names, abbrs };
+    const recipients = strings(readJson(store, agencyKey(standard.id, "recipients")));
+    if (names.length > 0 || abbrs.length > 0 || recipients.length > 0) agencies[standard.id] = { names, abbrs, recipients };
   }
   const file: ConfigFile = {
     format: CONFIG_FORMAT,
@@ -144,7 +145,7 @@ export function importConfig(store: KeyValueStore, text: string): ImportReport {
   for (const standard of STANDARDS) {
     const entry = agenciesIn[standard.id];
     if (typeof entry !== "object" || entry === null) continue;
-    for (const list of ["names", "abbrs"] as const) {
+    for (const list of ["names", "abbrs", "recipients"] as const) {
       const incoming = strings((entry as Record<string, unknown>)[list]);
       if (incoming.length === 0) continue;
       const current = strings(readJson(store, agencyKey(standard.id, list)));

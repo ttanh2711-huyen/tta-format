@@ -4,6 +4,7 @@ import { QUOC_HIEU, buildHeaderBlock, headerInputFromOptions, MAX_PARENT_LINES, 
 import { buildPartyHeaderBlock, MAX_PARENT_LINES as MAX_PARTY_PARENT_LINES, partyHeaderFromOptions, validatePartyHeader, type PartyHeaderInput } from "../standards/hd05/headerBlock";
 import { buildPartyTitleBody, partyRecipientsRow, partySubjectRow, partyTitleFromOptions, validatePartyTitle, type PartyTitleInput, type PartyTitleVariant } from "../standards/hd05/titleBlock";
 import { placeDateText, soText } from "../rules/validators";
+import { recipientPicker } from "./RecipientPicker";
 import { listAgencies, removeAgency, saveAgency } from "../settings/agencies";
 import type { AgencyProfile } from "../settings/profile";
 import type { FormatValues } from "../settings/formatOptions";
@@ -345,7 +346,10 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
     section.append(radio("congVan", "Công văn (về việc, Kính gửi)"), radio("coTenLoai", "Có thể loại (báo cáo, thông báo, quyết định...)"), radio("toTrinh", "Tờ trình (Kính trình)"));
     if (partyVariant !== "congVan") section.append(create("div", {}, text("hf-type-name", "Thể loại, ví dụ Quyết định", title.typeName, (v) => (title.typeName = v))));
     section.append(create("div", {}, text("hf-subject", partyVariant === "congVan" ? "Trích yếu (sau \"về việc\")" : "Trích yếu nội dung", title.subject, (v) => (title.subject = v))));
-    if (partyVariant !== "coTenLoai") section.append(create("div", {}, area("hf-recipients", partyVariant === "toTrinh" ? "Nơi nhận Kính trình, mỗi nơi một dòng" : "Nơi nhận Kính gửi, mỗi nơi một dòng", title.recipients, (v) => (title.recipients = v))));
+    if (partyVariant !== "coTenLoai") {
+      const recipientsArea = area("hf-recipients", partyVariant === "toTrinh" ? "Nơi nhận Kính trình, mỗi nơi một dòng" : "Nơi nhận Kính gửi, mỗi nơi một dòng", title.recipients, (v) => (title.recipients = v));
+      section.append(create("div", {}, recipientsArea), recipientPicker(deps.store, deps.currentStandard(), recipientsArea));
+    }
     section.append(create("div", {}, area("hf-basis", "Căn cứ ban hành (nếu có), mỗi căn cứ một dòng", basis, (v) => (basis = v))));
     return section;
   }
@@ -385,6 +389,7 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       section.append(
         create("div", {}, text("hf-subject", "Trích yếu (sau V/v)", title.subject, (v) => (title.subject = v))),
         create("div", {}, recipients),
+        recipientPicker(deps.store, deps.currentStandard(), recipients),
       );
     }
     return section;

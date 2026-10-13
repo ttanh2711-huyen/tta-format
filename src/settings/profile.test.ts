@@ -1,7 +1,7 @@
 import { STANDARDS } from "../standards";
 import { HD05 } from "../standards/hd05/profile";
 import { ND30 } from "../standards/nd30/profile";
-import { saveAgency } from "./agencies";
+import { listAgencies, saveAgency, saveRecipients } from "./agencies";
 import { saveDefaultStandard } from "./defaultStandard";
 import { CONFIG_FORMAT, CONFIG_VERSION, exportConfig, importConfig } from "./exportImport";
 import { buildRegistry, initialState } from "./formatOptions";
@@ -144,6 +144,16 @@ describe("xuất và nhập cấu hình", () => {
     expect(listProfiles(target, ND30)[0]).toMatchObject({ label: "Chi cục Thủy lợi", isDefault: true });
     expect(listProfiles(target, HD05)).toHaveLength(1);
     expect(exportConfig(target, new Date("2026-10-09T00:00:00Z"))).toBe(text);
+  });
+
+  it("danh bạ nơi nhận được xuất và nhập cùng cấu hình", () => {
+    const source = memoryStore();
+    saveRecipients(source, ND30, ["Sở Nội vụ", "Sở Tài chính"]);
+    const target = memoryStore();
+    saveRecipients(target, ND30, ["Sở Tài chính", "Sở Y tế"]);
+    const report = importConfig(target, exportConfig(source));
+    expect(report.ok).toBe(true);
+    expect(listAgencies(target, ND30, "recipients")).toEqual(["Sở Tài chính", "Sở Y tế", "Sở Nội vụ"]);
   });
 
   it("nhập hai lần không nhân đôi", () => {

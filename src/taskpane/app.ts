@@ -134,7 +134,7 @@ export function mountApp(): void {
   });
   const quick = mountQuickOptions(quickEl, { currentStandard: switcher.currentStandard, store });
   const header = mountHeaderForm(headerEl, { currentStandard: switcher.currentStandard, values: quick.values, store });
-  const footer = mountFooterForm(footerEl, { currentStandard: switcher.currentStandard, values: quick.values });
+  const footer = mountFooterForm(footerEl, { currentStandard: switcher.currentStandard, values: quick.values, store });
   const wizard = mountNewDocWizard(wizardEl, {
     currentStandard: switcher.currentStandard,
     values: quick.values,

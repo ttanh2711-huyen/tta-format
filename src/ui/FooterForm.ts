@@ -4,11 +4,14 @@ import { buildPartyFooterBlock, partyFooterFromOptions, validatePartyFooter, typ
 import { MAX_POSITION_LINES, buildFooterBlock, findAcademicTitle, footerInputFromOptions, validateFooterInput, type FooterBlockInput } from "../ooxml/footerBlock";
 import type { FormatValues } from "../settings/formatOptions";
 import type { AgencyProfile } from "../settings/profile";
+import type { KeyValueStore } from "../settings/storage";
+import { recipientPicker } from "./RecipientPicker";
 import type { StandardProfile } from "../standards/types";
 
 export interface FooterFormDeps {
   currentStandard: () => StandardProfile;
   values: () => FormatValues;
+  store: KeyValueStore;
 }
 
 function create<K extends keyof HTMLElementTagNameMap>(
@@ -142,7 +145,7 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
     });
     body.append(
       create("p", { className: "note", textContent: party ? "Chèn bảng nơi nhận (gạch chân) và chữ ký (chức vụ không đậm) ở cuối tài liệu. Add-in tự thêm gạch đầu dòng, dấu ; và dấu . cuối mục." : "Chèn bảng nơi nhận và chữ ký ở cuối tài liệu. Add-in tự thêm gạch đầu dòng, dấu ; và dấu . cuối mục." }),
-      group("nhan", "Nơi nhận", create("div", {}, list), create("div", {}, "Lưu: ", text("ff-luu", "VT, ...", luu, (v) => (luu = v)))),
+      group("nhan", "Nơi nhận", create("div", {}, list), recipientPicker(deps.store, profile, list), create("div", {}, "Lưu: ", text("ff-luu", "VT, ...", luu, (v) => (luu = v)))),
       group("ky", "Người ký", signer),
     );
     signer.append(authoritySection(profile));
