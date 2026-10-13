@@ -46,7 +46,10 @@ Cần bản có WordApiDesktop 1.3 (Microsoft 365 bản 2507 trở lên). Word t
 | Nút "Đến vị trí" | Không | [ ] | [ ] | Bảng lồng nhau và khối `w:sdt` có thể lệch chỉ số đoạn |
 | Nút "Sửa" từng lỗi | Có (giả lập trên bản sao) | [ ] | [ ] | Lỗi giãn dòng Exactly ghi lại đoạn bằng OOXML |
 | Sửa tất cả: xem trước, áp dụng, hoàn tác, Ctrl+Z | Có (gom, giả lập) | [ ] | [ ] | Đo thời gian văn bản 100 trang |
-| Xuất báo cáo (sao chép, tải về .txt) | Có (định dạng chữ) | [ ] | [ ] | Tải về có chạy trong Word không? |
+| Xuất báo cáo (sao chép, tải về .txt, mở .docx) | Có (định dạng chữ, zip .docx đọc lại được) | [ ] | [ ] | Tải về và "Mở báo cáo trong Word" có chạy trong Word không? |
+| Sửa nhanh (Chỉnh toàn bộ rồi Sửa tất cả), Hoàn tác | Có (từng phần) | [ ] | [ ] | Một nút, hoàn tác về bản chụp |
+| Kiểm tra sửa khối đầu, khối cuối (thêm dấu *, 5 gạch nối, gạch đầu dòng, họ tên, học hàm) | Có (giả lập) | [ ] | [ ] | `insertAfter` chèn đoạn đúng chỗ trong ô bảng? |
+| Bản sao y, trích sao, sao lục; sổ số; danh bạ nơi nhận; Khoản/Điểm dựng sẵn; điền giả định | Có (golden, logic) | [ ] | [ ] | Tạo từng loại, xem bố cục |
 | Cảnh báo trộn dấu hiệu hai chuẩn | Có | [ ] | [ ] | |
 
 ## 4. Thành phần bổ sung và cấu hình

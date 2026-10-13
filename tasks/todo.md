@@ -687,7 +687,23 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 **File dự kiến:** `src/ui/Tabs.ts`, `src/ui/Accordion.ts`, `src/taskpane/taskpane.css`, `src/taskpane/taskpane.html`, `src/taskpane/taskpane.ts`, `src/ui/StandardSwitcher.ts`, `manifest.xml`
 **Kích cỡ:** M
 
-### Checkpoint cuối
+### T26: Đề xuất bổ sung sau kiểm tra toàn bộ
+**Mô tả:** thực hiện các đề xuất thêm bớt sau đợt kiểm tra lại toàn bộ.
+**Tiêu chí nghiệm thu:**
+- [x] Gộp "Tuỳ chọn nhanh", "Trang, style và số trang", "Định dạng nội dung" thành mục "Định dạng"; nút chèn khối đầu/cuối lẻ vào nhóm "Nâng cao"; bỏ trang thăm dò API (spike)
+- [x] Giấy tờ ít dùng của chuẩn Đảng (giấy chứng nhận, giấy đi đường, phiếu chuyển, phiếu gửi) ẩn khỏi ô chọn loại, vẫn có cấu hình
+- [x] Sổ số văn bản: gợi ý số tiếp theo theo chuẩn, năm, loại; ghi số khi tạo văn bản; sửa số trong Cơ quan; xuất, nhập cùng cấu hình
+- [x] Danh bạ nơi nhận theo chuẩn, chọn từ danh sách khi nhập Kính gửi và Nơi nhận
+- [x] Tự dựng sẵn Khoản và Điểm trong các Điều của quyết định, nghị quyết, quy chế, quy định
+- [x] Khối đầu, khối cuối còn trống vẫn tạo được văn bản theo mẫu, mục thiếu điền chữ giả định (`src/templates/assumptions.ts`)
+- [x] Kiểm tra sửa luôn khối đầu, khối cuối: thêm dấu * dưới tên cơ quan (Đảng), dòng 5 gạch nối, gạch đầu dòng nơi nhận, họ tên viết hoa chữ cái đầu, bỏ học hàm, học vị (cách sửa mới `insertAfter`)
+- [x] Nút "Sửa nhanh" ở tab Kiểm tra: chạy Chỉnh toàn bộ rồi Sửa tất cả, một lần chụp để hoàn tác
+- [x] Xuất báo cáo kiểm tra ra .docx (zip không nén tự dựng, mở bằng `createDocument`), vẫn giữ .txt
+- [x] Bản sao y, trích sao, sao lục (SY, TrS, SL) cho chuẩn Chính quyền, họ mẫu giấy tờ
+- [ ] Thủ công trong Word
+**Trạng thái:** mã và test xong. **Chưa kiểm trong Word thật**: tạo văn bản từng họ mẫu, numbering Khoản/Điểm, cách sửa `insertAfter`, Sửa nhanh, mở .docx bằng `createDocument`. **Lưu ý**: bố cục bản sao y, trích sao, sao lục là đề xuất (Phụ lục III chỉ nêu chữ viết tắt), cần bạn duyệt; xem `docs/nd30-ambiguities.md` mục 17.
+**Kích cỡ:** L
+
 - [ ] Mọi tiêu chí nghiệm thu đạt; ma trận kiểm thử hoàn thành
 - [ ] Bạn dùng thử trên văn bản thật và xác nhận
 - [ ] Rà soát bảo mật và quyền riêng tư xong

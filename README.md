@@ -16,7 +16,7 @@ Bốn tab: **Nghị định 30** và **Hướng dẫn 05** (mỗi tab là một 
 - Thiết lập trang, cài bộ style `ND30_*` / `HD05_*`, định dạng thân và bảng, đánh số trang.
 - Dựng khối đầu, khối cuối và tạo văn bản mới theo loại (registry loại văn bản, danh sách đánh số Điều/Khoản/Điểm tự động).
 - **Chỉnh toàn bộ** nhiều bước có xem trước và khôi phục bản trước.
-- **Kiểm tra văn bản**: bộ quy tắc theo từng chuẩn, nút "Sửa" từng lỗi, "Sửa tất cả" có xem trước và hoàn tác, xuất báo cáo.
+- **Kiểm tra văn bản**: bộ quy tắc theo từng chuẩn, nút "Sửa" từng lỗi, "Sửa tất cả" có xem trước và hoàn tác, xuất báo cáo (.txt hoặc mở thành tệp Word), "Sửa nhanh" một nút (Chỉnh toàn bộ rồi Sửa tất cả); kiểm tra và sửa cả khối đầu, khối cuối.
 - Dấu chỉ mức độ khẩn, phụ lục, các thành phần bổ sung của văn bản Đảng.
 - Hồ sơ cơ quan, preset, xuất và nhập cấu hình.
 
