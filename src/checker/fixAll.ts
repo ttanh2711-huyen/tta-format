@@ -30,7 +30,7 @@ export interface FixPlan {
   manual: Issue[];
 }
 
-const KIND_ORDER: Record<Fix["kind"], number> = { page: 0, font: 1, paragraph: 2, replace: 3, exact: 4 };
+const KIND_ORDER: Record<Fix["kind"], number> = { page: 0, font: 1, paragraph: 2, replace: 3, exact: 4, insertAfter: 5 };
 
 function targetOf(fix: Fix): string {
   return fix.kind === "page" ? `page:${fix.section}` : `para:${fix.index}`;
@@ -83,7 +83,9 @@ export function planFixes(issues: readonly Issue[], options: FixPlanOptions = {}
   }
 
   const position = (fix: Fix): number => (fix.kind === "page" ? fix.section - 1_000_000 : fix.index);
-  entries.sort((a, b) => position(a.fix) - position(b.fix) || KIND_ORDER[a.fix.kind] - KIND_ORDER[b.fix.kind]);
+  // Cách sửa thêm đoạn làm lệch chỉ số các đoạn sau nên đặt sau cùng, chỉ số lớn trước.
+  const inserts = (fix: Fix): boolean => fix.kind === "insertAfter";
+  entries.sort((a, b) => Number(inserts(a.fix)) - Number(inserts(b.fix)) || (inserts(a.fix) ? position(b.fix) - position(a.fix) : position(a.fix) - position(b.fix) || KIND_ORDER[a.fix.kind] - KIND_ORDER[b.fix.kind]));
   return { fixes: entries.map((e) => e.fix), changes: entries.map((e) => ({ label: e.fix.label, where: e.where, ruleIds: e.ruleIds })), manual };
 }
 

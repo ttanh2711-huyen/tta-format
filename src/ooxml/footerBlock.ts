@@ -55,6 +55,17 @@ export function findAcademicTitle(name: string): string | null {
   return ACADEMIC_ABBREVIATIONS.exec(text)?.[0] ?? ACADEMIC_WORDS.exec(text)?.[0] ?? null;
 }
 
+/** Bỏ học hàm, học vị đứng đầu họ tên ("PGS.TS Lê Thị B" thành "Lê Thị B"). */
+export function stripAcademicTitles(name: string): string {
+  let rest = clean(name);
+  for (let guard = 0; guard < 6; guard += 1) {
+    const found = findAcademicTitle(rest);
+    if (found === null) break;
+    rest = rest.slice(found.length).replace(/^[.\s]+/, "");
+  }
+  return rest;
+}
+
 export function validateFooterInput(input: FooterBlockInput): string[] {
   const errors: string[] = [];
   if (clean(input.signerName) === "") errors.push("Hãy nhập họ tên người ký.");

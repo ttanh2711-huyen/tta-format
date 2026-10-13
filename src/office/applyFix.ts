@@ -68,6 +68,16 @@ export async function applyFixes(fixes: readonly Fix[]): Promise<ApplyFixResult>
       } else if (fix.kind === "exact") {
         exact.push({ paragraph, pt: fix.pt });
         applied += 1;
+      } else if (fix.kind === "insertAfter") {
+        const added = paragraph.insertParagraph(fix.text, "After");
+        added.alignment = fix.align === "center" ? "Centered" : "Left";
+        added.firstLineIndent = 0;
+        added.font.name = "Times New Roman";
+        added.font.bold = fix.bold ?? false;
+        added.font.italic = fix.italic ?? false;
+        added.font.underline = "None";
+        if (fix.sizePt !== undefined) added.font.size = fix.sizePt;
+        applied += 1;
       } else {
         const found = searches[i];
         if (found && found.items.length > 0) {

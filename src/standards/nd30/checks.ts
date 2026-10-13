@@ -1,6 +1,6 @@
-import { checkDate, checkTitleParagraph, pad2, paragraphIssue, replaceFix } from "../../checker/common";
+import { checkDate, checkTitleParagraph, pad2, paragraphIssue, replaceFix, toTitleCase } from "../../checker/common";
 import type { Fix, Issue, CheckDocument, CheckParagraph } from "../../checker/types";
-import { findAcademicTitle } from "../../ooxml/footerBlock";
+import { findAcademicTitle, stripAcademicTitles } from "../../ooxml/footerBlock";
 import { QUOC_HIEU, TIEU_NGU } from "../../ooxml/headerBlock";
 import type { StandardProfile } from "../types";
 
@@ -108,7 +108,7 @@ function checkFooter(doc: CheckDocument, profile: StandardProfile): Issue[] {
         );
       }
       if (!text.startsWith("-")) {
-        issues.push(paragraphIssue(item, { ruleId: "footer.noiNhan.dash", severity: "warning", message: "Mỗi mục của nơi nhận bắt đầu bằng dấu gạch ngang.", reference: noiNhanList.source }));
+        issues.push(paragraphIssue(item, { ruleId: "footer.noiNhan.dash", severity: "warning", message: "Mỗi mục của nơi nhận bắt đầu bằng dấu gạch ngang.", reference: noiNhanList.source, fix: replaceFix(item, `- ${text}`, "Thêm gạch đầu dòng") }));
       }
       const size = item.resolved.sizePt;
       if (size !== undefined && (size < noiNhanList.sizePt.min || size > noiNhanList.sizePt.max)) {
@@ -196,10 +196,10 @@ function checkFooter(doc: CheckDocument, profile: StandardProfile): Issue[] {
     const nameText = name.resolved.text.trim();
     const academic = findAcademicTitle(nameText);
     if (academic) {
-      issues.push(paragraphIssue(name, { ruleId: "footer.hoTen.hocHam", severity: "error", message: `Họ tên người ký có "${academic}"; chỉ ghi họ và tên, không ghi học hàm, học vị.`, reference: hoTen.source, actual: academic }));
+      issues.push(paragraphIssue(name, { ruleId: "footer.hoTen.hocHam", severity: "error", message: `Họ tên người ký có "${academic}"; chỉ ghi họ và tên, không ghi học hàm, học vị.`, reference: hoTen.source, actual: academic, ...(stripAcademicTitles(nameText) === "" ? {} : { fix: replaceFix(name, stripAcademicTitles(nameText), "Bỏ học hàm, học vị") }) }));
     }
     if (nameText.length >= 3 && nameText === nameText.toUpperCase() && nameText !== nameText.toLowerCase()) {
-      issues.push(paragraphIssue(name, { ruleId: "footer.hoTen.case", severity: "error", message: "Họ và tên người ký phải in thường (viết hoa chữ cái đầu).", reference: hoTen.source, actual: nameText }));
+      issues.push(paragraphIssue(name, { ruleId: "footer.hoTen.case", severity: "error", message: "Họ và tên người ký phải in thường (viết hoa chữ cái đầu).", reference: hoTen.source, actual: nameText, fix: replaceFix(name, toTitleCase(nameText), "Viết hoa chữ cái đầu họ tên") }));
     }
     if (name.resolved.bold !== true) {
       issues.push(paragraphIssue(name, { ruleId: "footer.hoTen.bold", severity: "error", message: "Họ và tên người ký phải in đậm.", reference: hoTen.source, fix: fontFix(name, { bold: true }, "In đậm họ tên") }));

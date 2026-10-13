@@ -1,6 +1,6 @@
-import { checkDate, checkTitleParagraph, DATE_PATTERN, matchTitle, pad2, paragraphIssue, replaceFix } from "../../checker/common";
+import { checkDate, checkTitleParagraph, DATE_PATTERN, matchTitle, pad2, paragraphIssue, replaceFix, toTitleCase } from "../../checker/common";
 import type { CheckDocument, CheckParagraph, Fix, Issue } from "../../checker/types";
-import { findAcademicTitle } from "../../ooxml/footerBlock";
+import { findAcademicTitle, stripAcademicTitles } from "../../ooxml/footerBlock";
 import { TIEU_NGU } from "../../ooxml/headerBlock";
 import type { StandardProfile } from "../types";
 import { checkPartyExtras } from "./extras";
@@ -114,7 +114,7 @@ function checkHeader(doc: CheckDocument, profile: StandardProfile): Issue[] {
     if (!left) continue;
     const star = left.findIndex((p) => p.resolved.text.trim() === HEADER_MARKS.agencyStar);
     if (star < 0) {
-      issues.push(paragraphIssue(left[0], { ruleId: "header.star", severity: "warning", message: `Dưới tên cơ quan ban hành phải có dấu ${HEADER_MARKS.agencyStar}.`, reference: HEADER_MARKS.source }));
+      issues.push(paragraphIssue(left[0], { ruleId: "header.star", severity: "warning", message: `Dưới tên cơ quan ban hành phải có dấu ${HEADER_MARKS.agencyStar}.`, reference: HEADER_MARKS.source, fix: { kind: "insertAfter", index: left[left.length - 1].index, text: HEADER_MARKS.agencyStar, align: "center", sizePt: issuer.sizePt.min, label: `Thêm dấu ${HEADER_MARKS.agencyStar} dưới tên cơ quan` } }));
       continue;
     }
     if (star === 0) continue;
@@ -165,7 +165,7 @@ function checkTitleBlock(doc: CheckDocument, profile: StandardProfile): Issue[] 
   const dashes = body[at + 2];
   const wanted = "-".repeat(HEADER_MARKS.trichYeuDashCount);
   if (!dashes || !/^-+$/.test(dashes.resolved.text.trim())) {
-    issues.push(paragraphIssue(subject, { ruleId: "title.dashes.missing", severity: "error", message: `Dưới trích yếu phải có dòng ${HEADER_MARKS.trichYeuDashCount} dấu gạch nối (${wanted}).`, reference: HEADER_MARKS.source }));
+    issues.push(paragraphIssue(subject, { ruleId: "title.dashes.missing", severity: "error", message: `Dưới trích yếu phải có dòng ${HEADER_MARKS.trichYeuDashCount} dấu gạch nối (${wanted}).`, reference: HEADER_MARKS.source, fix: { kind: "insertAfter", index: subject.index, text: wanted, align: "center", sizePt: trichYeu.sizePt.min, label: `Thêm dòng ${HEADER_MARKS.trichYeuDashCount} dấu gạch nối` } }));
   } else if (dashes.resolved.text.trim() !== wanted) {
     issues.push(paragraphIssue(dashes, { ruleId: "title.dashes.count", severity: "error", message: `Dòng gạch nối dưới trích yếu phải đúng ${HEADER_MARKS.trichYeuDashCount} dấu.`, reference: HEADER_MARKS.source, actual: dashes.resolved.text.trim(), expected: wanted, fix: replaceFix(dashes, wanted, `Đặt ${HEADER_MARKS.trichYeuDashCount} dấu gạch nối`) }));
   }
@@ -196,7 +196,7 @@ function checkRecipients(items: CheckParagraph[], profile: StandardProfile): Iss
       );
     }
     if (!text.startsWith("-")) {
-      issues.push(paragraphIssue(item, { ruleId: "footer.noiNhan.dash", severity: "warning", message: "Mỗi mục của nơi nhận bắt đầu bằng dấu gạch ngang.", reference: rule.source }));
+      issues.push(paragraphIssue(item, { ruleId: "footer.noiNhan.dash", severity: "warning", message: "Mỗi mục của nơi nhận bắt đầu bằng dấu gạch ngang.", reference: rule.source, fix: replaceFix(item, `- ${text}`, "Thêm gạch đầu dòng") }));
     }
     if (!inRange(item.resolved.sizePt, rule.sizePt)) {
       issues.push(paragraphIssue(item, { ruleId: "footer.noiNhan.size", severity: "error", message: `Danh sách nơi nhận cỡ ${item.resolved.sizePt} pt; phải ${rule.sizePt.min} pt.`, reference: rule.source, fix: sizeFix(item, rule.sizePt) }));
@@ -240,10 +240,10 @@ function checkSignature(lines: CheckParagraph[], profile: StandardProfile): Issu
   const nameText = name.resolved.text.trim();
   const academic = findAcademicTitle(nameText);
   if (academic) {
-    issues.push(paragraphIssue(name, { ruleId: "footer.hoTen.hocHam", severity: "error", message: `Họ tên người ký có "${academic}"; chỉ ghi họ và tên, không ghi học hàm, học vị.`, reference: hoTen.source, actual: academic }));
+    issues.push(paragraphIssue(name, { ruleId: "footer.hoTen.hocHam", severity: "error", message: `Họ tên người ký có "${academic}"; chỉ ghi họ và tên, không ghi học hàm, học vị.`, reference: hoTen.source, actual: academic, ...(stripAcademicTitles(nameText) === "" ? {} : { fix: replaceFix(name, stripAcademicTitles(nameText), "Bỏ học hàm, học vị") }) }));
   }
   if (nameText.length >= 3 && nameText === nameText.toUpperCase() && nameText !== nameText.toLowerCase()) {
-    issues.push(paragraphIssue(name, { ruleId: "footer.hoTen.case", severity: "error", message: "Họ và tên người ký phải in thường (viết hoa chữ cái đầu).", reference: hoTen.source, actual: nameText }));
+    issues.push(paragraphIssue(name, { ruleId: "footer.hoTen.case", severity: "error", message: "Họ và tên người ký phải in thường (viết hoa chữ cái đầu).", reference: hoTen.source, actual: nameText, fix: replaceFix(name, toTitleCase(nameText), "Viết hoa chữ cái đầu họ tên") }));
   }
   if (name.resolved.bold !== true) {
     issues.push(paragraphIssue(name, { ruleId: "footer.hoTen.bold", severity: "error", message: "Họ và tên người ký phải in đậm.", reference: hoTen.source, fix: fontFix(name, { bold: true }, "In đậm họ tên") }));

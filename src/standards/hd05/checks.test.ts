@@ -242,7 +242,7 @@ describe("thể loại, trích yếu, 5 dấu gạch nối", () => {
     const missing = block().filter((p) => p.text !== "-----");
     const issues = run(doc(missing));
     expect(ids(issues)).toEqual(["title.dashes.missing"]);
-    expect(issues[0].fix).toBeUndefined();
+    expect(issues[0].fix).toMatchObject({ kind: "insertAfter", text: "-----" });
   });
 });
 

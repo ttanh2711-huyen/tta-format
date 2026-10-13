@@ -17,6 +17,7 @@ export type Fix =
   | { kind: "font"; index: number; name?: string; bold?: boolean; italic?: boolean; underline?: boolean; sizePt?: number; label: string }
   | { kind: "paragraph"; index: number; align?: "both"; firstLineIndentMm?: number; spaceBeforePt?: number; spaceAfterPt?: number; lineMultiple?: number; label: string }
   | { kind: "exact"; index: number; pt: number; label: string }
+  | { kind: "insertAfter"; index: number; text: string; align?: "center" | "left"; sizePt?: number; bold?: boolean; italic?: boolean; label: string }
   | { kind: "page"; section: number; paper?: "A4"; marginsMm?: Partial<Record<"top" | "bottom" | "left" | "right", number>>; headerDistanceMm?: number; label: string };
 
 export interface Issue {

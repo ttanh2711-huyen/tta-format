@@ -238,10 +238,10 @@ describe("nơi nhận và chữ ký", () => {
     expect(run(with_((l) => (l[3] = { text: "Q. CHI CỤC TRƯỞNG", col: 1, bold: true, sizePt: 14 })))).toEqual([]);
   });
 
-  it("họ tên có học hàm hoặc học vị bị báo, không có cách sửa tự động", () => {
+  it("họ tên có học hàm hoặc học vị bị báo và sửa được bằng cách bỏ học hàm", () => {
     const issues = run(with_((l) => (l[5] = { text: "TS. Mai Hiếu Hiền", col: 1, bold: true, sizePt: 14 })));
     expect(ids(issues)).toEqual(["footer.hoTen.hocHam"]);
-    expect(issues[0].fix).toBeUndefined();
+    expect(issues[0].fix).toMatchObject({ kind: "replace", replacement: "Mai Hiếu Hiền" });
   });
 
   it("họ tên in hoa toàn bộ bị báo; họ tên không đậm bị báo và sửa được", () => {

@@ -136,3 +136,12 @@ export function checkDate(p: CheckParagraph, source: string): Issue[] {
   }
   return issues;
 }
+
+/** Viết hoa chữ cái đầu mỗi chữ, còn lại viết thường ("NGUYỄN VĂN ĐỨC" thành "Nguyễn Văn Đức"). */
+export function toTitleCase(text: string): string {
+  return text
+    .toLowerCase()
+    .split(/(\s+)/)
+    .map((part) => (part.trim() === "" ? part : part.charAt(0).toUpperCase() + part.slice(1)))
+    .join("");
+}

@@ -15,6 +15,23 @@ export function fixIndex(fix: Fix): number | undefined {
  * trước và để kiểm tra lại sau khi sửa mà không cần gọi Word.
  */
 export function applyFix(doc: CheckDocument, fix: Fix): CheckDocument {
+  if (fix.kind === "insertAfter") {
+    // Đoạn mới nằm cùng ô bảng (nếu có) với đoạn đứng trước; các đoạn sau được dồn chỉ số như trong Word.
+    const paragraphs: CheckDocument["paragraphs"] = [];
+    for (const p of doc.paragraphs) {
+      if (p.index > fix.index) paragraphs.push({ ...p, index: p.index + 1 });
+      else paragraphs.push(p);
+      if (p.index === fix.index) {
+        paragraphs.push({
+          index: p.index + 1,
+          inTable: p.inTable,
+          table: p.table,
+          resolved: { kind: "paragraph", text: fix.text, align: fix.align, sizePt: fix.sizePt, bold: fix.bold ?? false, italic: fix.italic ?? false },
+        });
+      }
+    }
+    return { ...doc, paragraphs };
+  }
   if (fix.kind === "page") {
     return {
       ...doc,
