@@ -164,7 +164,7 @@ export function mountSettingsPanel(container: HTMLElement, deps: SettingsPanelDe
       deps.onImported();
       render();
       const skipped = report.skipped.length > 0 ? ` Bỏ qua ${report.skipped.length} mục: ${report.skipped.join(" ")}` : "";
-      show(report.skipped.length > 0 ? "warning" : "ok", `Đã nhập ${report.profiles} hồ sơ, ${report.presets} preset, ${report.defaults} mặc định, ${report.agencyEntries} cơ quan.${skipped}`);
+      show(report.skipped.length > 0 ? "warning" : "ok", `Đã nhập ${report.profiles} hồ sơ, ${report.presets} preset, ${report.defaults} mặc định, ${report.agencyEntries} cơ quan, ${report.counters} bộ đếm sổ số.${skipped}`);
     }, { id: "sp-import" });
     return create("div", {}, create("p", { className: "note", textContent: "Xuất để chuyển hồ sơ cơ quan, preset và danh sách cơ quan sang máy khác; nhập sẽ gộp vào cấu hình hiện có (hồ sơ trùng mã được thay)." }), exportButton, " ", link, area, importButton);
   }

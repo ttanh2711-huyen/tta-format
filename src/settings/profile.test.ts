@@ -2,6 +2,7 @@ import { STANDARDS } from "../standards";
 import { HD05 } from "../standards/hd05/profile";
 import { ND30 } from "../standards/nd30/profile";
 import { listAgencies, saveAgency, saveRecipients } from "./agencies";
+import { lastNumber, recordNumber } from "./soVanBan";
 import { saveDefaultStandard } from "./defaultStandard";
 import { CONFIG_FORMAT, CONFIG_VERSION, exportConfig, importConfig } from "./exportImport";
 import { buildRegistry, initialState } from "./formatOptions";
@@ -154,6 +155,18 @@ describe("xuất và nhập cấu hình", () => {
     const report = importConfig(target, exportConfig(source));
     expect(report.ok).toBe(true);
     expect(listAgencies(target, ND30, "recipients")).toEqual(["Sở Tài chính", "Sở Y tế", "Sở Nội vụ"]);
+  });
+
+  it("sổ số văn bản được xuất và nhập; nhập lấy số lớn hơn, không làm lùi", () => {
+    const source = memoryStore();
+    recordNumber(source, ND30, 2026, "QĐ", 9);
+    recordNumber(source, ND30, 2026, null, 4);
+    const target = memoryStore();
+    recordNumber(target, ND30, 2026, "QĐ", 12);
+    const report = importConfig(target, exportConfig(source));
+    expect(report).toMatchObject({ ok: true, counters: 2 });
+    expect(lastNumber(target, ND30, 2026, "QĐ")).toBe(12);
+    expect(lastNumber(target, ND30, 2026, null)).toBe(4);
   });
 
   it("nhập hai lần không nhân đôi", () => {

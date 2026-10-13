@@ -4,6 +4,7 @@ import { agencyKey, type AgencyList } from "./agencies";
 import { loadDefaultStandard, saveDefaultStandard } from "./defaultStandard";
 import { defaultsKey, isPreset, readUserPresets, writeUserPresets, type Preset } from "./presets";
 import { allProfiles, isAgencyProfile, replaceProfiles, validateProfile, type AgencyProfile } from "./profile";
+import { listCounters, recordNumber, type Counter } from "./soVanBan";
 import type { KeyValueStore } from "./storage";
 
 /**
@@ -24,6 +25,8 @@ export interface ConfigFile {
   presets: Preset[];
   defaults: Partial<Record<StandardId, { values: Record<string, unknown>; exceptions: string[] }>>;
   agencies: Partial<Record<StandardId, { names: string[]; abbrs: string[]; recipients: string[] }>>;
+  /** Sổ số văn bản: số cuối đã dùng theo chuẩn, năm, loại (có từ T26). */
+  counters?: Partial<Record<StandardId, Counter[]>>;
 }
 
 function readJson(store: KeyValueStore, key: string): unknown {
@@ -51,6 +54,11 @@ export function exportConfig(store: KeyValueStore, now: Date = new Date()): stri
     const recipients = strings(readJson(store, agencyKey(standard.id, "recipients")));
     if (names.length > 0 || abbrs.length > 0 || recipients.length > 0) agencies[standard.id] = { names, abbrs, recipients };
   }
+  const counters: NonNullable<ConfigFile["counters"]> = {};
+  for (const standard of STANDARDS) {
+    const list = listCounters(store, standard);
+    if (list.length > 0) counters[standard.id] = list;
+  }
   const file: ConfigFile = {
     format: CONFIG_FORMAT,
     version: CONFIG_VERSION,
@@ -60,6 +68,7 @@ export function exportConfig(store: KeyValueStore, now: Date = new Date()): stri
     presets: readUserPresets(store),
     defaults,
     agencies,
+    counters,
   };
   return JSON.stringify(file, null, 2);
 }
@@ -72,11 +81,12 @@ export interface ImportReport {
   presets: number;
   defaults: number;
   agencyEntries: number;
+  counters: number;
   /** Mục bị bỏ qua kèm lý do. */
   skipped: string[];
 }
 
-const EMPTY: ImportReport = { ok: false, profiles: 0, presets: 0, defaults: 0, agencyEntries: 0, skipped: [] };
+const EMPTY: ImportReport = { ok: false, profiles: 0, presets: 0, defaults: 0, agencyEntries: 0, counters: 0, skipped: [] };
 
 /**
  * Nhập cấu hình, gộp vào cấu hình hiện có: hồ sơ và preset trùng `id` được thay bằng bản trong file, mục mới được thêm,
@@ -155,10 +165,27 @@ export function importConfig(store: KeyValueStore, text: string): ImportReport {
     }
   }
 
+  const countersIn = typeof file.counters === "object" && file.counters !== null ? (file.counters as Record<string, unknown>) : {};
+  const counterOut: Array<[(typeof STANDARDS)[number], Counter]> = [];
+  for (const standard of STANDARDS) {
+    const list = countersIn[standard.id];
+    if (!Array.isArray(list)) continue;
+    for (const item of list) {
+      const c = item as Partial<Counter> | null;
+      if (c && typeof c.year === "number" && typeof c.typeKey === "string" && typeof c.last === "number") {
+        counterOut.push([standard, { year: c.year, typeKey: c.typeKey, last: c.last }]);
+        report.counters += 1;
+      } else {
+        report.skipped.push("Một mục sổ số sai cấu trúc.");
+      }
+    }
+  }
+
   replaceProfiles(store, [...profiles.values()]);
   writeUserPresets(store, [...presets.values()]);
   for (const [id, value] of defaultsOut) store.set(defaultsKey(id), JSON.stringify(value));
   for (const [id, list, merged] of agencyOut) store.set(agencyKey(id, list), JSON.stringify(merged));
+  for (const [standard, c] of counterOut) recordNumber(store, standard, c.year, c.typeKey === "-" ? null : c.typeKey, c.last);
   if (STANDARDS.some((s) => s.id === file.defaultStandard)) saveDefaultStandard(store, file.defaultStandard as StandardId);
   return report;
 }
