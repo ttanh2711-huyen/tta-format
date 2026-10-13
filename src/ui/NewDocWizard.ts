@@ -6,6 +6,7 @@ import type { FormatValues } from "../settings/formatOptions";
 import type { StyleSpec } from "../ooxml/styleSpecs";
 import { assembleDocumentBody } from "../ooxml/documentAssembler";
 import { QUOC_HIEU } from "../ooxml/headerBlock";
+import { PLACEHOLDERS } from "../templates/assumptions";
 import { findTemplate, visibleTemplates, type TemplateEntry } from "../templates/registry";
 import { multiSignFromOptions, parseSignLines, validateMultiSign } from "../ooxml/multiSignBlock";
 import { assembleMinutesBody, defaultMinutesParties } from "../templates/bienBan";
@@ -26,10 +27,10 @@ export interface NewDocWizardDeps {
   values: () => FormatValues;
   styleSpecs: () => StyleSpec[];
   behavior: () => { localFormatting: "keep" | "clear" };
-  collectHeader: () => HeaderCollect;
+  collectHeader: (options?: { assumeDefaults?: boolean }) => HeaderCollect;
   /** Đặt sẵn Khối đầu theo loại văn bản được chọn. */
   presetHeader?: (preset: HeaderPreset) => void;
-  collectFooter: () => FooterCollect;
+  collectFooter: (options?: { assumeDefaults?: boolean }) => FooterCollect;
   /** Ghi chuẩn vào thuộc tính tài liệu sau khi tạo xong; bỏ trống nếu Word không hỗ trợ. */
   writeStandard?: (id: StandardId) => Promise<void>;
   /** Gọi sau khi tạo văn bản thành công (ví dụ ghi số văn bản vào sổ số). */
@@ -97,7 +98,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
   function refresh(): void {
     const profile = deps.currentStandard();
     const party = profile.headerKind === "dang";
-    note.textContent = `Điền Khối đầu và Khối cuối bên dưới rồi bấm: add-in thiết lập trang${party ? " (lề đối xứng nếu bật in hai mặt)" : ""}, cài style, dựng khối đầu, ${party ? "thể loại hoặc Kính gửi, căn cứ" : "Kính gửi"}, chỗ nội dung, khối cuối và đánh số trang. Sau đó bạn gõ nội dung vào chỗ con trỏ.`;
+    note.textContent = `Điền Khối đầu và Khối cuối bên dưới (mục nào để trống sẽ được điền tạm để bạn sửa trong văn bản) rồi bấm: add-in thiết lập trang${party ? " (lề đối xứng nếu bật in hai mặt)" : ""}, cài style, dựng khối đầu, ${party ? "thể loại hoặc Kính gửi, căn cứ" : "Kính gửi"}, chỗ nội dung, khối cuối và đánh số trang. Sau đó bạn gõ nội dung vào chỗ con trỏ.`;
     if (!visibleTemplates(profile).some((item) => item.key === entryKey && item.supported)) entryKey = "cong-van";
     const entry = findTemplate(profile, entryKey);
     create_.textContent = party ? "Tạo văn bản Đảng" : entry?.family === "congVan" || !entry ? "Tạo công văn" : `Tạo ${entry.label.toLowerCase()}`;
@@ -228,8 +229,10 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
 
   async function onCreate(confirmed: boolean): Promise<void> {
     if (busy) return;
-    const header = deps.collectHeader();
-    const footer = deps.collectFooter();
+    // Mục còn trống được điền chữ giả định để vẫn tạo được văn bản theo mẫu (T26); người dùng sửa ngay trong văn bản.
+    const header = deps.collectHeader({ assumeDefaults: true });
+    const footer = deps.collectFooter({ assumeDefaults: true });
+    const assumedAll: string[] = [...(header.ok ? header.assumed : []), ...(footer.ok ? footer.assumed : [])];
     const profile = deps.currentStandard();
     const entry = findTemplate(profile, entryKey);
     // Biên bản và văn bản nhiều bên ký có khối ký riêng nên không dùng Khối cuối.
@@ -284,13 +287,11 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
         show("error", "Ở Khối đầu hãy chọn thể loại (không phải công văn) và nhập trích yếu.");
         return;
       }
-      if (congress.name.trim() === "") {
-        show("error", "Hãy nhập tên đại hội.");
-        return;
-      }
+      const congressName = congress.name.trim() === "" ? PLACEHOLDERS.congress : congress.name;
+      if (congress.name.trim() === "") assumedAll.push("tên đại hội");
       const document = { header: header.input, title: header.titleInput, footer: footer.input };
       const size = typeof deps.values().fontSize === "number" ? (deps.values().fontSize as number) : profile.styles.defaults.fontSizePt;
-      parts = { buildBody: (body) => assemblePartyCongressBody(document, congress.name, size, body), headText: profile.identifyingTitle, signerName: footer.input.signerName };
+      parts = { buildBody: (body) => assemblePartyCongressBody(document, congressName, size, body), headText: profile.identifyingTitle, signerName: footer.input.signerName };
     } else if (header.kind === "dang" && footer.kind === "dang" && entry?.family === "form") {
       const smallForm = findSmallForm(entry.docTypeId);
       if (!smallForm || !header.titleInput || header.titleInput.variant === "congVan") {
@@ -332,7 +333,10 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
         return;
       }
       const info = decisionKindInfo(entry.decisionKind);
-      const decisionInput = decisionInputFromOptions(profile, deps.values(), { kind: entry.decisionKind, authority: decision.authority, basis: decision.basis.split(/\r?\n/), articleCount: Number(decision.articles), khoanPerDieu: Number(decision.khoan), diemPerKhoan: Number(decision.diem) });
+      if (decision.authority.trim() === "") assumedAll.push("thẩm quyền ban hành");
+      const basisRaw = decision.basis.split(/\r?\n/).filter((line) => line.trim() !== "");
+      if (basisRaw.length === 0) assumedAll.push("căn cứ");
+      const decisionInput = decisionInputFromOptions(profile, deps.values(), { kind: entry.decisionKind, authority: decision.authority.trim() === "" ? PLACEHOLDERS.authority : decision.authority, basis: basisRaw.length === 0 ? [PLACEHOLDERS.basis] : basisRaw, articleCount: Number(decision.articles), khoanPerDieu: Number(decision.khoan), diemPerKhoan: Number(decision.diem) });
       const decisionProblems = validateDecision(decisionInput);
       if (decisionProblems.length > 0) {
         show("error", decisionProblems.join(" "));
@@ -426,7 +430,8 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
       for (const line of summary.lines) list.append(create("li", { textContent: line }));
       box.append(list);
       panel.replaceChildren(box);
-      show(summary.kind, report.ok ? `Đã tạo văn bản; hãy gõ nội dung vào chỗ con trỏ.${standardNote}` : "Có bước bị lỗi, xem chi tiết bên trên; có thể khôi phục bản trước khi tạo.");
+      const assumedNote = assumedAll.length > 0 ? ` Đã tạm điền các mục còn thiếu: ${assumedAll.join(", ")}; hãy sửa trực tiếp trong văn bản.` : "";
+      show(summary.kind, report.ok ? `Đã tạo văn bản; hãy gõ nội dung vào chỗ con trỏ.${assumedNote}${standardNote}` : "Có bước bị lỗi, xem chi tiết bên trên; có thể khôi phục bản trước khi tạo.");
     } catch (error) {
       show("error", `Lỗi ngoài dự kiến: ${errorText(error)}`);
     } finally {

@@ -5,6 +5,7 @@ import { MAX_POSITION_LINES, buildFooterBlock, findAcademicTitle, footerInputFro
 import type { FormatValues } from "../settings/formatOptions";
 import type { AgencyProfile } from "../settings/profile";
 import type { KeyValueStore } from "../settings/storage";
+import { assumeFooter } from "../templates/assumptions";
 import { recipientPicker } from "./RecipientPicker";
 import type { StandardProfile } from "../standards/types";
 
@@ -33,11 +34,11 @@ function button(text: string, onClick: () => void, props: Partial<HTMLButtonElem
 
 /** Form "Khối cuối văn bản" (T10): nơi nhận, quyền hạn, chức vụ, họ tên; chèn bảng ở cuối tài liệu. */
 export type FooterCollect =
-  | { ok: true; kind: "quocHieu"; input: FooterBlockInput; academicTitle: string | null }
-  | { ok: true; kind: "dang"; input: PartyFooterInput; academicTitle: string | null }
+  | { ok: true; kind: "quocHieu"; input: FooterBlockInput; academicTitle: string | null; assumed: string[] }
+  | { ok: true; kind: "dang"; input: PartyFooterInput; academicTitle: string | null; assumed: string[] }
   | { ok: false; error: string };
 
-export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): { refresh: () => void; collect: () => FooterCollect; applyAgency: (agency: AgencyProfile) => void } {
+export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): { refresh: () => void; collect: (options?: { assumeDefaults?: boolean }) => FooterCollect; applyAgency: (agency: AgencyProfile) => void } {
   let recipients = "Như trên";
   let luu = "VT";
   let authority = "";
@@ -59,25 +60,26 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
   }
 
   /** Đọc và kiểm tra các ô đang nhập; dùng chung cho nút "Chèn khối cuối" và trình tạo công văn. */
-  function collect(): FooterCollect {
+  function collect(options: { assumeDefaults?: boolean } = {}): FooterCollect {
     const profile = deps.currentStandard();
-    const academicTitle = findAcademicTitle(signerName);
+    const { draft, assumed } = assumeFooter({ recipients, positionLines, signerName }, options.assumeDefaults === true);
+    const academicTitle = findAcademicTitle(draft.signerName);
     if (profile.headerKind === "dang") {
       const party = partyFooterFromOptions(profile, deps.values(), {
-        recipients: recipients.split(/\r?\n/),
+        recipients: draft.recipients.split(/\r?\n/),
         luu,
         drafter,
         authority,
-        positionLines,
-        signerName,
+        positionLines: draft.positionLines,
+        signerName: draft.signerName,
         confirmation: withConfirmation ? confirmation : "",
       });
       const partyProblems = validatePartyFooter(party);
-      return partyProblems.length > 0 ? { ok: false, error: partyProblems.join(" ") } : { ok: true, kind: "dang", input: party, academicTitle };
+      return partyProblems.length > 0 ? { ok: false, error: partyProblems.join(" ") } : { ok: true, kind: "dang", input: party, academicTitle, assumed };
     }
-    const input = footerInputFromOptions(profile, deps.values(), { recipients: recipients.split(/\r?\n/), luu, authority, positionLines, signerName });
+    const input = footerInputFromOptions(profile, deps.values(), { recipients: draft.recipients.split(/\r?\n/), luu, authority, positionLines: draft.positionLines, signerName: draft.signerName });
     const problems = validateFooterInput(input);
-    return problems.length > 0 ? { ok: false, error: problems.join(" ") } : { ok: true, kind: "quocHieu", input, academicTitle };
+    return problems.length > 0 ? { ok: false, error: problems.join(" ") } : { ok: true, kind: "quocHieu", input, academicTitle, assumed };
   }
 
   async function insert(force: boolean): Promise<void> {

@@ -5,6 +5,7 @@ import { buildPartyHeaderBlock, MAX_PARENT_LINES as MAX_PARTY_PARENT_LINES, part
 import { buildPartyTitleBody, partyRecipientsRow, partySubjectRow, partyTitleFromOptions, validatePartyTitle, type PartyTitleInput, type PartyTitleVariant } from "../standards/hd05/titleBlock";
 import { placeDateText, soText } from "../rules/validators";
 import { lastNumber, nextNumber, recordNumber, yearOf } from "../settings/soVanBan";
+import { assumeHeader } from "../templates/assumptions";
 import { recipientPicker } from "./RecipientPicker";
 import { listAgencies, removeAgency, saveAgency } from "../settings/agencies";
 import type { AgencyProfile } from "../settings/profile";
@@ -43,8 +44,8 @@ function button(text: string, onClick: () => void, props: Partial<HTMLButtonElem
 
 /** Form "Khối đầu văn bản" (T7): cơ quan chủ quản 0 đến 3 dòng, cơ quan ban hành, chèn bảng quốc hiệu và tiêu ngữ. */
 export type HeaderCollect =
-  | { ok: true; kind: "quocHieu"; input: HeaderBlockInput; titleInput: TitleBlockInput | undefined }
-  | { ok: true; kind: "dang"; input: PartyHeaderInput; titleInput: PartyTitleInput | undefined }
+  | { ok: true; kind: "quocHieu"; input: HeaderBlockInput; titleInput: TitleBlockInput | undefined; assumed: string[] }
+  | { ok: true; kind: "dang"; input: PartyHeaderInput; titleInput: PartyTitleInput | undefined; assumed: string[] }
   | { ok: false; error: string };
 
 /** Đặt sẵn dạng khối đầu theo loại văn bản người dùng chọn ở trình tạo (T17). */
@@ -56,7 +57,7 @@ export interface HeaderPreset {
   abbr?: string | null;
 }
 
-export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): { refresh: () => void; collect: () => HeaderCollect; preset: (preset: HeaderPreset) => void; applyAgency: (agency: AgencyProfile) => void; commitNumber: () => void } {
+export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): { refresh: () => void; collect: (options?: { assumeDefaults?: boolean }) => HeaderCollect; preset: (preset: HeaderPreset) => void; applyAgency: (agency: AgencyProfile) => void; commitNumber: () => void } {
   let hasParent = false;
   let parentLines = [""];
   let issuer = "";
@@ -82,12 +83,28 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
   }
 
   /** Đọc và kiểm tra các ô đang nhập; dùng chung cho nút "Chèn khối đầu" và trình tạo công văn. */
-  function collect(): HeaderCollect {
+  function collect(options: { assumeDefaults?: boolean } = {}): HeaderCollect {
     const profile = deps.currentStandard();
+    const party = profile.headerKind === "dang";
+    const { draft, assumed } = assumeHeader(
+      {
+        issuer,
+        place,
+        agencyAbbrs: number.agencyAbbrs,
+        subject: title.subject,
+        recipients: title.recipients,
+        typeName: title.typeName,
+        needsRecipients: party ? partyVariant !== "coTenLoai" : variant === "letter",
+        needsTypeName: party ? partyVariant !== "congVan" : variant === "named",
+        withNumberRow,
+        withTitle,
+      },
+      options.assumeDefaults === true,
+    );
     let numberRow: { so: string; placeDate: string } | undefined;
     if (withNumberRow) {
-      const so = soText(profile, { so: toInt(number.so), typeAbbr: number.typeAbbr.trim() === "" ? null : number.typeAbbr.trim(), agencyAbbrs: number.agencyAbbrs.split("-").map((part) => part.trim()).filter((part) => part !== "") });
-      const date = placeDateText({ place, day: toInt(number.day), month: toInt(number.month), year: toInt(number.year) });
+      const so = soText(profile, { so: toInt(number.so), typeAbbr: number.typeAbbr.trim() === "" ? null : number.typeAbbr.trim(), agencyAbbrs: draft.agencyAbbrs.split("-").map((part) => part.trim()).filter((part) => part !== "") });
+      const date = placeDateText({ place: draft.place, day: toInt(number.day), month: toInt(number.month), year: toInt(number.year) });
       if (!so.ok || !date.ok) return { ok: false, error: [so.ok ? "" : so.error, date.ok ? "" : date.error].filter(Boolean).join(" ") };
       numberRow = { so: so.text, placeDate: date.text };
     }
@@ -96,9 +113,9 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       if (withTitle) {
         partyTitle = partyTitleFromOptions(profile, deps.values(), {
           variant: partyVariant,
-          typeName: title.typeName,
-          subject: title.subject,
-          recipients: title.recipients.split(/\r?\n/),
+          typeName: draft.typeName,
+          subject: draft.subject,
+          recipients: draft.recipients.split(/\r?\n/),
           basis: basis.split(/\r?\n/),
         });
         const titleProblems = validatePartyTitle(partyTitle);
@@ -106,7 +123,7 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       }
       const partyInput = partyHeaderFromOptions(profile, deps.values(), {
         parentLines: hasParent ? parentLines : [],
-        issuerLines: issuer.split(/\r?\n/),
+        issuerLines: draft.issuer.split(/\r?\n/),
         numberRow,
         subjectRow: partyTitle ? partySubjectRow(partyTitle) : undefined,
         recipientsRow: partyTitle ? partyRecipientsRow(partyTitle) : undefined,
@@ -114,7 +131,7 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       const partyProblems = validatePartyHeader(partyInput);
       if (partyProblems.length > 0) return { ok: false, error: partyProblems.join(" ") };
       if (numberRow) deps.store.set(PLACE_KEY, place.trim());
-      return { ok: true, kind: "dang", input: partyInput, titleInput: partyTitle };
+      return { ok: true, kind: "dang", input: partyInput, titleInput: partyTitle, assumed };
     }
     let subjectRow: { text: string } | undefined;
     let recipientsRow: RecipientsRow | undefined;
@@ -122,20 +139,20 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
     if (withTitle) {
       titleInput = titleInputFromOptions(profile, deps.values(), {
         variant,
-        typeName: title.typeName,
-        subject: title.subject,
-        recipients: title.recipients.split(/\r?\n/),
+        typeName: draft.typeName,
+        subject: draft.subject,
+        recipients: draft.recipients.split(/\r?\n/),
       });
       const titleProblems = validateTitleInput(titleInput);
       if (titleProblems.length > 0) return { ok: false, error: titleProblems.join(" ") };
-      if (variant === "letter") subjectRow = { text: subjectLine(title.subject) };
+      if (variant === "letter") subjectRow = { text: subjectLine(draft.subject) };
       recipientsRow = recipientsRowOf(titleInput);
     }
-    const input = headerInputFromOptions(profile, deps.values(), { parentLines: hasParent ? parentLines : [], issuer, numberRow, subjectRow, recipientsRow });
+    const input = headerInputFromOptions(profile, deps.values(), { parentLines: hasParent ? parentLines : [], issuer: draft.issuer, numberRow, subjectRow, recipientsRow });
     const problems = validateHeaderInput(input);
     if (problems.length > 0) return { ok: false, error: problems.join(" ") };
     if (numberRow) deps.store.set(PLACE_KEY, place.trim());
-    return { ok: true, kind: "quocHieu", input, titleInput };
+    return { ok: true, kind: "quocHieu", input, titleInput, assumed };
   }
 
   async function insert(force: boolean): Promise<void> {
