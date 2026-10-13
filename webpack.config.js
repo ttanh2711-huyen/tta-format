@@ -7,7 +7,16 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 const { receiveSpikeReport } = require("./tools/receiveSpikeReport");
 
 const OFFICE_SCRIPT = '<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>';
-const styles = () => fs.readFileSync(path.resolve(__dirname, "src/taskpane/taskpane.css"), "utf8");
+/**
+ * Trang task pane dựng bằng cách thay hai chỗ trống trong taskpane.html (`<%= officeScript %>`, `<%= styles %>`) ngay tại đây,
+ * không qua bộ nạp mẫu của html-webpack-plugin: hai trang (taskpane, preview) dùng chung một mẫu với tham số khác nhau nên
+ * bộ nạp mẫu báo "officeScript is not defined" khi chạy dev server.
+ */
+const taskpaneHtml = (officeScript) => () =>
+  fs
+    .readFileSync(path.resolve(__dirname, "src/taskpane/taskpane.html"), "utf8")
+    .replace("<%= officeScript %>", () => officeScript)
+    .replace("<%= styles %>", () => fs.readFileSync(path.resolve(__dirname, "src/taskpane/taskpane.css"), "utf8"));
 
 const port = Number(process.env.npm_package_config_dev_server_port) || 3000;
 
@@ -38,9 +47,8 @@ module.exports = async (env) => {
     plugins: [
       new HtmlWebpackPlugin({
         filename: "taskpane.html",
-        template: "./src/taskpane/taskpane.html",
+        templateContent: taskpaneHtml(OFFICE_SCRIPT),
         chunks: ["taskpane"],
-        templateParameters: { officeScript: OFFICE_SCRIPT, styles: styles() },
       }),
       ...(release
         ? []
@@ -48,9 +56,8 @@ module.exports = async (env) => {
             // Bản xem trước giao diện ngoài Word (Office giả), chỉ có khi phát triển.
             new HtmlWebpackPlugin({
               filename: "preview.html",
-              template: "./src/taskpane/taskpane.html",
+              templateContent: taskpaneHtml(""),
               chunks: ["preview"],
-              templateParameters: { officeScript: "", styles: styles() },
             }),
             new HtmlWebpackPlugin({
               filename: "spike.html",
