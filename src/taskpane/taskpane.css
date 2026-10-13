@@ -530,12 +530,13 @@ li.error {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   margin: 8px 0;
 }
 
 .rp-actions button {
   margin: 0;
+  padding: 6px 8px;
 }
 
 /* Ô chọn chuẩn nhanh trong tab Kiểm tra */

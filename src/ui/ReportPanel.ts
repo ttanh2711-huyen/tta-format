@@ -46,13 +46,13 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
   let undoSnapshot: DocumentSnapshot | null = null;
   let issuesNow: Issue[] = [];
 
-  const check = create("button", { id: "rp-check", type: "button", textContent: "Kiểm tra văn bản" });
+  const check = create("button", { id: "rp-check", type: "button", textContent: "Kiểm tra", title: "Đọc văn bản và liệt kê lỗi (chỉ đọc)" });
   const summary = create("p", { id: "rp-summary" });
   summary.setAttribute("role", "status");
   const fixAll = create("button", { id: "rp-fix-all", type: "button", textContent: "Sửa tất cả", hidden: true });
-  const undo = create("button", { id: "rp-undo", type: "button", textContent: "Hoàn tác lần sửa tất cả", hidden: true });
+  const undo = create("button", { id: "rp-undo", type: "button", textContent: "Hoàn tác", title: "Hoàn tác lần Sửa tất cả hoặc Sửa nhanh gần nhất", hidden: true });
   const quick = create("button", { id: "rp-quick", type: "button", textContent: "Sửa nhanh", hidden: !deps.pipelineContext, title: "Chỉnh toàn bộ rồi sửa tất cả lỗi sửa được, một lần bấm; hoàn tác được." });
-  const exportButton = create("button", { id: "rp-export", type: "button", textContent: "Xuất báo cáo", hidden: true });
+  const exportButton = create("button", { id: "rp-export", type: "button", textContent: "Báo cáo", title: "Xuất báo cáo kiểm tra (sao chép, .txt, .docx)", hidden: true });
   const preview = create("div", { id: "rp-preview", className: "fa-box", hidden: true });
   const exported = create("div", { id: "rp-exported", hidden: true });
   const list = create("ol", { id: "rp-list" });
@@ -129,7 +129,7 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
     const rest = plan.manual.length > 0 ? `; ${plan.manual.length} lỗi còn lại cần bạn xem` : "";
     preview.replaceChildren(
       create("p", {
-        textContent: `Sẽ sửa ${plan.fixes.length} chỗ${rest}. Sau khi sửa, add-in kiểm tra lại và sửa tiếp nếu còn lỗi sửa được (tối đa vài lượt). Hoàn tác ngay sau đó bằng nút "Hoàn tác lần sửa tất cả" hoặc Ctrl+Z.`,
+        textContent: `Sẽ sửa ${plan.fixes.length} chỗ${rest}. Sau khi sửa, add-in kiểm tra lại và sửa tiếp nếu còn lỗi sửa được (tối đa vài lượt). Hoàn tác ngay sau đó bằng nút "Hoàn tác" hoặc Ctrl+Z.`,
       }),
       create("ol", {}, ...items),
       create("div", { className: "rp-actions" }, apply, cancel),
