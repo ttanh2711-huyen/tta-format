@@ -37,6 +37,8 @@ export interface TemplateEntry {
   supported: boolean;
   /** Lý do chưa hỗ trợ, hiện cho người dùng. */
   reason?: string;
+  /** Ẩn khỏi ô chọn loại (vẫn có cấu hình) cho đến khi bố cục được duyệt. */
+  hidden?: true;
 }
 
 interface FamilySpec {
@@ -121,11 +123,24 @@ const EXTRAS: Record<Headers, TemplateEntry[]> = {
   ],
 };
 
+/** Giấy tờ ít dùng, chưa có mẫu gốc để đối chiếu: ẩn khỏi ô chọn cho đến khi bạn duyệt bố cục (T26). */
+const HIDDEN: Record<Headers, ReadonlySet<string>> = {
+  quocHieu: new Set(),
+  dang: new Set(["giay-chung-nhan", "giay-di-duong", "phieu-chuyen", "phieu-gui"]),
+};
+
 /** Mọi loại của chuẩn, theo thứ tự trong `docTypes`, rồi các mục thêm; mỗi loại có đúng một mục (quyết định cá biệt có hai biến thể). */
 export function templatesFor(profile: StandardProfile): TemplateEntry[] {
   const byLayout = FAMILIES[profile.headerKind];
   const byId = BY_ID[profile.headerKind];
-  return [...profile.docTypes.flatMap((type) => entryFor(type, byId[type.id] ?? byLayout[type.layout])), ...EXTRAS[profile.headerKind]];
+  const hidden = HIDDEN[profile.headerKind];
+  const entries = profile.docTypes.flatMap((type) => entryFor(type, byId[type.id] ?? byLayout[type.layout]));
+  return [...entries.map((entry) => (hidden.has(entry.docTypeId) ? { ...entry, hidden: true as const } : entry)), ...EXTRAS[profile.headerKind]];
+}
+
+/** Các mục hiện trong ô chọn loại văn bản (bỏ mục đang ẩn). */
+export function visibleTemplates(profile: StandardProfile): TemplateEntry[] {
+  return templatesFor(profile).filter((entry) => !entry.hidden);
 }
 
 export function findTemplate(profile: StandardProfile, key: string): TemplateEntry | undefined {

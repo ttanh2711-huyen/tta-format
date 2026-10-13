@@ -6,7 +6,7 @@ import type { FormatValues } from "../settings/formatOptions";
 import type { StyleSpec } from "../ooxml/styleSpecs";
 import { assembleDocumentBody } from "../ooxml/documentAssembler";
 import { QUOC_HIEU } from "../ooxml/headerBlock";
-import { findTemplate, templatesFor, type TemplateEntry } from "../templates/registry";
+import { findTemplate, visibleTemplates, type TemplateEntry } from "../templates/registry";
 import { multiSignFromOptions, parseSignLines, validateMultiSign } from "../ooxml/multiSignBlock";
 import { assembleMinutesBody, defaultMinutesParties } from "../templates/bienBan";
 import { agreementNumberingXml, assembleAgreementBody, defaultAgreementParties, MAX_ARTICLES as MAX_AGREEMENT_ARTICLES, validateAgreement } from "../templates/hopDong";
@@ -96,7 +96,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
     const profile = deps.currentStandard();
     const party = profile.headerKind === "dang";
     note.textContent = `Điền Khối đầu và Khối cuối bên dưới rồi bấm: add-in thiết lập trang${party ? " (lề đối xứng nếu bật in hai mặt)" : ""}, cài style, dựng khối đầu, ${party ? "thể loại hoặc Kính gửi, căn cứ" : "Kính gửi"}, chỗ nội dung, khối cuối và đánh số trang. Sau đó bạn gõ nội dung vào chỗ con trỏ.`;
-    if (!findTemplate(profile, entryKey)?.supported) entryKey = "cong-van";
+    if (!visibleTemplates(profile).some((item) => item.key === entryKey && item.supported)) entryKey = "cong-van";
     const entry = findTemplate(profile, entryKey);
     create_.textContent = party ? "Tạo văn bản Đảng" : entry?.family === "congVan" || !entry ? "Tạo công văn" : `Tạo ${entry.label.toLowerCase()}`;
     renderForm(profile);
@@ -107,7 +107,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
   /** Chọn loại văn bản từ registry (T17) và các ô riêng của nghị quyết, quyết định cá biệt. */
   function renderForm(profile: StandardProfile): void {
     formBox.replaceChildren();
-    const entries = templatesFor(profile);
+    const entries = visibleTemplates(profile);
     const select = create("select", { id: "nw-form-kind" });
     for (const entry of entries) {
       const option = create("option", { value: entry.key, textContent: entry.supported ? entry.label : `${entry.label} — chưa hỗ trợ: ${entry.reason ?? ""}` });
