@@ -59,9 +59,8 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
   container.append(
     create("h2", { textContent: "Kiểm tra văn bản" }),
     create("p", { className: "note", textContent: "Đối chiếu trang, phông, cỡ chữ, căn lề, thụt dòng, giãn đoạn, giãn dòng, khối đầu và khối cuối của văn bản với chuẩn đang chọn. Kiểm tra chỉ đọc; nút \"Sửa\" sửa đúng chỗ của từng lỗi, \"Sửa tất cả\" cho xem trước rồi mới sửa." }),
-    create("div", {}, check, " ", quick),
+    create("div", { className: "rp-actions" }, check, quick, fixAll, undo, exportButton),
     summary,
-    create("div", {}, fixAll, " ", undo, " ", exportButton),
     preview,
     exported,
     list,
@@ -80,6 +79,7 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
       issue.message,
       create("div", { className: "note", textContent: `${where} · ${issue.reference}` }),
     );
+    const actions = create("div", { className: "rp-actions" });
     if (issue.location.kind === "paragraph") {
       const index = issue.location.index;
       const go = create("button", { type: "button", textContent: "Đến vị trí", className: "rp-go" });
@@ -88,7 +88,7 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
           if (!found) show("warning", "Không tìm thấy đoạn này nữa; hãy kiểm tra lại.");
         });
       });
-      item.append(go);
+      actions.append(go);
     }
     const fix = issue.fix;
     if (fix) {
@@ -102,8 +102,9 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
           })
           .catch((error: unknown) => show("error", `Không sửa được: ${errorText(error)}`));
       });
-      item.append(button);
+      actions.append(button);
     }
+    if (actions.children.length > 0) item.append(actions);
     return item;
   }
 
@@ -131,7 +132,7 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
         textContent: `Sẽ sửa ${plan.fixes.length} chỗ${rest}. Sau khi sửa, add-in kiểm tra lại và sửa tiếp nếu còn lỗi sửa được (tối đa vài lượt). Hoàn tác ngay sau đó bằng nút "Hoàn tác lần sửa tất cả" hoặc Ctrl+Z.`,
       }),
       create("ol", {}, ...items),
-      create("div", {}, apply, " ", cancel),
+      create("div", { className: "rp-actions" }, apply, cancel),
     );
     preview.hidden = false;
   }
@@ -268,7 +269,7 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
           docx.disabled = false;
         });
     });
-    exported.replaceChildren(area, create("div", {}, copy, " ", docx, " ", link));
+    exported.replaceChildren(area, create("div", { className: "rp-actions" }, copy, docx, link));
     exported.hidden = false;
   });
 

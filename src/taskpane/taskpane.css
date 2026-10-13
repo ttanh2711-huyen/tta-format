@@ -521,8 +521,21 @@ li.error {
   padding: 8px 10px;
 }
 
-#rp-list li button {
+#rp-list li .rp-actions {
   margin-top: 6px;
+}
+
+/* Các nút của tab Kiểm tra nằm cùng một hàng, xuống hàng khi hết chỗ */
+.rp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.rp-actions button {
+  margin: 0;
 }
 
 /* Ô chọn chuẩn nhanh trong tab Kiểm tra */
