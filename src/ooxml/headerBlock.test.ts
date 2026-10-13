@@ -28,13 +28,14 @@ const table = (input: HeaderBlockInput) => modelOf(input).blocks[0] as TableMode
 const asDoc = (p: ParagraphModel): DocModel => ({ page: fixture.page, blocks: [p] });
 
 describe("buildHeaderBlock: cấu trúc", () => {
-  it("một bảng 2 cột không viền, vừa vùng chữ, tỉ lệ 45% / 55%", () => {
+  it("một bảng 2 cột không viền, vừa vùng chữ, cột phải đủ rộng để quốc hiệu nằm trên một dòng", () => {
     const t = table(base);
     expect(t.bordersNone).toBe(true);
     expect(t.rows).toHaveLength(1);
     expect(t.rows[0]).toHaveLength(2);
     expect(t.columnsMm[0] + t.columnsMm[1]).toBeCloseTo(160, 0);
-    expect(t.columnsMm[0] / 160).toBeCloseTo(0.45, 2);
+    expect(t.columnsMm[1]).toBeGreaterThan(textWidthMm("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", 13, true));
+    expect(t.columnsMm[0] / 160).toBeGreaterThanOrEqual(0.3);
     expect(t.widthMm).toBeCloseTo(160, 0);
     expect(t.indentMm ?? 0).toBeCloseTo(0, 1);
   });

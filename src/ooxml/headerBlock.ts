@@ -129,9 +129,11 @@ export function buildHeaderBlock(input: HeaderBlockInput): string {
   if (problems.length > 0) throw new Error(problems.join(" "));
 
   const total = mmToTwips(input.textWidthMm);
-  const leftWidth = Math.round(total * LEFT_COLUMN_RATIO);
-  const rightWidth = total - leftWidth;
   const mm = (twips: number) => (twips * 25.4) / 1440;
+  // Cột phải phải đủ rộng để "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM" nằm trên một dòng (tối đa 70% vùng chữ).
+  const quocHieuTwips = mmToTwips(textWidthMm(QUOC_HIEU, input.sizes.quocHieu, true) * 1.02 + 1);
+  const rightWidth = Math.min(Math.max(total - Math.round(total * LEFT_COLUMN_RATIO), quocHieuTwips), Math.round(total * 0.7));
+  const leftWidth = total - rightWidth;
 
   const parents = input.parentLines.map(clean).filter((line) => line !== "").map((line) => line.toUpperCase());
   const issuer = clean(input.issuer).toUpperCase();

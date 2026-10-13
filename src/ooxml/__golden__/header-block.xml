@@ -17,13 +17,13 @@
 </w:tblCellMar>
 </w:tblPr>
 <w:tblGrid>
-<w:gridCol w:w="4082"/>
-<w:gridCol w:w="4989"/>
+<w:gridCol w:w="3482"/>
+<w:gridCol w:w="5589"/>
 </w:tblGrid>
 <w:tr>
 <w:tc>
 <w:tcPr>
-<w:tcW w:w="4082" w:type="dxa"/>
+<w:tcW w:w="3482" w:type="dxa"/>
 </w:tcPr>
 <w:p>
 <w:pPr>
@@ -68,7 +68,7 @@
 <wp:anchor distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="251658341" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1">
 <wp:simplePos x="0" y="0"/>
 <wp:positionH relativeFrom="column">
-<wp:posOffset>902767</wp:posOffset>
+<wp:posOffset>712267</wp:posOffset>
 </wp:positionH>
 <wp:positionV relativeFrom="paragraph">
 <wp:posOffset>227965</wp:posOffset>
@@ -118,7 +118,7 @@
 </w:tc>
 <w:tc>
 <w:tcPr>
-<w:tcW w:w="4989" w:type="dxa"/>
+<w:tcW w:w="5589" w:type="dxa"/>
 </w:tcPr>
 <w:p>
 <w:pPr>
@@ -150,7 +150,7 @@
 <wp:anchor distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="251658342" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1">
 <wp:simplePos x="0" y="0"/>
 <wp:positionH relativeFrom="column">
-<wp:posOffset>499694</wp:posOffset>
+<wp:posOffset>690194</wp:posOffset>
 </wp:positionH>
 <wp:positionV relativeFrom="paragraph">
 <wp:posOffset>242570</wp:posOffset>
