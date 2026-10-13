@@ -161,7 +161,10 @@ export function mountApp(): void {
       wizard.refresh();
     },
   });
-  const report = mountReportPanel(reportEl, { currentStandard: switcher.currentStandard });
+  const report = mountReportPanel(reportEl, {
+    currentStandard: switcher.currentStandard,
+    pipelineContext: () => ({ profile: switcher.currentStandard(), values: quick.values(), specs: quick.styleSpecs(), localFormatting: quick.behavior().localFormatting }),
+  });
   mountFixAllButton(fixAllEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs, behavior: quick.behavior });
   mountPageSetupPanel(pageEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs });
   mountFormatPanel(formatEl, { currentStandard: switcher.currentStandard, behavior: quick.behavior, styleSpecs: quick.styleSpecs });

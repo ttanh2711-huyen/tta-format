@@ -6,10 +6,14 @@ import { applyFixes } from "../office/applyFix";
 import { checkDocument, runFixAll } from "../office/fixAll";
 import { isReadDocumentSupported, selectParagraph } from "../office/readDocument";
 import { describeSnapshot, restoreSnapshot, takeSnapshot, type DocumentSnapshot } from "../office/snapshot";
+import { planPipeline, runPipeline, summarizeReport } from "../pipeline/runner";
+import { createFixAllRegistry, type FixAllContext } from "../pipeline/steps";
 import type { StandardProfile } from "../standards/types";
 
 export interface ReportPanelDeps {
   currentStandard: () => StandardProfile;
+  /** Ngữ cảnh của "Chỉnh toàn bộ" (tuỳ chọn nhanh, style); có thì hiện nút "Sửa nhanh". */
+  pipelineContext?: () => FixAllContext;
   snapshots?: {
     take: () => Promise<DocumentSnapshot>;
     restore: (snapshot: DocumentSnapshot) => Promise<{ problems: string[] }>;
@@ -46,6 +50,7 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
   summary.setAttribute("role", "status");
   const fixAll = create("button", { id: "rp-fix-all", type: "button", textContent: "Sửa tất cả", hidden: true });
   const undo = create("button", { id: "rp-undo", type: "button", textContent: "Hoàn tác lần sửa tất cả", hidden: true });
+  const quick = create("button", { id: "rp-quick", type: "button", textContent: "Sửa nhanh", hidden: !deps.pipelineContext, title: "Chỉnh toàn bộ rồi sửa tất cả lỗi sửa được, một lần bấm; hoàn tác được." });
   const exportButton = create("button", { id: "rp-export", type: "button", textContent: "Xuất báo cáo", hidden: true });
   const preview = create("div", { id: "rp-preview", className: "fa-box", hidden: true });
   const exported = create("div", { id: "rp-exported", hidden: true });
@@ -53,7 +58,7 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
   container.append(
     create("h2", { textContent: "Kiểm tra văn bản" }),
     create("p", { className: "note", textContent: "Đối chiếu trang, phông, cỡ chữ, căn lề, thụt dòng, giãn đoạn, giãn dòng, khối đầu và khối cuối của văn bản với chuẩn đang chọn. Kiểm tra chỉ đọc; nút \"Sửa\" sửa đúng chỗ của từng lỗi, \"Sửa tất cả\" cho xem trước rồi mới sửa." }),
-    check,
+    create("div", {}, check, " ", quick),
     summary,
     create("div", {}, fixAll, " ", undo, " ", exportButton),
     preview,
@@ -165,6 +170,50 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
 
   fixAll.addEventListener("click", openPreview);
 
+  /** Sửa nhanh: một lần chụp, chạy các bước Chỉnh toàn bộ rồi Sửa tất cả; Hoàn tác về bản chụp. */
+  async function onQuick(): Promise<void> {
+    if (busy || !deps.pipelineContext) return;
+    busy = true;
+    quick.disabled = fixAll.disabled = check.disabled = true;
+    show("ok", "Đang chụp tài liệu để có thể hoàn tác…");
+    let outcome: { kind: "ok" | "warning" | "error"; text: string } | undefined;
+    try {
+      const taken = await snapshots.take();
+      const ctx = deps.pipelineContext();
+      const registry = createFixAllRegistry();
+      const steps = registry.steps();
+      show("ok", "Đang chỉnh toàn bộ…");
+      const report = await runPipeline(steps, ctx, await planPipeline(steps, ctx));
+      if (!report.ok) {
+        undoSnapshot = taken;
+        undo.hidden = false;
+        outcome = { kind: "error", text: `Chỉnh toàn bộ chưa hoàn tất: ${summarizeReport(report).lines.join("; ")}. Có thể hoàn tác.` };
+      } else {
+        show("ok", "Đang sửa các lỗi còn lại…");
+        const result = await runFixAll(ctx.profile);
+        undoSnapshot = taken;
+        undo.hidden = false;
+        const fixable = result.remaining.filter((issue) => issue.fix).length;
+        const note = result.skipped.length > 0 ? ` Không sửa được: ${result.skipped.join("; ")}.` : "";
+        outcome = {
+          kind: result.skipped.length > 0 || fixable > 0 ? "warning" : "ok",
+          text: `Sửa nhanh xong: ${result.applied} chỗ sửa thêm sau Chỉnh toàn bộ; còn ${result.remaining.length} lỗi hoặc cảnh báo cần bạn xem.${note}`,
+        };
+      }
+    } catch (error) {
+      show("error", `Không sửa nhanh được: ${errorText(error)}`);
+    } finally {
+      busy = false;
+      quick.disabled = fixAll.disabled = check.disabled = false;
+    }
+    if (outcome) {
+      await onCheck();
+      show(outcome.kind, outcome.text);
+    }
+  }
+
+  quick.addEventListener("click", () => void onQuick());
+
   async function restoreAndRecheck(saved: DocumentSnapshot): Promise<void> {
     let text: { kind: "ok" | "warning"; text: string } | undefined;
     try {
@@ -243,7 +292,7 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
   if (isReadDocumentSupported()) {
     check.addEventListener("click", () => void onCheck());
   } else {
-    check.disabled = true;
+    check.disabled = quick.disabled = true;
     show("error", "Kiểm tra văn bản cần Microsoft 365 bản 2507 trở lên (WordApiDesktop 1.3).");
   }
 
