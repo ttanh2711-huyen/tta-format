@@ -4,6 +4,7 @@ import { QUOC_HIEU, buildHeaderBlock, headerInputFromOptions, MAX_PARENT_LINES, 
 import { buildPartyHeaderBlock, MAX_PARENT_LINES as MAX_PARTY_PARENT_LINES, partyHeaderFromOptions, validatePartyHeader, type PartyHeaderInput } from "../standards/hd05/headerBlock";
 import { buildPartyTitleBody, partyRecipientsRow, partySubjectRow, partyTitleFromOptions, validatePartyTitle, type PartyTitleInput, type PartyTitleVariant } from "../standards/hd05/titleBlock";
 import { placeDateText, soText } from "../rules/validators";
+import { lastNumber, nextNumber, recordNumber, yearOf } from "../settings/soVanBan";
 import { recipientPicker } from "./RecipientPicker";
 import { listAgencies, removeAgency, saveAgency } from "../settings/agencies";
 import type { AgencyProfile } from "../settings/profile";
@@ -55,7 +56,7 @@ export interface HeaderPreset {
   abbr?: string | null;
 }
 
-export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): { refresh: () => void; collect: () => HeaderCollect; preset: (preset: HeaderPreset) => void; applyAgency: (agency: AgencyProfile) => void } {
+export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): { refresh: () => void; collect: () => HeaderCollect; preset: (preset: HeaderPreset) => void; applyAgency: (agency: AgencyProfile) => void; commitNumber: () => void } {
   let hasParent = false;
   let parentLines = [""];
   let issuer = "";
@@ -154,6 +155,7 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       }
       confirmInsert = false;
       const result = await insertHeaderBlock(xml, expected);
+      commitNumber();
       render();
       show(result.verified ? "ok" : "warning", result.verified ? "Đã chèn khối đầu văn bản ở đầu tài liệu." : "Đã chèn nhưng đọc lại không thấy tiêu đề trong bảng đầu tiên; hãy kiểm tra tài liệu.");
     } catch (error) {
@@ -278,6 +280,36 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
     return section;
   }
 
+  /** Sổ số văn bản (T26): gợi ý số tiếp theo theo chuẩn, năm và loại. */
+  function soContext(): { year: number; abbr: string | null } {
+    return { year: yearOf(number.year), abbr: number.typeAbbr.trim() === "" ? null : number.typeAbbr.trim() };
+  }
+
+  function soSuggestion(): HTMLElement {
+    const profile = deps.currentStandard();
+    const { year, abbr } = soContext();
+    const next = nextNumber(deps.store, profile, year, abbr);
+    const last = lastNumber(deps.store, profile, year, abbr);
+    const label = abbr ?? "công văn";
+    return create(
+      "div",
+      { className: "note" },
+      `Sổ số ${label} năm ${year}: ${last === 0 ? "chưa có số nào" : `số cuối đã dùng ${last}`}. `,
+      button(`Dùng số ${next}`, () => {
+        number.so = String(next);
+        render();
+      }, { id: "hf-next-so", title: "Điền số tiếp theo theo sổ số văn bản" }),
+    );
+  }
+
+  /** Ghi số vừa dùng vào sổ để lần sau gợi ý số kế tiếp (gọi khi tạo hoặc chèn văn bản thành công). */
+  function commitNumber(): void {
+    const used = toInt(number.so);
+    if (used === null || Number.isNaN(used)) return;
+    const { year, abbr } = soContext();
+    recordNumber(deps.store, deps.currentStandard(), year, abbr, used);
+  }
+
   function numberSection(): HTMLElement {
     const toggle = create("input", { type: "checkbox", id: "hf-with-number", checked: withNumberRow });
     toggle.addEventListener("change", () => {
@@ -295,6 +327,7 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
     section.append(
       create("div", { className: "note", textContent: "Để trống số hoặc ngày nếu chưa vào sổ, chưa ký; add-in chừa chỗ trống." }),
       field("hf-so", "Số", number.so, (v) => (number.so = v), 50),
+      soSuggestion(),
       field("hf-type", "Viết tắt loại", number.typeAbbr, (v) => (number.typeAbbr = v), 60),
       field("hf-agency", "Viết tắt cơ quan (nối bằng -)", number.agencyAbbrs, (v) => (number.agencyAbbrs = v), 110),
       suggestionSection(),
@@ -456,6 +489,7 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
       render();
     },
     collect,
+    commitNumber,
     applyAgency: (agency) => {
       hasParent = agency.parentLines.length > 0;
       parentLines = agency.parentLines.length > 0 ? [...agency.parentLines] : [""];

@@ -1,5 +1,6 @@
 import { exportConfig, importConfig } from "../settings/exportImport";
 import { defaultProfile, deleteProfile, listProfiles, saveProfile, setDefaultProfile, type AgencyProfile } from "../settings/profile";
+import { listCounters, removeCounter, setLastNumber } from "../settings/soVanBan";
 import type { KeyValueStore } from "../settings/storage";
 import type { StandardProfile } from "../standards/types";
 
@@ -108,6 +109,40 @@ export function mountSettingsPanel(container: HTMLElement, deps: SettingsPanelDe
     );
   }
 
+  /** Sổ số văn bản (T26): xem và sửa số cuối cùng đã dùng của từng loại, từng năm. */
+  function numberBook(standard: StandardProfile): HTMLElement {
+    const counters = listCounters(deps.store, standard);
+    const list = create("ul", { id: "sp-book" });
+    for (const counter of counters) {
+      const input = create("input", { type: "text", value: String(counter.last), inputMode: "numeric" });
+      input.style.width = "60px";
+      input.setAttribute("aria-label", `Số cuối đã dùng của ${counter.typeKey === "-" ? "công văn" : counter.typeKey} năm ${counter.year}`);
+      list.append(
+        create(
+          "li",
+          {},
+          `${counter.typeKey === "-" ? "Công văn" : counter.typeKey} năm ${counter.year}: số cuối `,
+          input,
+          button("Lưu", () => {
+            const ok = setLastNumber(deps.store, standard, counter.year, counter.typeKey === "-" ? null : counter.typeKey, Number(input.value));
+            show(ok ? "ok" : "error", ok ? "Đã sửa số cuối." : "Số phải là số nguyên từ 1 trở lên.");
+            if (ok) render();
+          }),
+          button("Xoá", () => {
+            removeCounter(deps.store, standard, counter.year, counter.typeKey === "-" ? null : counter.typeKey);
+            render();
+          }),
+        ),
+      );
+    }
+    return create(
+      "div",
+      {},
+      create("p", { className: "note", textContent: "Add-in ghi số văn bản mỗi lần tạo hoặc chèn khối đầu để gợi ý số kế tiếp. Số đánh liên tục từ 1 trong năm cho từng loại; sửa ở đây nếu số thực tế khác." }),
+      counters.length === 0 ? create("p", { className: "note", textContent: "Chưa có số nào được ghi." }) : list,
+    );
+  }
+
   function transfer(): HTMLElement {
     const area = create("textarea", { id: "sp-transfer", rows: 6, placeholder: "Dán nội dung file cấu hình vào đây để nhập, hoặc bấm Xuất để xem nội dung." });
     const exportButton = button("Xuất cấu hình", () => {
@@ -175,6 +210,7 @@ export function mountSettingsPanel(container: HTMLElement, deps: SettingsPanelDe
         render();
       }, { id: "sp-add" }));
     }
+    body.append(create("details", { id: "sp-book-group" }, create("summary", { textContent: "Sổ số văn bản" }), numberBook(standard)));
     body.append(create("details", { id: "sp-transfer-group" }, create("summary", { textContent: "Xuất, nhập cấu hình" }), transfer()));
   }
 

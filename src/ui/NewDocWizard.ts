@@ -32,6 +32,8 @@ export interface NewDocWizardDeps {
   collectFooter: () => FooterCollect;
   /** Ghi chuẩn vào thuộc tính tài liệu sau khi tạo xong; bỏ trống nếu Word không hỗ trợ. */
   writeStandard?: (id: StandardId) => Promise<void>;
+  /** Gọi sau khi tạo văn bản thành công (ví dụ ghi số văn bản vào sổ số). */
+  afterCreate?: () => void;
 }
 
 type DocumentParts = Pick<LetterContext, "buildBody" | "headText" | "signerName" | "numberingXml" | "markerStyle">;
@@ -404,6 +406,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
         restore.hidden = false;
       }
       let standardNote = "";
+      if (report.ok) deps.afterCreate?.();
       if (report.ok && deps.writeStandard) {
         try {
           await deps.writeStandard(profile.id);

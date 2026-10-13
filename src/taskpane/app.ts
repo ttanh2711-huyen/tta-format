@@ -144,6 +144,7 @@ export function mountApp(): void {
     presetHeader: header.preset,
     collectFooter: footer.collect,
     writeStandard: documentSupported ? writeDocumentStandard : undefined,
+    afterCreate: () => header.commitNumber(),
   });
   const extras = mountInsertPanel(extrasEl, { currentStandard: switcher.currentStandard, values: quick.values });
   const settings = mountSettingsPanel(settingsEl, {
