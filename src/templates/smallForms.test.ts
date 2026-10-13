@@ -39,9 +39,9 @@ function paragraphsOf(xml: string): ParagraphModel[] {
 }
 
 describe("giấy tờ và mẫu nhỏ", () => {
-  it("năm mẫu, mỗi mẫu có trong registry với đúng họ mẫu và ghi rõ nguồn bố cục", () => {
+  it("tám mẫu của chuẩn Chính quyền, mỗi mẫu có trong registry với đúng họ mẫu và ghi rõ nguồn bố cục", () => {
     const nd30Forms = SMALL_FORMS.filter((form) => findTemplate(ND30, form.docTypeId)?.family === "form");
-    expect(nd30Forms.map((form) => form.docTypeId).sort()).toEqual(["cong-dien", "giay-gioi-thieu", "giay-moi", "giay-nghi-phep", "thu-cong"]);
+    expect(nd30Forms.map((form) => form.docTypeId).sort()).toEqual(["cong-dien", "giay-gioi-thieu", "giay-moi", "giay-nghi-phep", "sao-luc", "sao-y", "thu-cong", "trich-sao"]);
     for (const form of SMALL_FORMS) {
       expect(form.source).not.toBe("");
       expect(findSmallForm(form.docTypeId)).toBe(form);

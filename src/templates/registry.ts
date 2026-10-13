@@ -116,7 +116,11 @@ function entryFor(type: DocType, spec: FamilySpec | undefined): TemplateEntry[] 
 
 /** Mục không đi theo một loại trong `docTypes` (văn bản đại hội, văn bản liên cơ quan của Đảng). */
 const EXTRAS: Record<Headers, TemplateEntry[]> = {
-  quocHieu: [],
+  quocHieu: [
+    { key: "sao-y", docTypeId: "sao-y", label: "Bản sao y", typeName: "Sao y", abbr: "SY", templateRef: null, family: "form", supported: true },
+    { key: "trich-sao", docTypeId: "trich-sao", label: "Bản trích sao", typeName: "Trích sao", abbr: "TrS", templateRef: null, family: "form", supported: true },
+    { key: "sao-luc", docTypeId: "sao-luc", label: "Bản sao lục", typeName: "Sao lục", abbr: "SL", templateRef: null, family: "form", supported: true },
+  ],
   dang: [
     { key: "van-ban-dai-hoi", docTypeId: "van-ban-dai-hoi", label: "Văn bản đại hội (ký hiệu ĐH)", typeName: "", abbr: "ĐH", templateRef: null, family: "congress", supported: true },
     { key: "lien-co-quan", docTypeId: "lien-co-quan", label: "Văn bản liên cơ quan (hai khối ký)", typeName: "", abbr: null, templateRef: null, family: "joint", supported: true },

@@ -28,12 +28,17 @@ export interface SmallForm {
 const UNVERIFIED = "bố cục theo cách trình bày thông dụng, chưa đối chiếu nguyên văn";
 const PARTY_NOTE = "Hướng dẫn 05 không có mẫu riêng cho giấy tờ này: bố cục đề xuất, cần bạn duyệt";
 
+const SAO_NOTE = "Phụ lục III chỉ nêu chữ viết tắt SY, TrS, SL (Mục I); bố cục bản sao là đề xuất, cần bạn duyệt";
+
 export const SMALL_FORMS: readonly SmallForm[] = [
   { docTypeId: "giay-moi", fields: ["Kính mời:", "Đến dự:", "Thời gian:", "Địa điểm:", "Nội dung:"], closing: "Rất mong sự có mặt của quý vị.", source: `Mẫu 1.7, ${UNVERIFIED} Phụ lục III` },
   { docTypeId: "giay-gioi-thieu", fields: ["Kính gửi:", "Trân trọng giới thiệu ông (bà):", "Chức vụ:", "Được cử đến:", "Về việc:"], closing: "Đề nghị quý cơ quan tạo điều kiện để ông (bà) có tên trên hoàn thành nhiệm vụ.", source: `Mẫu 1.8, ${UNVERIFIED} Phụ lục III` },
   { docTypeId: "cong-dien", fields: ["Kính gửi:", "Nội dung:"], closing: "", source: `Mẫu 1.6, ${UNVERIFIED} Phụ lục III` },
   { docTypeId: "giay-nghi-phep", fields: ["Cấp cho ông (bà):", "Chức vụ:", "Đơn vị công tác:", "Được nghỉ phép từ ngày … đến ngày …:", "Nơi nghỉ phép:"], closing: "", source: `Mẫu 1.10, ${UNVERIFIED} Phụ lục III` },
   { docTypeId: "thu-cong", fields: ["Kính gửi:", "Nội dung:"], closing: "Trân trọng.", source: "Phụ lục III không có mẫu: bố cục đề xuất, cần bạn duyệt" },
+  { docTypeId: "sao-y", fields: ["Sao y bản chính văn bản số … ngày … của …:", "Nội dung:"], closing: "", source: SAO_NOTE },
+  { docTypeId: "trich-sao", fields: ["Trích sao từ văn bản số … ngày … của …:", "Nội dung trích:"], closing: "", source: SAO_NOTE },
+  { docTypeId: "sao-luc", fields: ["Sao lục từ văn bản số … ngày … của …:", "Nội dung:"], closing: "", source: SAO_NOTE },
   { docTypeId: "giay-chung-nhan", fields: ["Chứng nhận ông (bà):", "Chức vụ, đơn vị:", "Nội dung chứng nhận:"], closing: "", source: "Chỉ dùng cho chuẩn Đảng", sourceParty: PARTY_NOTE },
   { docTypeId: "giay-di-duong", fields: ["Cấp cho ông (bà):", "Chức vụ, đơn vị:", "Được cử đi công tác tại:", "Thời gian từ ngày … đến ngày …:", "Phương tiện:"], closing: "", source: "Chỉ dùng cho chuẩn Đảng", sourceParty: PARTY_NOTE },
   { docTypeId: "phieu-chuyen", fields: ["Kính gửi:", "Chuyển kèm theo:", "Nội dung đề nghị:"], closing: "", source: "Chỉ dùng cho chuẩn Đảng", sourceParty: PARTY_NOTE },

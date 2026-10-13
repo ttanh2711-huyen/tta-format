@@ -81,6 +81,14 @@ describe("registry loại văn bản", () => {
     for (const profile of [ND30, HD05]) for (const entry of templatesFor(profile).filter((e) => e.family === "form")) expect(findSmallForm(entry.docTypeId)).toBeDefined();
   });
 
+  it("chuẩn Chính quyền có bản sao y, trích sao, sao lục (ký hiệu SY, TrS, SL) dùng họ mẫu form; chuẩn Đảng không có", () => {
+    for (const [key, abbr] of [["sao-y", "SY"], ["trich-sao", "TrS"], ["sao-luc", "SL"]] as const) {
+      expect(findTemplate(ND30, key)).toMatchObject({ family: "form", supported: true, abbr });
+      expect(findSmallForm(key)).toBeDefined();
+      expect(findTemplate(HD05, key)).toBeUndefined();
+    }
+  });
+
   it("loại chưa có họ mẫu hiện kèm lý do, không bị ẩn (cơ chế)", () => {
     const entry = findTemplate({ ...ND30, docTypes: [...ND30.docTypes, { id: "x", name: "X", abbr: null, layout: "la", template: null }] } as typeof ND30, "x");
     expect(entry).toMatchObject({ supported: false, family: null });
