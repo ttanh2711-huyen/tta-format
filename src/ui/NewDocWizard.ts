@@ -69,8 +69,8 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
   let snapshot: DocumentSnapshot | null = null;
 
   let entryKey = "cong-van";
-  const decision = { authority: "", basis: "", articles: "3" };
-  const regulation = { chapters: "3", articles: "2", sections: false, attached: "" };
+  const decision = { authority: "", basis: "", articles: "3", khoan: "0", diem: "0" };
+  const regulation = { chapters: "3", articles: "2", sections: false, attached: "", khoan: "1", diem: "0" };
   const signed = { lines: "", recipients: "", articles: "5" };
   const congress = { name: "" };
   const partyReg: { top: PartyTopLevel; numbering: PartyNumbering } = { top: "Chương", numbering: "roman" };
@@ -181,6 +181,8 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
         create("div", {}, create("label", {}, "Cấp cao nhất ", top), " ", create("label", {}, "Cách ghi số ", numbering)),
         field(create("input", { type: "text", id: "nw-chapters", value: regulation.chapters, placeholder: `Số Phần hoặc Chương (1 đến ${MAX_CHAPTERS})`, inputMode: "numeric" }), (v) => (regulation.chapters = v)),
         field(create("input", { type: "text", id: "nw-reg-articles", value: regulation.articles, placeholder: `Số Điều mỗi Phần hoặc Chương (1 đến ${MAX_ARTICLES_PER_CHAPTER})`, inputMode: "numeric" }), (v) => (regulation.articles = v)),
+        field(create("input", { type: "text", id: "nw-reg-khoan", value: regulation.khoan, placeholder: "Số Khoản dựng sẵn mỗi Điều (0 đến 10)", inputMode: "numeric" }), (v) => (regulation.khoan = v)),
+        field(create("input", { type: "text", id: "nw-reg-diem", value: regulation.diem, placeholder: "Số Điểm dựng sẵn mỗi Khoản (0 đến 10)", inputMode: "numeric" }), (v) => (regulation.diem = v)),
         create("label", {}, sections, " Mỗi Phần hoặc Chương có một Mục"),
       );
       return;
@@ -195,6 +197,8 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
         field(create("input", { type: "text", id: "nw-attached", value: regulation.attached, placeholder: "Dòng ban hành kèm theo, ví dụ Ban hành kèm theo Quyết định số ... ngày ... của ..." }), (v) => (regulation.attached = v)),
         field(create("input", { type: "text", id: "nw-chapters", value: regulation.chapters, placeholder: `Số Chương (1 đến ${MAX_CHAPTERS})`, inputMode: "numeric" }), (v) => (regulation.chapters = v)),
         field(create("input", { type: "text", id: "nw-reg-articles", value: regulation.articles, placeholder: `Số Điều mỗi Chương (1 đến ${MAX_ARTICLES_PER_CHAPTER})`, inputMode: "numeric" }), (v) => (regulation.articles = v)),
+        field(create("input", { type: "text", id: "nw-reg-khoan", value: regulation.khoan, placeholder: "Số Khoản dựng sẵn mỗi Điều (0 đến 10)", inputMode: "numeric" }), (v) => (regulation.khoan = v)),
+        field(create("input", { type: "text", id: "nw-reg-diem", value: regulation.diem, placeholder: "Số Điểm dựng sẵn mỗi Khoản (0 đến 10)", inputMode: "numeric" }), (v) => (regulation.diem = v)),
         create("label", {}, sections, " Mỗi Chương có một Mục"),
       );
       return;
@@ -206,6 +210,8 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
       field(create("input", { type: "text", id: "nw-authority", value: decision.authority, placeholder: "Thẩm quyền ban hành, ví dụ Chủ tịch Ủy ban nhân dân thành phố" }), (v) => (decision.authority = v)),
       field(create("textarea", { id: "nw-basis", rows: 4, value: decision.basis, placeholder: "Căn cứ, mỗi căn cứ một dòng" }), (v) => (decision.basis = v)),
       field(create("input", { type: "text", id: "nw-articles", value: decision.articles, placeholder: `Số Điều (1 đến ${MAX_ARTICLES})`, inputMode: "numeric" }), (v) => (decision.articles = v)),
+      field(create("input", { type: "text", id: "nw-khoan", value: decision.khoan, placeholder: "Số Khoản dựng sẵn mỗi Điều (0 đến 10)", inputMode: "numeric" }), (v) => (decision.khoan = v)),
+      field(create("input", { type: "text", id: "nw-diem", value: decision.diem, placeholder: "Số Điểm dựng sẵn mỗi Khoản (0 đến 10)", inputMode: "numeric" }), (v) => (decision.diem = v)),
     );
   }
 
@@ -306,7 +312,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
         show("error", "Ở Khối đầu hãy chọn \"Văn bản có tên loại\" và nhập trích yếu.");
         return;
       }
-      const regulationInput = regulationInputFromOptions(profile, deps.values(), { chapters: Number(regulation.chapters), articlesPerChapter: Number(regulation.articles), withSections: regulation.sections, attachedLine: regulation.attached });
+      const regulationInput = regulationInputFromOptions(profile, deps.values(), { chapters: Number(regulation.chapters), articlesPerChapter: Number(regulation.articles), withSections: regulation.sections, attachedLine: regulation.attached, khoanPerDieu: Number(regulation.khoan), diemPerKhoan: Number(regulation.diem) });
       const regulationProblems = validateRegulation(regulationInput);
       if (regulationProblems.length > 0) {
         show("error", regulationProblems.join(" "));
@@ -326,7 +332,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
         return;
       }
       const info = decisionKindInfo(entry.decisionKind);
-      const decisionInput = decisionInputFromOptions(profile, deps.values(), { kind: entry.decisionKind, authority: decision.authority, basis: decision.basis.split(/\r?\n/), articleCount: Number(decision.articles) });
+      const decisionInput = decisionInputFromOptions(profile, deps.values(), { kind: entry.decisionKind, authority: decision.authority, basis: decision.basis.split(/\r?\n/), articleCount: Number(decision.articles), khoanPerDieu: Number(decision.khoan), diemPerKhoan: Number(decision.diem) });
       const decisionProblems = validateDecision(decisionInput);
       if (decisionProblems.length > 0) {
         show("error", decisionProblems.join(" "));
@@ -342,7 +348,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
         show("error", "Ở Khối đầu hãy chọn thể loại (không phải công văn) và nhập trích yếu.");
         return;
       }
-      const reg = partyRegulationFromOptions(profile, deps.values(), { chapters: Number(regulation.chapters), articlesPerChapter: Number(regulation.articles), withSections: regulation.sections, top: partyReg.top, numbering: partyReg.numbering });
+      const reg = partyRegulationFromOptions(profile, deps.values(), { chapters: Number(regulation.chapters), articlesPerChapter: Number(regulation.articles), withSections: regulation.sections, top: partyReg.top, numbering: partyReg.numbering, khoanPerDieu: Number(regulation.khoan), diemPerKhoan: Number(regulation.diem) });
       const regProblems = validatePartyRegulation(reg);
       if (regProblems.length > 0) {
         show("error", regProblems.join(" "));

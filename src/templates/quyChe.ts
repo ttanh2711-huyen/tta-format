@@ -3,7 +3,7 @@ import { BODY_MARKER } from "../ooxml/documentAssembler";
 import { buildFooterBlock } from "../ooxml/footerBlock";
 import { mmToTwips } from "../ooxml/flatOpc";
 import { buildHeaderBlock, escapeXml } from "../ooxml/headerBlock";
-import { multilevelNumberingXml, numberedParagraph, regulationLevels, type LevelSpec } from "../ooxml/numbering";
+import { multilevelNumberingXml, numberedParagraph, regulationLevels, validateSubItems, type LevelSpec } from "../ooxml/numbering";
 import { styleIdFromName } from "../ooxml/styleXml";
 import { buildTitleBody } from "../ooxml/titleBlock";
 import type { FormatValues } from "../settings/formatOptions";
@@ -24,6 +24,10 @@ export interface RegulationInput {
   articlesPerChapter: number;
   /** Mỗi Chương có một Mục trước các Điều. */
   withSections: boolean;
+  /** Số Khoản dựng sẵn trong mỗi Điều (mặc định 1). */
+  khoanPerDieu?: number;
+  /** Số Điểm dựng sẵn trong mỗi Khoản (mặc định 0; cần có Khoản). */
+  diemPerKhoan?: number;
   /** Dòng "(Ban hành kèm theo Quyết định số ... ngày ... của ...)"; trống thì bỏ. */
   attachedLine: string;
   stylePrefix: string;
@@ -41,6 +45,7 @@ export function validateRegulation(input: RegulationInput): string[] {
   if (!Number.isInteger(input.articlesPerChapter) || input.articlesPerChapter < 1 || input.articlesPerChapter > MAX_ARTICLES_PER_CHAPTER) {
     errors.push(`Số Điều mỗi Chương phải từ 1 đến ${MAX_ARTICLES_PER_CHAPTER}.`);
   }
+  errors.push(...validateSubItems(input.khoanPerDieu ?? 1, input.diemPerKhoan ?? 0));
   return errors;
 }
 
@@ -70,12 +75,15 @@ export interface StructureStyles {
   tenMuc: string;
   dieu: string;
   khoan: string;
+  diem: string;
 }
 
 export interface StructureSpec {
   chapters: number;
   articlesPerChapter: number;
   withSections: boolean;
+  khoanPerDieu?: number;
+  diemPerKhoan?: number;
   levels: readonly LevelSpec[];
   styles: StructureStyles;
   /** Dòng đặt trước cấu trúc (đã có ngoặc đơn); trống thì bỏ. */
@@ -96,7 +104,10 @@ export function buildStructureBody(spec: StructureSpec): string {
     }
     for (let article = 0; article < spec.articlesPerChapter; article += 1) {
       parts.push(numberedParagraph(spec.levels, "dieu", id(spec.styles.dieu), ""));
-      parts.push(numberedParagraph(spec.levels, "khoan", id(spec.styles.khoan), ""));
+      for (let k = 0; k < (spec.khoanPerDieu ?? 1); k += 1) {
+        parts.push(numberedParagraph(spec.levels, "khoan", id(spec.styles.khoan), ""));
+        for (let d = 0; d < (spec.diemPerKhoan ?? 0); d += 1) parts.push(numberedParagraph(spec.levels, "diem", id(spec.styles.diem), ""));
+      }
     }
   }
   return parts.join("");
@@ -114,14 +125,16 @@ export function buildRegulationBody(input: RegulationInput): string {
     chapters: input.chapters,
     articlesPerChapter: input.articlesPerChapter,
     withSections: input.withSections,
+    khoanPerDieu: input.khoanPerDieu,
+    diemPerKhoan: input.diemPerKhoan,
     levels: regulationLevels(mmToTwips(input.firstLineIndentMm)),
-    styles: { chuong: `${prefix}PhanChuong`, tenChuong: `${prefix}TieuDePhanChuong`, muc: `${prefix}MucTieuMuc`, tenMuc: `${prefix}TieuDeMucTieuMuc`, dieu: `${prefix}Dieu`, khoan: `${prefix}Khoan` },
+    styles: { chuong: `${prefix}PhanChuong`, tenChuong: `${prefix}TieuDePhanChuong`, muc: `${prefix}MucTieuMuc`, tenMuc: `${prefix}TieuDeMucTieuMuc`, dieu: `${prefix}Dieu`, khoan: `${prefix}Khoan`, diem: `${prefix}Diem` },
     attached: { text: attachedText(input.attachedLine), sizePt: input.sizePt },
   });
 }
 
 /** Dựng thông số từ Tuỳ chọn nhanh. */
-export function regulationInputFromOptions(profile: StandardProfile, values: FormatValues, text: Pick<RegulationInput, "chapters" | "articlesPerChapter" | "withSections" | "attachedLine">): RegulationInput {
+export function regulationInputFromOptions(profile: StandardProfile, values: FormatValues, text: Pick<RegulationInput, "chapters" | "articlesPerChapter" | "withSections" | "attachedLine" | "khoanPerDieu" | "diemPerKhoan">): RegulationInput {
   const num = (id: string, fallback: number): number => (typeof values[id] === "number" ? (values[id] as number) : fallback);
   return {
     ...text,

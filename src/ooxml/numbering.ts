@@ -11,6 +11,18 @@ export const NUMBERING_NS = "http://schemas.openxmlformats.org/wordprocessingml/
 /** Mã danh sách dùng trong thân văn bản; Word cấp lại mã khi chèn nên chỉ cần khớp giữa phần numbering và thân. */
 export const LEGAL_NUM_ID = 1;
 
+export const MAX_SUBITEMS = 10;
+
+/** Số Khoản mỗi Điều và số Điểm mỗi Khoản dựng sẵn: từ 0 đến 10, và Điểm chỉ nằm trong Khoản. */
+export function validateSubItems(khoanPerDieu: number, diemPerKhoan: number): string[] {
+  const errors: string[] = [];
+  const bad = (n: number) => !Number.isInteger(n) || n < 0 || n > MAX_SUBITEMS;
+  if (bad(khoanPerDieu)) errors.push(`Số Khoản mỗi Điều phải từ 0 đến ${MAX_SUBITEMS}.`);
+  if (bad(diemPerKhoan)) errors.push(`Số Điểm mỗi Khoản phải từ 0 đến ${MAX_SUBITEMS}.`);
+  else if (diemPerKhoan > 0 && khoanPerDieu === 0) errors.push("Điểm nằm trong Khoản: hãy đặt ít nhất một Khoản mỗi Điều hoặc bỏ Điểm.");
+  return errors;
+}
+
 export type NumberFormat = "decimal" | "lowerLetter" | "upperRoman" | "vietnameseCounting";
 
 export interface LevelSpec {

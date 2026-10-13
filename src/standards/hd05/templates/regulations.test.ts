@@ -58,6 +58,20 @@ describe("cấu trúc Phần/Chương, Mục, Điều", () => {
   });
 });
 
+describe("Khoản và Điểm dựng sẵn trong Điều (chuẩn Đảng)", () => {
+  const styles = (patch: Partial<PartyRegulationInput>) => paragraphsOf(buildPartyRegulationBody({ ...base, chapters: 1, ...patch })).map((p) => p.styleId).slice(2);
+
+  it("mặc định mỗi Điều có một Khoản; thêm Khoản và Điểm đúng thứ tự", () => {
+    expect(styles({ articlesPerChapter: 1 })).toEqual(["HD05Dieu", "HD05Khoan"]);
+    expect(styles({ articlesPerChapter: 1, khoanPerDieu: 2, diemPerKhoan: 1 })).toEqual(["HD05Dieu", "HD05Khoan", "HD05Diem", "HD05Khoan", "HD05Diem"]);
+    expect(styles({ articlesPerChapter: 1, khoanPerDieu: 0 })).toEqual(["HD05Dieu"]);
+  });
+
+  it("Điểm cần có Khoản", () => {
+    expect(validatePartyRegulation({ ...base, khoanPerDieu: 0, diemPerKhoan: 2 })).not.toEqual([]);
+  });
+});
+
 describe("đánh số", () => {
   const text = (top: "Phần" | "Chương", numbering: "roman" | "words") => partyRegulationNumberingXml({ ...base, top, numbering });
 

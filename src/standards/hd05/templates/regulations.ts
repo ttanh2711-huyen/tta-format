@@ -1,5 +1,5 @@
 import { mmToTwips } from "../../../ooxml/flatOpc";
-import { multilevelNumberingXml } from "../../../ooxml/numbering";
+import { multilevelNumberingXml, validateSubItems } from "../../../ooxml/numbering";
 import type { FormatValues } from "../../../settings/formatOptions";
 import { buildStructureBody } from "../../../templates/quyChe";
 import type { StandardProfile } from "../../types";
@@ -21,6 +21,10 @@ export interface PartyRegulationInput {
   chapters: number;
   articlesPerChapter: number;
   withSections: boolean;
+  /** Số Khoản dựng sẵn trong mỗi Điều (mặc định 1). */
+  khoanPerDieu?: number;
+  /** Số Điểm dựng sẵn trong mỗi Khoản (mặc định 0; cần có Khoản). */
+  diemPerKhoan?: number;
   top: PartyTopLevel;
   numbering: PartyNumbering;
   stylePrefix: string;
@@ -33,6 +37,7 @@ export function validatePartyRegulation(input: PartyRegulationInput): string[] {
   if (!Number.isInteger(input.articlesPerChapter) || input.articlesPerChapter < 1 || input.articlesPerChapter > MAX_ARTICLES_PER_CHAPTER) {
     errors.push(`Số Điều mỗi ${input.top} phải từ 1 đến ${MAX_ARTICLES_PER_CHAPTER}.`);
   }
+  errors.push(...validateSubItems(input.khoanPerDieu ?? 1, input.diemPerKhoan ?? 0));
   return errors;
 }
 
@@ -53,8 +58,10 @@ export function buildPartyRegulationBody(input: PartyRegulationInput): string {
     chapters: input.chapters,
     articlesPerChapter: input.articlesPerChapter,
     withSections: input.withSections,
+    khoanPerDieu: input.khoanPerDieu,
+    diemPerKhoan: input.diemPerKhoan,
     levels: levelsOf(input),
-    styles: { chuong: `${p}PhanChuong`, tenChuong: `${p}TenPhanChuong`, muc: `${p}MucSo`, tenMuc: `${p}TenMuc`, dieu: `${p}Dieu`, khoan: `${p}Khoan` },
+    styles: { chuong: `${p}PhanChuong`, tenChuong: `${p}TenPhanChuong`, muc: `${p}MucSo`, tenMuc: `${p}TenMuc`, dieu: `${p}Dieu`, khoan: `${p}Khoan`, diem: `${p}Diem` },
   });
 }
 
@@ -62,7 +69,7 @@ export function buildPartyRegulationBody(input: PartyRegulationInput): string {
 export function partyRegulationFromOptions(
   profile: StandardProfile,
   values: FormatValues,
-  text: Pick<PartyRegulationInput, "chapters" | "articlesPerChapter" | "withSections" | "top" | "numbering">,
+  text: Pick<PartyRegulationInput, "chapters" | "articlesPerChapter" | "withSections" | "top" | "numbering" | "khoanPerDieu" | "diemPerKhoan">,
 ): PartyRegulationInput {
   const indent = values.firstLineIndent;
   return { ...text, stylePrefix: profile.styles.prefix, firstLineIndentMm: typeof indent === "number" ? indent : profile.styles.defaults.firstLineIndentMm };

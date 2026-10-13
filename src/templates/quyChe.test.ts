@@ -74,6 +74,25 @@ describe("cấu trúc Chương, Mục, Điều", () => {
   });
 });
 
+describe("Khoản và Điểm dựng sẵn trong Điều", () => {
+  const styles = (patch: Partial<RegulationInput>) => paragraphsOf(buildRegulationBody({ ...base, chapters: 1, attachedLine: "", ...patch })).map((p) => p.styleId).slice(2);
+
+  it("mặc định mỗi Điều có một Khoản như trước", () => {
+    expect(styles({ articlesPerChapter: 2 })).toEqual(["ND30Dieu", "ND30Khoan", "ND30Dieu", "ND30Khoan"]);
+  });
+
+  it("không Khoản thì Điều đứng một mình; nhiều Khoản và Điểm thì đủ thứ tự", () => {
+    expect(styles({ articlesPerChapter: 2, khoanPerDieu: 0 })).toEqual(["ND30Dieu", "ND30Dieu"]);
+    expect(styles({ articlesPerChapter: 1, khoanPerDieu: 2, diemPerKhoan: 2 })).toEqual(["ND30Dieu", "ND30Khoan", "ND30Diem", "ND30Diem", "ND30Khoan", "ND30Diem", "ND30Diem"]);
+  });
+
+  it("Điểm cần có Khoản; số ngoài 0 đến 10 bị từ chối", () => {
+    expect(validateRegulation({ ...base, khoanPerDieu: 0, diemPerKhoan: 1 })).not.toEqual([]);
+    expect(validateRegulation({ ...base, khoanPerDieu: 11 })).not.toEqual([]);
+    expect(validateRegulation({ ...base, khoanPerDieu: 2, diemPerKhoan: 2 })).toEqual([]);
+  });
+});
+
 describe("đánh số nhiều cấp", () => {
   const xml = regulationNumberingXml(base);
   const levels = xml.split("<w:lvl ").slice(1);

@@ -4,7 +4,7 @@ import { buildFooterBlock } from "../ooxml/footerBlock";
 import { mmToTwips } from "../ooxml/flatOpc";
 import { buildHeaderBlock, escapeXml } from "../ooxml/headerBlock";
 import { buildTitleBody } from "../ooxml/titleBlock";
-import { legalNumberingXml, legalParagraph } from "../ooxml/numbering";
+import { legalNumberingXml, legalParagraph, validateSubItems } from "../ooxml/numbering";
 import { styleIdFromName } from "../ooxml/styleXml";
 import type { FormatValues } from "../settings/formatOptions";
 import type { StandardProfile } from "../standards/types";
@@ -50,6 +50,10 @@ export interface DecisionInput {
   /** Các căn cứ, mỗi căn cứ một dòng, không cần dấu cuối dòng. */
   basis: readonly string[];
   articleCount: number;
+  /** Số Khoản dựng sẵn trong mỗi Điều (mặc định 0). */
+  khoanPerDieu?: number;
+  /** Số Điểm dựng sẵn trong mỗi Khoản (mặc định 0; cần có Khoản). */
+  diemPerKhoan?: number;
   /** Tiền tố style của chuẩn, ví dụ "ND30_". */
   stylePrefix: string;
   sizes: { authority: number; basis: number; verdict: number };
@@ -66,6 +70,7 @@ export function validateDecision(input: DecisionInput): string[] {
   if (clean(input.authority) === "") errors.push("Hãy nhập thẩm quyền ban hành (chức danh hoặc tên cơ quan).");
   if (input.basis.map(clean).filter((line) => line !== "").length === 0) errors.push("Hãy nhập ít nhất một căn cứ.");
   if (!Number.isInteger(input.articleCount) || input.articleCount < 1 || input.articleCount > MAX_ARTICLES) errors.push(`Số Điều phải từ 1 đến ${MAX_ARTICLES}.`);
+  errors.push(...validateSubItems(input.khoanPerDieu ?? 0, input.diemPerKhoan ?? 0));
   return errors;
 }
 
@@ -109,8 +114,15 @@ export function buildDecisionBody(input: DecisionInput): string {
   for (const line of basisLines(input.basis)) parts.push(plain(line, input.sizes.basis, { italic: true, align: "both", styleId: basisStyle }));
   parts.push(plain(info.verdict, input.sizes.verdict, { bold: true, align: "center", keepNext: true, beforePt: 6, afterPt: 6 }));
   const indirect = input.kind === "quyetDinhGianTiep";
-  parts.push(legalParagraph("dieu", body, indirect ? INDIRECT_LEAD : "", MARKER_RUN));
-  for (let i = 1; i < input.articleCount; i += 1) parts.push(legalParagraph("dieu", body, ""));
+  const khoanStyle = styleIdFromName(`${input.stylePrefix}Khoan`);
+  const diemStyle = styleIdFromName(`${input.stylePrefix}Diem`);
+  for (let i = 0; i < input.articleCount; i += 1) {
+    parts.push(i === 0 ? legalParagraph("dieu", body, indirect ? INDIRECT_LEAD : "", MARKER_RUN) : legalParagraph("dieu", body, ""));
+    for (let k = 0; k < (input.khoanPerDieu ?? 0); k += 1) {
+      parts.push(legalParagraph("khoan", khoanStyle, ""));
+      for (let d = 0; d < (input.diemPerKhoan ?? 0); d += 1) parts.push(legalParagraph("diem", diemStyle, ""));
+    }
+  }
   return parts.join("");
 }
 
@@ -118,7 +130,7 @@ export function buildDecisionBody(input: DecisionInput): string {
 export function decisionInputFromOptions(
   profile: StandardProfile,
   values: FormatValues,
-  text: { kind: DecisionKind; authority: string; basis: readonly string[]; articleCount: number },
+  text: { kind: DecisionKind; authority: string; basis: readonly string[]; articleCount: number; khoanPerDieu?: number; diemPerKhoan?: number },
 ): DecisionInput {
   const num = (id: string, fallback: number): number => (typeof values[id] === "number" ? (values[id] as number) : fallback);
   const size = num("fontSize", profile.styles.defaults.fontSizePt);

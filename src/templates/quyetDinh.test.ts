@@ -100,6 +100,41 @@ describe("thân văn bản", () => {
   });
 });
 
+describe("Khoản và Điểm dựng sẵn trong Điều", () => {
+  const styles = (input: Partial<DecisionInput>) => paragraphsOf(buildDecisionBody({ ...base, ...input })).slice(5).map((p) => p.styleId);
+
+  it("không nêu số Khoản, Điểm thì mỗi Điều chỉ có một đoạn như trước", () => {
+    expect(styles({})).toEqual(["ND30NoiDung", "ND30NoiDung", "ND30NoiDung"]);
+  });
+
+  it("mỗi Điều có đủ Khoản, mỗi Khoản có đủ Điểm, đúng thứ tự", () => {
+    const one = ["ND30NoiDung", "ND30Khoan", "ND30Diem", "ND30Diem", "ND30Khoan", "ND30Diem", "ND30Diem"];
+    expect(styles({ articleCount: 2, khoanPerDieu: 2, diemPerKhoan: 2 })).toEqual([...one, ...one]);
+  });
+
+  it("chỉ Khoản, không Điểm", () => {
+    expect(styles({ articleCount: 1, khoanPerDieu: 3 })).toEqual(["ND30NoiDung", "ND30Khoan", "ND30Khoan", "ND30Khoan"]);
+  });
+
+  it("Khoản và Điểm đánh số tự động ở cấp 1 và 2; chữ đánh dấu vẫn chỉ ở Điều 1", () => {
+    const xml = buildDecisionBody({ ...base, articleCount: 1, khoanPerDieu: 1, diemPerKhoan: 1 });
+    expect(xml).toContain('<w:ilvl w:val="1"/>');
+    expect(xml).toContain('<w:ilvl w:val="2"/>');
+    expect(xml.split(BODY_MARKER)).toHaveLength(2);
+  });
+
+  it.each([
+    ["Khoản âm", { khoanPerDieu: -1 }],
+    ["Khoản quá 10", { khoanPerDieu: 11 }],
+    ["Điểm quá 10", { khoanPerDieu: 1, diemPerKhoan: 11 }],
+    ["Điểm lẻ", { khoanPerDieu: 1, diemPerKhoan: 1.5 }],
+    ["Điểm khi không có Khoản", { khoanPerDieu: 0, diemPerKhoan: 2 }],
+  ])("%s bị từ chối", (_name, patch) => {
+    expect(validateDecision({ ...base, ...patch })).not.toEqual([]);
+    expect(() => buildDecisionBody({ ...base, ...patch })).toThrow();
+  });
+});
+
 describe("đánh số Điều, Khoản, Điểm", () => {
   const xml = decisionNumberingXml(base);
 
