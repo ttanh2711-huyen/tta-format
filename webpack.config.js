@@ -4,7 +4,6 @@ const webpack = require("webpack");
 const { version } = require("./package.json");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
-const { receiveSpikeReport } = require("./tools/receiveSpikeReport");
 const { receiveSelftest } = require("./tools/receiveSelftest");
 
 const OFFICE_SCRIPT = '<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>';
@@ -30,10 +29,10 @@ async function getHttpsOptions() {
 
 module.exports = async (env) => {
   const serving = Boolean(env && env.WEBPACK_SERVE);
-  // Bản phát hành không gồm trang thăm dò API (spike) dùng khi phát triển.
+  // Bản phát hành không gồm các trang chỉ dùng khi phát triển (xem trước giao diện, tự kiểm thử trong Word).
   const release = Boolean(env && env.release);
   return {
-    entry: release ? { taskpane: "./src/taskpane/taskpane.ts" } : { taskpane: "./src/taskpane/taskpane.ts", spike: "./src/spike/spike.ts", preview: "./src/taskpane/preview.ts", selftest: "./src/selftest/selftest.ts" },
+    entry: release ? { taskpane: "./src/taskpane/taskpane.ts" } : { taskpane: "./src/taskpane/taskpane.ts", preview: "./src/taskpane/preview.ts", selftest: "./src/selftest/selftest.ts" },
     output: {
       path: path.resolve(__dirname, "dist"),
       filename: "[name].js",
@@ -65,11 +64,6 @@ module.exports = async (env) => {
               template: "./src/selftest/selftest.html",
               chunks: ["selftest"],
             }),
-            new HtmlWebpackPlugin({
-              filename: "spike.html",
-              template: "./src/spike/spike.html",
-              chunks: ["spike"],
-            }),
           ]),
       new CopyWebpackPlugin({ patterns: [{ from: "assets", to: "assets" }] }),
       new webpack.DefinePlugin({ __APP_VERSION__: JSON.stringify(version) }),
@@ -78,7 +72,7 @@ module.exports = async (env) => {
       ? {
           headers: { "Access-Control-Allow-Origin": "*" },
           server: { type: "https", options: await getHttpsOptions() },
-          setupMiddlewares: (middlewares, devServer) => receiveSelftest()(receiveSpikeReport(path.resolve(__dirname, "docs"))(middlewares, devServer), devServer),
+          setupMiddlewares: receiveSelftest(),
           port,
         }
       : undefined,

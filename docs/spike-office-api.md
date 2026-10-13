@@ -1,5 +1,7 @@
 # Spike T3: khả thi Office.js trên Word 365
 
+> **Lưu ý (T26):** trang thăm dò `spike.html` đã bỏ khỏi dự án; kiểm thử trong Word nay dùng `src/selftest`. Tài liệu này và các báo cáo `spike-results*` chỉ giữ làm hồ sơ kết quả đã đo; các bước chạy trang thăm dò bên dưới không còn áp dụng.
+
 Trạng thái: **đã chạy 3 lần trên Word 365; kết luận GO với Office.js**. Còn vài mục kiểm chứng bổ sung không chặn (xem cuối tài liệu). Báo cáo máy: `docs/spike-results-lan-1.md`, `lan-2`, `lan-3`; kết quả mới nhất ở `docs/spike-results.md`.
 
 ## Mục đích

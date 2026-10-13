@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 /**
  * Quyền riêng tư (T24): mã nguồn của add-in không gọi mạng. Nội dung văn bản chỉ đi từ Word vào bộ nhớ của task pane; cấu hình
- * lưu ở localStorage của máy. Test này quét mã nguồn (trừ mã thăm dò spike chỉ chạy khi phát triển) tìm mọi cách gửi dữ liệu ra
+ * lưu ở localStorage của máy. Test này quét mã nguồn (trừ mã tự kiểm thử `src/selftest` chỉ chạy khi phát triển) tìm mọi cách gửi dữ liệu ra
  * ngoài; bước kiểm tra bản build (`tools/check-release.js`) kiểm tra thêm địa chỉ ngoài trong bản phát hành.
  */
 
@@ -21,7 +21,7 @@ const FORBIDDEN: Array<[RegExp, string]> = [
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
-    if (entry.isDirectory()) return entry.name === "spike" || entry.name === "selftest" ? [] : sourceFiles(path);
+    if (entry.isDirectory()) return entry.name === "selftest" ? [] : sourceFiles(path);
     return /\.(ts|html)$/.test(entry.name) && !entry.name.endsWith(".test.ts") ? [path] : [];
   });
 }
