@@ -52,7 +52,7 @@ describe("bảng tính năng khớp với mã nguồn", () => {
   function sourceFiles(dir: string): string[] {
     return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
       const path = join(dir, entry.name);
-      if (entry.isDirectory()) return entry.name === "spike" ? [] : sourceFiles(path);
+      if (entry.isDirectory()) return entry.name === "spike" || entry.name === "selftest" ? [] : sourceFiles(path);
       return entry.name.endsWith(".ts") && !entry.name.endsWith(".test.ts") && entry.name !== "capabilities.ts" ? [path] : [];
     });
   }

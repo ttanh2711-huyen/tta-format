@@ -5,6 +5,7 @@ const { version } = require("./package.json");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const { receiveSpikeReport } = require("./tools/receiveSpikeReport");
+const { receiveSelftest } = require("./tools/receiveSelftest");
 
 const OFFICE_SCRIPT = '<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>';
 /**
@@ -32,7 +33,7 @@ module.exports = async (env) => {
   // Bản phát hành không gồm trang thăm dò API (spike) dùng khi phát triển.
   const release = Boolean(env && env.release);
   return {
-    entry: release ? { taskpane: "./src/taskpane/taskpane.ts" } : { taskpane: "./src/taskpane/taskpane.ts", spike: "./src/spike/spike.ts", preview: "./src/taskpane/preview.ts" },
+    entry: release ? { taskpane: "./src/taskpane/taskpane.ts" } : { taskpane: "./src/taskpane/taskpane.ts", spike: "./src/spike/spike.ts", preview: "./src/taskpane/preview.ts", selftest: "./src/selftest/selftest.ts" },
     output: {
       path: path.resolve(__dirname, "dist"),
       filename: "[name].js",
@@ -60,6 +61,11 @@ module.exports = async (env) => {
               chunks: ["preview"],
             }),
             new HtmlWebpackPlugin({
+              filename: "selftest.html",
+              template: "./src/selftest/selftest.html",
+              chunks: ["selftest"],
+            }),
+            new HtmlWebpackPlugin({
               filename: "spike.html",
               template: "./src/spike/spike.html",
               chunks: ["spike"],
@@ -72,7 +78,7 @@ module.exports = async (env) => {
       ? {
           headers: { "Access-Control-Allow-Origin": "*" },
           server: { type: "https", options: await getHttpsOptions() },
-          setupMiddlewares: receiveSpikeReport(path.resolve(__dirname, "docs")),
+          setupMiddlewares: (middlewares, devServer) => receiveSelftest()(receiveSpikeReport(path.resolve(__dirname, "docs"))(middlewares, devServer), devServer),
           port,
         }
       : undefined,

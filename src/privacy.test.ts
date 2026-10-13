@@ -21,7 +21,7 @@ const FORBIDDEN: Array<[RegExp, string]> = [
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
-    if (entry.isDirectory()) return entry.name === "spike" ? [] : sourceFiles(path);
+    if (entry.isDirectory()) return entry.name === "spike" || entry.name === "selftest" ? [] : sourceFiles(path);
     return /\.(ts|html)$/.test(entry.name) && !entry.name.endsWith(".test.ts") ? [path] : [];
   });
 }
