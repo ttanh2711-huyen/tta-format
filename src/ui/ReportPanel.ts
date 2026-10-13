@@ -1,4 +1,5 @@
 import { summarizeIssues } from "../checker/engine";
+import { buildReportDocx, toBase64 } from "../checker/exportDocx";
 import { formatReport } from "../checker/exportReport";
 import { planFixes, type FixPlan } from "../checker/fixAll";
 import type { Issue } from "../checker/types";
@@ -254,7 +255,20 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
     });
     const file = new Blob(["﻿", text], { type: "text/plain;charset=utf-8" });
     const link = create("a", { textContent: "Tải về .txt", href: URL.createObjectURL(file), download: "bao-cao-kiem-tra.txt" });
-    exported.replaceChildren(area, create("div", {}, copy, " ", link));
+    const docx = create("button", { type: "button", textContent: "Mở báo cáo trong Word (.docx)", id: "rp-docx" });
+    docx.addEventListener("click", () => {
+      docx.disabled = true;
+      const base64 = toBase64(buildReportDocx(issuesNow, { standardName: deps.currentStandard().name, checkedAt: new Date() }));
+      void Word.run(async (context) => {
+        context.application.createDocument(base64).open();
+        await context.sync();
+      })
+        .catch((error: unknown) => show("error", `Không mở được báo cáo .docx: ${errorText(error)}. Dùng bản .txt.`))
+        .finally(() => {
+          docx.disabled = false;
+        });
+    });
+    exported.replaceChildren(area, create("div", {}, copy, " ", docx, " ", link));
     exported.hidden = false;
   });
 
