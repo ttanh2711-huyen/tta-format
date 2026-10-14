@@ -16,6 +16,7 @@ import { mountPageSetupPanel } from "../ui/PageSetupPanel";
 import { mountQuickOptions } from "../ui/QuickOptions";
 import { mountReportPanel } from "../ui/ReportPanel";
 import { mountSettingsPanel } from "../ui/SettingsPanel";
+import { addEntry, entryFromDocument } from "../settings/soDangKy";
 import { mountStandardSwitcher } from "../ui/StandardSwitcher";
 import { mountTabs, tabButtonId, type TabSpec } from "../ui/Tabs";
 import { loadAccordionOpen, loadActiveTab, saveAccordionOpen, saveActiveTab } from "../ui/tabsLogic";
@@ -144,7 +145,11 @@ export function mountApp(): void {
     presetHeader: header.preset,
     collectFooter: footer.collect,
     writeStandard: documentSupported ? writeDocumentStandard : undefined,
-    afterCreate: () => header.commitNumber(),
+    afterCreate: (doc) => {
+      header.commitNumber();
+      addEntry(store, switcher.currentStandard(), entryFromDocument(doc));
+      settings.refresh();
+    },
   });
   const extras = mountInsertPanel(extrasEl, { currentStandard: switcher.currentStandard, values: quick.values });
   const settings = mountSettingsPanel(settingsEl, {

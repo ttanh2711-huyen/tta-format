@@ -33,8 +33,18 @@ export interface NewDocWizardDeps {
   collectFooter: (options?: { assumeDefaults?: boolean }) => FooterCollect;
   /** Ghi chuẩn vào thuộc tính tài liệu sau khi tạo xong; bỏ trống nếu Word không hỗ trợ. */
   writeStandard?: (id: StandardId) => Promise<void>;
-  /** Gọi sau khi tạo văn bản thành công (ví dụ ghi số văn bản vào sổ số). */
-  afterCreate?: () => void;
+  /** Gọi sau khi tạo văn bản thành công (ghi số vào sổ số, ghi dòng vào sổ đăng ký văn bản đi). */
+  afterCreate?: (doc: CreatedDocument) => void;
+}
+
+/** Thông tin của văn bản vừa tạo, để ghi sổ đăng ký văn bản đi. */
+export interface CreatedDocument {
+  typeName: string;
+  so: string;
+  placeDate: string;
+  subject: string;
+  recipients: readonly string[];
+  signer: string;
 }
 
 type DocumentParts = Pick<LetterContext, "buildBody" | "headText" | "signerName" | "numberingXml" | "markerStyle">;
@@ -417,7 +427,16 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
         restore.hidden = false;
       }
       let standardNote = "";
-      if (report.ok) deps.afterCreate?.();
+      if (report.ok) {
+        deps.afterCreate?.({
+          typeName: entry?.label ?? "",
+          so: header.input.numberRow?.so ?? "",
+          placeDate: header.input.numberRow?.placeDate ?? "",
+          subject: header.titleInput?.subject ?? "",
+          recipients: footer.ok ? footer.input.recipients : (header.titleInput?.recipients ?? []),
+          signer: footer.ok ? footer.input.signerName : "",
+        });
+      }
       if (report.ok && deps.writeStandard) {
         try {
           await deps.writeStandard(profile.id);

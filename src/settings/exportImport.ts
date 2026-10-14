@@ -1,3 +1,4 @@
+import { listEntries, mergeEntries, parseEntries, type RegisterEntry } from "./soDangKy";
 import { STANDARDS } from "../standards";
 import type { StandardId } from "../standards/types";
 import { agencyKey, type AgencyList } from "./agencies";
@@ -27,6 +28,8 @@ export interface ConfigFile {
   agencies: Partial<Record<StandardId, { names: string[]; abbrs: string[]; recipients: string[] }>>;
   /** Sổ số văn bản: số cuối đã dùng theo chuẩn, năm, loại (có từ T26). */
   counters?: Partial<Record<StandardId, Counter[]>>;
+  /** Sổ đăng ký văn bản đi (có từ T27). */
+  register?: Partial<Record<StandardId, RegisterEntry[]>>;
 }
 
 function readJson(store: KeyValueStore, key: string): unknown {
@@ -59,6 +62,11 @@ export function exportConfig(store: KeyValueStore, now: Date = new Date()): stri
     const list = listCounters(store, standard);
     if (list.length > 0) counters[standard.id] = list;
   }
+  const register: NonNullable<ConfigFile["register"]> = {};
+  for (const standard of STANDARDS) {
+    const list = listEntries(store, standard);
+    if (list.length > 0) register[standard.id] = list;
+  }
   const file: ConfigFile = {
     format: CONFIG_FORMAT,
     version: CONFIG_VERSION,
@@ -69,6 +77,7 @@ export function exportConfig(store: KeyValueStore, now: Date = new Date()): stri
     defaults,
     agencies,
     counters,
+    register,
   };
   return JSON.stringify(file, null, 2);
 }
@@ -82,11 +91,13 @@ export interface ImportReport {
   defaults: number;
   agencyEntries: number;
   counters: number;
+  /** Số dòng sổ đăng ký văn bản đi mới được thêm. */
+  registerEntries: number;
   /** Mục bị bỏ qua kèm lý do. */
   skipped: string[];
 }
 
-const EMPTY: ImportReport = { ok: false, profiles: 0, presets: 0, defaults: 0, agencyEntries: 0, counters: 0, skipped: [] };
+const EMPTY: ImportReport = { ok: false, profiles: 0, presets: 0, defaults: 0, agencyEntries: 0, counters: 0, registerEntries: 0, skipped: [] };
 
 /**
  * Nhập cấu hình, gộp vào cấu hình hiện có: hồ sơ và preset trùng `id` được thay bằng bản trong file, mục mới được thêm,
@@ -186,6 +197,8 @@ export function importConfig(store: KeyValueStore, text: string): ImportReport {
   for (const [id, value] of defaultsOut) store.set(defaultsKey(id), JSON.stringify(value));
   for (const [id, list, merged] of agencyOut) store.set(agencyKey(id, list), JSON.stringify(merged));
   for (const [standard, c] of counterOut) recordNumber(store, standard, c.year, c.typeKey === "-" ? null : c.typeKey, c.last);
+  const registerIn = typeof file.register === "object" && file.register !== null ? (file.register as Record<string, unknown>) : {};
+  for (const standard of STANDARDS) report.registerEntries += mergeEntries(store, standard, parseEntries(registerIn[standard.id]));
   if (STANDARDS.some((s) => s.id === file.defaultStandard)) saveDefaultStandard(store, file.defaultStandard as StandardId);
   return report;
 }

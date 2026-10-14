@@ -1,5 +1,9 @@
 import { exportConfig, importConfig } from "../settings/exportImport";
 import { defaultProfile, deleteProfile, listProfiles, saveProfile, setDefaultProfile, type AgencyProfile } from "../settings/profile";
+import { buildTableDocx } from "../checker/exportDocx";
+import { buildXlsx } from "../ooxml/xlsx";
+import { toBase64 } from "../ooxml/zipStore";
+import { listEntries, registerRows, registerYears, removeEntry } from "../settings/soDangKy";
 import { listCounters, removeCounter, setLastNumber } from "../settings/soVanBan";
 import type { KeyValueStore } from "../settings/storage";
 import type { StandardProfile } from "../standards/types";
@@ -28,6 +32,8 @@ const lines = (text: string): string[] => text.split(/\r?\n/).map((line) => line
  */
 export function mountSettingsPanel(container: HTMLElement, deps: SettingsPanelDeps): { refresh: () => void; applyDefault: () => void } {
   let editing: { id?: string; draft: Draft } | null = null;
+  let registerOpen = false;
+  let registerYear: number | undefined;
   const body = create("div");
   const message = create("p", { id: "sp-message" });
   message.setAttribute("role", "status");
@@ -143,6 +149,53 @@ export function mountSettingsPanel(container: HTMLElement, deps: SettingsPanelDe
     );
   }
 
+  /** Sổ đăng ký văn bản đi (T27): xem theo năm, xoá dòng, xuất Excel hoặc mở thành bảng trong Word. */
+  function registerBook(standard: StandardProfile): HTMLElement {
+    const years = registerYears(deps.store, standard);
+    if (registerYear !== undefined && !years.includes(registerYear)) registerYear = undefined;
+    const year = registerYear ?? years[0];
+    const entries = year === undefined ? [] : listEntries(deps.store, standard, year);
+    const select = create("select", { id: "sp-register-year" });
+    for (const y of years) select.append(create("option", { value: String(y), textContent: `Năm ${y}`, selected: y === year }));
+    select.addEventListener("change", () => {
+      registerYear = Number(select.value);
+      render();
+    });
+    const list = create("ol", { id: "sp-register" });
+    for (const entry of entries.slice(0, 50)) {
+      list.append(
+        create(
+          "li",
+          {},
+          create("strong", { textContent: entry.soKyHieu || "(chưa có số)" }),
+          ` ${entry.loai}`,
+          create("div", { className: "note", textContent: [entry.trichYeu, entry.noiNgay].filter(Boolean).join(" · ") }),
+          button("Xoá", () => {
+            removeEntry(deps.store, standard, entry.id);
+            render();
+          }),
+        ),
+      );
+    }
+    const title = `SỔ ĐĂNG KÝ VĂN BẢN ĐI NĂM ${year ?? ""}`.trim();
+    const rows = (): string[][] => registerRows(entries);
+    const xlsx = create("a", { textContent: "Tải Excel (.xlsx)", id: "sp-register-xlsx", download: `so-van-ban-di-${year ?? ""}.xlsx` });
+    xlsx.addEventListener("click", () => {
+      xlsx.href = URL.createObjectURL(new Blob([buildXlsx(`Năm ${year ?? ""}`, rows()).buffer as ArrayBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+    });
+    const word = button("Mở bảng trong Word", () => {
+      const base64 = toBase64(buildTableDocx(title, rows()));
+      void Word.run(async (context) => {
+        context.application.createDocument(base64).open();
+        await context.sync();
+      }).catch((error: unknown) => show("error", `Không mở được bảng: ${error instanceof Error ? error.message : String(error)}`));
+    }, { id: "sp-register-word" });
+    const note = create("p", { className: "note", textContent: "Mỗi lần tạo văn bản thành công, add-in ghi một dòng vào sổ (số, ký hiệu, ngày tháng, tên loại, trích yếu, nơi nhận, người ký). Dữ liệu chỉ nằm trên máy này và đi kèm khi xuất cấu hình." });
+    if (years.length === 0) return create("div", {}, note, create("p", { className: "note", textContent: "Sổ chưa có dòng nào." }));
+    const more = entries.length > 50 ? create("p", { className: "note", textContent: `Hiện 50 dòng mới nhất trên tổng ${entries.length}; xuất để xem đủ.` }) : "";
+    return create("div", {}, note, select, create("p", { className: "note", textContent: `${entries.length} văn bản.` }), create("div", { className: "rp-actions" }, word, xlsx), list, more);
+  }
+
   function transfer(): HTMLElement {
     const area = create("textarea", { id: "sp-transfer", rows: 6, placeholder: "Dán nội dung file cấu hình vào đây để nhập, hoặc bấm Xuất để xem nội dung." });
     const exportButton = button("Xuất cấu hình", () => {
@@ -164,7 +217,7 @@ export function mountSettingsPanel(container: HTMLElement, deps: SettingsPanelDe
       deps.onImported();
       render();
       const skipped = report.skipped.length > 0 ? ` Bỏ qua ${report.skipped.length} mục: ${report.skipped.join(" ")}` : "";
-      show(report.skipped.length > 0 ? "warning" : "ok", `Đã nhập ${report.profiles} hồ sơ, ${report.presets} preset, ${report.defaults} mặc định, ${report.agencyEntries} cơ quan, ${report.counters} bộ đếm sổ số.${skipped}`);
+      show(report.skipped.length > 0 ? "warning" : "ok", `Đã nhập ${report.profiles} hồ sơ, ${report.presets} preset, ${report.defaults} mặc định, ${report.agencyEntries} cơ quan, ${report.counters} bộ đếm sổ số, ${report.registerEntries} dòng sổ văn bản đi.${skipped}`);
     }, { id: "sp-import" });
     return create("div", {}, create("p", { className: "note", textContent: "Xuất để chuyển hồ sơ cơ quan, preset và danh sách cơ quan sang máy khác; nhập sẽ gộp vào cấu hình hiện có (hồ sơ trùng mã được thay)." }), exportButton, " ", link, area, importButton);
   }
@@ -211,6 +264,11 @@ export function mountSettingsPanel(container: HTMLElement, deps: SettingsPanelDe
       }, { id: "sp-add" }));
     }
     body.append(create("details", { id: "sp-book-group" }, create("summary", { textContent: "Sổ số văn bản" }), numberBook(standard)));
+    const registerGroup = create("details", { id: "sp-register-group", open: registerOpen }, create("summary", { textContent: "Sổ đăng ký văn bản đi" }), registerBook(standard));
+    registerGroup.addEventListener("toggle", () => {
+      registerOpen = registerGroup.open;
+    });
+    body.append(registerGroup);
     body.append(create("details", { id: "sp-transfer-group" }, create("summary", { textContent: "Xuất, nhập cấu hình" }), transfer()));
   }
 

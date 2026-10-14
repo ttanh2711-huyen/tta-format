@@ -6,7 +6,7 @@ Add-in "TTA-Format" dùng cá nhân, chạy trong Microsoft Word. Tóm tắt: **
 
 - Đọc nội dung, định dạng và thiết lập trang của tài liệu đang mở **trong bộ nhớ của bảng add-in** để kiểm tra, sửa và dựng văn bản. Mọi xử lý diễn ra trên máy bạn.
 - Ghi vào tài liệu đang mở đúng những gì bạn yêu cầu (định dạng, khối đầu, khối cuối, số trang…). Ghi thêm một thuộc tính nhỏ trong tài liệu cho biết chuẩn đang dùng (Chính quyền hoặc Đảng).
-- Lưu cài đặt (hồ sơ cơ quan, preset, chuẩn mặc định, danh sách cơ quan, danh bạ nơi nhận, sổ số văn bản) trong **bộ nhớ cục bộ (localStorage) của Word trên máy này**. Không có tài khoản, không đồng bộ lên máy chủ. Bạn chủ động xuất ra file để sao lưu hoặc chuyển máy.
+- Lưu cài đặt (hồ sơ cơ quan, preset, chuẩn mặc định, danh sách cơ quan, danh bạ nơi nhận, sổ số văn bản, sổ đăng ký văn bản đi) trong **bộ nhớ cục bộ (localStorage) của Word trên máy này**. Không có tài khoản, không đồng bộ lên máy chủ. Bạn chủ động xuất ra file để sao lưu hoặc chuyển máy.
 
 ## Add-in kết nối mạng ở đâu
 
