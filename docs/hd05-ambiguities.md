@@ -37,3 +37,4 @@ Văn bản trích chữ làm mất chữ "Đ", dẫn đến mã sai nếu chỉ 
 13. **Chữ ký**: bản giấy ký bằng bút mực xanh; bản điện tử là ảnh PNG nền trong suốt màu xanh, canh giữa chức vụ và họ tên. Add-in chỉ chừa chỗ ký, không xử lý chữ ký số.
 14. **Ngày có hiệu lực của NĐ 30** ghi `2020-03-05` (ngày ký) là giả định "hiệu lực từ ngày ký", chưa kiểm chứng; chỉ dùng để hiển thị.
 15. **Bảng tra ký hiệu cơ quan** chỉ có các tên Hướng dẫn 05 thống nhất. Tên cấp uỷ cụ thể (TU, TW, VPTW, BTCTU...) do từng cấp uỷ đặt theo quy tắc chữ cái đầu.
+16. **Viết hoa trong văn bản Đảng (T27).** Bộ kiểm tra viết hoa dùng quy tắc của Phụ lục II Nghị định 30 cho cả văn bản Đảng (đầu câu, tên cơ quan, tổ chức cố định, tên văn bản khi viện dẫn), trừ quy tắc viết hoa điều, khoản, điểm khi viện dẫn. Chưa đối chiếu quy định viết hoa riêng của Đảng; mọi lỗi là cảnh báo.

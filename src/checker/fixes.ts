@@ -55,6 +55,8 @@ export function applyFix(doc: CheckDocument, fix: Fix): CheckDocument {
       switch (fix.kind) {
         case "replace":
           return { ...p, resolved: { ...r, text: r.text.replace(fix.find, fix.replacement) } };
+        case "edits":
+          return { ...p, resolved: { ...r, text: fix.edits.reduce((text, edit) => text.replace(edit.find, edit.replacement), r.text) } };
         case "font":
           return {
             ...p,

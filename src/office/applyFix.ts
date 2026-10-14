@@ -34,6 +34,24 @@ export async function applyFixes(fixes: readonly Fix[]): Promise<ApplyFixResult>
     });
     await context.sync();
 
+    // Nhiều chỗ thay chữ trên một đoạn: tìm và thay lần lượt, mỗi chỗ một lượt tìm sau khi chỗ trước đã thay.
+    for (const fix of fixes) {
+      if (fix.kind !== "edits") continue;
+      const paragraph = paragraphs.items[fix.index];
+      if (!paragraph) continue;
+      let done = 0;
+      for (const edit of fix.edits) {
+        const found = paragraph.search(edit.find, { matchCase: true });
+        found.load("items");
+        await context.sync();
+        if (found.items.length === 0) continue;
+        found.items[0].insertText(edit.replacement, "Replace");
+        await context.sync();
+        done += 1;
+      }
+      if (done < fix.edits.length) skipped.push(`${fix.label}: ${fix.edits.length - done} chỗ không tìm thấy chữ cần sửa (có thể đã được sửa)`);
+    }
+
     const exact: Array<{ paragraph: Word.Paragraph; pt: number }> = [];
     fixes.forEach((fix, i) => {
       if (fix.kind === "page") {
@@ -67,6 +85,8 @@ export async function applyFixes(fixes: readonly Fix[]): Promise<ApplyFixResult>
         applied += 1;
       } else if (fix.kind === "exact") {
         exact.push({ paragraph, pt: fix.pt });
+        applied += 1;
+      } else if (fix.kind === "edits") {
         applied += 1;
       } else if (fix.kind === "insertAfter") {
         const added = paragraph.insertParagraph(fix.text, "After");

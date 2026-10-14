@@ -14,6 +14,8 @@ export type IssueLocation =
  */
 export type Fix =
   | { kind: "replace"; index: number; find: string; replacement: string; label: string }
+  /** Nhiều chỗ thay chữ trên một đoạn, theo thứ tự; mỗi chỗ thay lần xuất hiện đầu tiên của `find` (ngắn, dưới 255 ký tự). */
+  | { kind: "edits"; index: number; edits: ReadonlyArray<{ find: string; replacement: string }>; label: string }
   | { kind: "font"; index: number; name?: string; bold?: boolean; italic?: boolean; underline?: boolean; sizePt?: number; label: string }
   | { kind: "paragraph"; index: number; align?: "both"; firstLineIndentMm?: number; spaceBeforePt?: number; spaceAfterPt?: number; lineMultiple?: number; label: string }
   | { kind: "exact"; index: number; pt: number; label: string }

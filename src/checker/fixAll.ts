@@ -30,7 +30,7 @@ export interface FixPlan {
   manual: Issue[];
 }
 
-const KIND_ORDER: Record<Fix["kind"], number> = { page: 0, font: 1, paragraph: 2, replace: 3, exact: 4, insertAfter: 5 };
+const KIND_ORDER: Record<Fix["kind"], number> = { page: 0, font: 1, paragraph: 2, replace: 3, edits: 3, exact: 4, insertAfter: 5 };
 
 function targetOf(fix: Fix): string {
   return fix.kind === "page" ? `page:${fix.section}` : `para:${fix.index}`;
@@ -44,6 +44,8 @@ function merge(a: Fix, b: Fix): Fix | undefined {
   if (a.kind === "font" && b.kind === "font") return { ...a, ...b, label };
   if (a.kind === "paragraph" && b.kind === "paragraph") return { ...a, ...b, label };
   if (a.kind === "exact" && b.kind === "exact") return { ...b, label };
+  // Các chỗ thay chữ không chồng nhau trên một đoạn áp được nối tiếp nhau.
+  if (a.kind === "edits" && b.kind === "edits") return { ...a, edits: [...a.edits, ...b.edits], label };
   return undefined;
 }
 
@@ -58,7 +60,7 @@ export function planFixes(issues: readonly Issue[], options: FixPlanOptions = {}
 
   for (const issue of issues) {
     const fix = issue.fix;
-    if (!fix || (!includeText && fix.kind === "replace") || options.skipRule?.(issue.ruleId)) {
+    if (!fix || (!includeText && (fix.kind === "replace" || fix.kind === "edits")) || options.skipRule?.(issue.ruleId)) {
       manual.push(issue);
       continue;
     }
