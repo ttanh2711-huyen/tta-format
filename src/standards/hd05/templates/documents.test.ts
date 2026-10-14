@@ -8,7 +8,9 @@ import { parseStyleTable } from "../../../ooxml/styleResolver";
 import { buildStyleSpecs } from "../../../ooxml/styleSpecs";
 import { toStyleDefinitionsXml } from "../../../ooxml/styleXml";
 import { extractDocModel, type ParagraphModel, type TableModel } from "../../../rules/docModel";
-import { templatesFor } from "../../../templates/registry";
+import { findTemplate, templatesFor } from "../../../templates/registry";
+import { buildMinutesBody, MINUTES_SIGNERS, MINUTES_VARIANTS } from "../../../templates/bienBan";
+import { ND30 } from "../../nd30/profile";
 import { SMALL_FORMS, findSmallForm } from "../../../templates/smallForms";
 import type { PartyAssembleInput } from "../assembleDocument";
 import { HD05 } from "../profile";
@@ -109,8 +111,8 @@ describe("văn bản đại hội", () => {
 describe("giấy tờ hành chính nhỏ của chuẩn Đảng", () => {
   const forms = templatesFor(HD05).filter((entry) => entry.family === "form");
 
-  it("có đủ tám giấy tờ", () => {
-    expect(forms.map((entry) => entry.docTypeId).sort()).toEqual(["giay-chung-nhan", "giay-di-duong", "giay-gioi-thieu", "giay-moi", "giay-nghi-phep", "phieu-chuyen", "phieu-gui", "thu-cong"]);
+  it("có đủ tám giấy tờ và ba mẫu của chi bộ (nghị quyết hằng tháng, báo cáo kiểm điểm tập thể, bản kiểm điểm cá nhân)", () => {
+    expect(forms.map((entry) => entry.docTypeId).sort()).toEqual(["ban-kiem-diem-ca-nhan", "bao-cao-kiem-diem-tap-the", "giay-chung-nhan", "giay-di-duong", "giay-gioi-thieu", "giay-moi", "giay-nghi-phep", "nghi-quyet-chi-bo", "phieu-chuyen", "phieu-gui", "thu-cong"]);
   });
 
   it.each(forms.map((entry) => [entry.docTypeId, entry.typeName] as const))("%s: 0 lỗi", (id, typeName) => {
@@ -121,5 +123,23 @@ describe("giấy tờ hành chính nhỏ của chuẩn Đảng", () => {
 
   it("golden một giấy tờ của Đảng", () => {
     expectMatchesGolden("partyForm-giay-chung-nhan.xml", assemblePartyFormBody(input("Giấy chứng nhận"), findSmallForm("giay-chung-nhan")!, "HD05_"));
+  });
+});
+
+describe("văn bản của chi bộ (T27)", () => {
+  it("biên bản sinh hoạt chi bộ có các mục riêng, hai bên ký Thư ký và Chủ trì", () => {
+    expect(MINUTES_VARIANTS["bien-ban-sinh-hoat-chi-bo"]).toEqual(expect.arrayContaining(["Địa điểm:", "IV. Kết luận của đồng chí chủ trì:"]));
+    expect(MINUTES_SIGNERS["bien-ban-sinh-hoat-chi-bo"]).toEqual(["Thư ký", "Chủ trì"]);
+    const xml = buildMinutesBody("HD05_", MINUTES_VARIANTS["bien-ban-sinh-hoat-chi-bo"]);
+    expect(xml).toContain("Biểu quyết thông qua nghị quyết");
+    expect(xml).not.toContain("Thành phần tham dự:");
+  });
+
+  it("chuẩn Đảng có đủ bốn mẫu chi bộ; bản kiểm điểm cá nhân không có số, ký hiệu; chuẩn Chính quyền không có", () => {
+    for (const key of ["nghi-quyet-chi-bo", "bien-ban-sinh-hoat-chi-bo", "bao-cao-kiem-diem-tap-the", "ban-kiem-diem-ca-nhan"]) {
+      expect(findTemplate(HD05, key)?.supported).toBe(true);
+      expect(findTemplate(ND30, key)).toBeUndefined();
+    }
+    expect(findTemplate(HD05, "ban-kiem-diem-ca-nhan")).toMatchObject({ abbr: null, noNumber: true });
   });
 });

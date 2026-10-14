@@ -155,8 +155,10 @@ export function checkParagraphs(doc: CheckDocument, profile: StandardProfile): I
     }
 
     // Chỉ báo đoạn kết thúc bằng chữ hoặc số; kết thúc bằng ":", ";", "," là đoạn dẫn vào danh sách hoặc ý tiếp theo.
+    // Đề mục (in đậm cả đoạn, hoặc mở đầu bằng số La Mã "I. ") không phải câu văn nên không cần dấu chấm.
     const text = r.text.trim();
-    if (content.endsWithPeriod && /[\p{L}\p{N}]$/u.test(text)) {
+    const heading = r.bold === true || /^[IVXLC]+\.\s/.test(text);
+    if (content.endsWithPeriod && !heading && /[\p{L}\p{N}]$/u.test(text)) {
       const tail = text.slice(-30);
       add({
         ruleId: "paragraph.endsWithPeriod",

@@ -9,7 +9,7 @@ import { QUOC_HIEU } from "../ooxml/headerBlock";
 import { PLACEHOLDERS } from "../templates/assumptions";
 import { findTemplate, visibleTemplates, type TemplateEntry } from "../templates/registry";
 import { multiSignFromOptions, parseSignLines, validateMultiSign } from "../ooxml/multiSignBlock";
-import { assembleMinutesBody, defaultMinutesParties } from "../templates/bienBan";
+import { assembleMinutesBody, defaultMinutesParties, MINUTES_SIGNERS, MINUTES_VARIANTS } from "../templates/bienBan";
 import { agreementNumberingXml, assembleAgreementBody, defaultAgreementParties, MAX_ARTICLES as MAX_AGREEMENT_ARTICLES, validateAgreement } from "../templates/hopDong";
 import { partyRegulationFromOptions, assemblePartyRegulationBody, partyRegulationNumberingXml, validatePartyRegulation } from "../standards/hd05/templates/regulations";
 import type { PartyNumbering, PartyTopLevel } from "../standards/hd05/numbering";
@@ -27,7 +27,7 @@ export interface NewDocWizardDeps {
   values: () => FormatValues;
   styleSpecs: () => StyleSpec[];
   behavior: () => { localFormatting: "keep" | "clear" };
-  collectHeader: (options?: { assumeDefaults?: boolean; fallbackTypeAbbr?: string }) => HeaderCollect;
+  collectHeader: (options?: { assumeDefaults?: boolean; fallbackTypeAbbr?: string; noNumber?: boolean }) => HeaderCollect;
   /** Đặt sẵn Khối đầu theo loại văn bản được chọn. */
   presetHeader?: (preset: HeaderPreset) => void;
   collectFooter: (options?: { assumeDefaults?: boolean }) => FooterCollect;
@@ -157,7 +157,8 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
     }
     if (entry?.family === "minutes" || entry?.family === "agreement" || entry?.family === "joint") {
       const party = profile.headerKind === "dang";
-      const defaults = entry.family === "agreement" ? defaultAgreementParties(2) : entry.family === "joint" ? [{ title: "T/M cơ quan thứ nhất" }, { title: "T/M cơ quan thứ hai" }] : party ? [{ title: "Người ghi biên bản" }, { title: "Chủ trì hội nghị" }] : defaultMinutesParties();
+      const variantSigners = MINUTES_SIGNERS[entry.docTypeId]?.map((title) => ({ title }));
+      const defaults = entry.family === "agreement" ? defaultAgreementParties(2) : entry.family === "joint" ? [{ title: "T/M cơ quan thứ nhất" }, { title: "T/M cơ quan thứ hai" }] : (variantSigners ?? (party ? [{ title: "Người ghi biên bản" }, { title: "Chủ trì hội nghị" }] : defaultMinutesParties()));
       if (signed.lines.trim() === "") signed.lines = defaults.map((p) => `${p.title} | |`).join("\n");
       const lines = create("textarea", { id: "nw-sign-lines", rows: 4, value: signed.lines, placeholder: party ? "Mỗi bên một dòng: Tên bên | Chức vụ | Họ tên | Xác nhận chữ ký (nếu không đóng dấu)" : "Mỗi bên một dòng: Tên bên | Chức vụ | Họ tên (2 đến 4 bên)" });
       const recipients = create("textarea", { id: "nw-sign-recipients", rows: 3, value: signed.recipients, placeholder: "Nơi nhận, mỗi nơi một dòng (bỏ trống nếu không cần)" });
@@ -243,7 +244,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
     // Mục còn trống được điền chữ giả định để vẫn tạo được văn bản theo mẫu (T26); người dùng sửa ngay trong văn bản.
     const profile = deps.currentStandard();
     const entry = findTemplate(profile, entryKey);
-    const header = deps.collectHeader({ assumeDefaults: true, fallbackTypeAbbr: entry?.abbr ?? undefined });
+    const header = deps.collectHeader({ assumeDefaults: true, fallbackTypeAbbr: entry?.abbr ?? undefined, noNumber: entry?.noNumber === true });
     const footer = deps.collectFooter({ assumeDefaults: true });
     const assumedAll: string[] = [...(header.ok ? header.assumed : []), ...(footer.ok ? footer.assumed : [])];
     // Biên bản và văn bản nhiều bên ký có khối ký riêng nên không dùng Khối cuối.
@@ -267,7 +268,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
         return;
       }
       if (entry.family === "minutes") {
-        parts = { buildBody: () => assembleMinutesBody(document, profile.styles.prefix, sign), headText: QUOC_HIEU, signerName: "" };
+        parts = { buildBody: () => assembleMinutesBody(document, profile.styles.prefix, sign, MINUTES_VARIANTS[entry.docTypeId]), headText: QUOC_HIEU, signerName: "" };
       } else {
         const agreement = { parties: parties.length, articleCount: Number(signed.articles), stylePrefix: profile.styles.prefix, firstLineIndentMm: typeof deps.values().firstLineIndent === "number" ? (deps.values().firstLineIndent as number) : profile.styles.defaults.firstLineIndentMm };
         const problems = [...validateAgreement(agreement)];
@@ -290,7 +291,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
       }
       const document = { header: header.input, title: { ...header.titleInput, typeName: entry.family === "joint" ? header.titleInput.typeName : entry.typeName } };
       if (entry.family === "joint") parts = { buildBody: (body) => assemblePartyJointBody(document, sign, body), headText: profile.identifyingTitle, signerName: "" };
-      else parts = { buildBody: () => assemblePartyMinutesBody(document, profile.styles.prefix, sign), headText: profile.identifyingTitle, signerName: "" };
+      else parts = { buildBody: () => assemblePartyMinutesBody(document, profile.styles.prefix, sign, MINUTES_VARIANTS[entry.docTypeId]), headText: profile.identifyingTitle, signerName: "" };
     } else if (!footer.ok) {
       return;
     } else if (header.kind === "dang" && footer.kind === "dang" && entry?.family === "congress") {

@@ -39,6 +39,8 @@ export interface TemplateEntry {
   reason?: string;
   /** Ẩn khỏi ô chọn loại (vẫn có cấu hình) cho đến khi bố cục được duyệt. */
   hidden?: true;
+  /** Văn bản không có số, ký hiệu (ví dụ bản kiểm điểm cá nhân): hàng số chỉ còn địa danh, ngày tháng. */
+  noNumber?: true;
 }
 
 interface FamilySpec {
@@ -124,6 +126,10 @@ const EXTRAS: Record<Headers, TemplateEntry[]> = {
   dang: [
     { key: "van-ban-dai-hoi", docTypeId: "van-ban-dai-hoi", label: "Văn bản đại hội (ký hiệu ĐH)", typeName: "", abbr: "ĐH", templateRef: null, family: "congress", supported: true },
     { key: "lien-co-quan", docTypeId: "lien-co-quan", label: "Văn bản liên cơ quan (hai khối ký)", typeName: "", abbr: null, templateRef: null, family: "joint", supported: true },
+    { key: "nghi-quyet-chi-bo", docTypeId: "nghi-quyet-chi-bo", label: "Nghị quyết chi bộ (hằng tháng)", typeName: "Nghị quyết", abbr: "NQ", templateRef: null, family: "form", supported: true },
+    { key: "bien-ban-sinh-hoat-chi-bo", docTypeId: "bien-ban-sinh-hoat-chi-bo", label: "Biên bản sinh hoạt chi bộ", typeName: "Biên bản", abbr: "BB", templateRef: null, family: "minutes", supported: true },
+    { key: "bao-cao-kiem-diem-tap-the", docTypeId: "bao-cao-kiem-diem-tap-the", label: "Báo cáo kiểm điểm tập thể (cuối năm)", typeName: "Báo cáo", abbr: "BC", templateRef: null, family: "form", supported: true },
+    { key: "ban-kiem-diem-ca-nhan", docTypeId: "ban-kiem-diem-ca-nhan", label: "Bản kiểm điểm cá nhân (đảng viên)", typeName: "Bản kiểm điểm", abbr: null, templateRef: null, family: "form", supported: true, noNumber: true },
   ],
 };
 

@@ -22,9 +22,9 @@ function titled(input: Head): { head: string; title: string } {
 }
 
 /** Biên bản: khối đầu, thể loại, các mục (Thời gian, Địa điểm...), khối ký nhiều bên (người ghi biên bản và chủ trì hội nghị). */
-export function assemblePartyMinutesBody(input: Head, stylePrefix: string, sign: MultiSignInput): string {
+export function assemblePartyMinutesBody(input: Head, stylePrefix: string, sign: MultiSignInput, fields?: readonly string[]): string {
   const { head, title } = titled(input);
-  return head + title + buildMinutesBody(stylePrefix) + buildMultiSignBlock(sign);
+  return head + title + buildMinutesBody(stylePrefix, fields) + buildMultiSignBlock(sign);
 }
 
 /** Văn bản liên cơ quan: hai khối ký cạnh nhau (tên cơ quan nối bằng gạch nối ở khối đầu và ký hiệu). */

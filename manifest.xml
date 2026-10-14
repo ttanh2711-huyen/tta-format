@@ -7,7 +7,7 @@
   xsi:type="TaskPaneApp">
 
   <Id>f47a9dbd-3e89-4ae6-a70d-f52558640c57</Id>
-  <Version>1.0.2.0</Version>
+  <Version>1.0.3.0</Version>
   <ProviderName>TTA-Format</ProviderName>
   <DefaultLocale>vi-VN</DefaultLocale>
   <DisplayName DefaultValue="TTA-Format"/>
