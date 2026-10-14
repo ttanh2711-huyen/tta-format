@@ -256,7 +256,7 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
     });
     const file = new Blob(["﻿", text], { type: "text/plain;charset=utf-8" });
     const link = create("a", { textContent: "Tải về .txt", href: URL.createObjectURL(file), download: "bao-cao-kiem-tra.txt" });
-    const docx = create("button", { type: "button", textContent: "Mở báo cáo trong Word (.docx)", id: "rp-docx" });
+    const docx = create("button", { type: "button", textContent: "Mở .docx trong Word", id: "rp-docx" });
     docx.addEventListener("click", () => {
       docx.disabled = true;
       const base64 = toBase64(buildReportDocx(issuesNow, { standardName: deps.currentStandard().name, checkedAt: new Date() }));
