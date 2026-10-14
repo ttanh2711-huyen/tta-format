@@ -1,6 +1,6 @@
 const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
-const { buildManifest, normalizeBase, officeVersion } = require("./make-manifest");
+const { buildManifest, normalizeBase, officeVersion, RELEASE_ID } = require("./make-manifest");
 
 const source = readFileSync(join(__dirname, "..", "manifest.xml"), "utf8");
 const BASE = "https://tenban.github.io/nd30-word-addin";
@@ -20,9 +20,11 @@ describe("manifest phát hành", () => {
     expect(officeVersion("2.0.1-rc.1")).toBe("2.0.1.0");
   });
 
-  it("giữ nguyên Id và các phần còn lại của manifest", () => {
+  it("bản phát hành có mã add-in riêng, khác bản chạy thử; giữ nguyên các phần còn lại của manifest", () => {
     const xml = buildManifest(source, BASE, "1.0.0");
-    expect(xml).toContain("<Id>f47a9dbd-3e89-4ae6-a70d-f52558640c57</Id>");
+    expect(xml).toContain(`<Id>${RELEASE_ID}</Id>`);
+    expect(source).toContain("<Id>f47a9dbd-3e89-4ae6-a70d-f52558640c57</Id>");
+    expect(RELEASE_ID).not.toBe("f47a9dbd-3e89-4ae6-a70d-f52558640c57");
     expect(xml).toContain("<Permissions>ReadWriteDocument</Permissions>");
     expect(xml.match(/<bt:Image /g)?.length).toBe(source.match(/<bt:Image /g)?.length);
   });

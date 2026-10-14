@@ -8,6 +8,11 @@ const { mkdirSync, readFileSync, writeFileSync } = require("node:fs");
 const { join, resolve } = require("node:path");
 
 const DEV_ORIGIN = "https://localhost:3000";
+/**
+ * Mã add-in của bản phát hành, khác mã của bản chạy thử (manifest.xml). Word gắn bộ nhớ đệm manifest và đăng ký chạy thử
+ * theo mã add-in; dùng chung mã thì bản phát hành bị lẫn với bản chạy thử trỏ localhost và báo "không tải được add-in".
+ */
+const RELEASE_ID = "1997e0af-fc75-4d8d-9618-b228e9049d9d";
 
 /** "1.0.0" thành "1.0.0.0"; Office yêu cầu đúng bốn số nguyên không âm. */
 function officeVersion(packageVersion) {
@@ -42,6 +47,7 @@ function buildManifest(sourceXml, baseUrl, packageVersion) {
   let xml = sourceXml.replace(/<AppDomain>[^<]*<\/AppDomain>/, `<AppDomain>${appDomain}</AppDomain>`);
   xml = xml.split(DEV_ORIGIN).join(base);
   xml = xml.replace(/<Version>[^<]*<\/Version>/, `<Version>${version}</Version>`);
+  xml = xml.replace(/<Id>[^<]*<\/Id>/, `<Id>${RELEASE_ID}</Id>`);
   if (xml.includes("localhost")) {
     throw new Error("Manifest phát hành vẫn còn localhost.");
   }
@@ -71,4 +77,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { buildManifest, officeVersion, normalizeBase };
+module.exports = { buildManifest, officeVersion, normalizeBase, RELEASE_ID };
