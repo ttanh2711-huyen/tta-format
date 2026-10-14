@@ -70,7 +70,7 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
   let snapshot: DocumentSnapshot | null = null;
 
   let entryKey = "cong-van";
-  const decision = { authority: "", basis: "", articles: "3", khoan: "0", diem: "0" };
+  const decision = { authority: "", basis: "", articles: "3", khoan: "2", diem: "0" };
   const regulation = { chapters: "3", articles: "2", sections: false, attached: "", khoan: "1", diem: "0" };
   const signed = { lines: "", recipients: "", articles: "5" };
   const congress = { name: "" };
@@ -130,7 +130,8 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
     const field =
       (el: HTMLInputElement | HTMLTextAreaElement, onInput: (v: string) => void): HTMLElement => {
         el.addEventListener("input", () => onInput(el.value));
-        return create("div", {}, el);
+        // Ô đã có sẵn giá trị thì chữ gợi ý (placeholder) không hiện; hiện thành nhãn để biết ô đó là gì.
+        return create("div", { className: "nw-field" }, create("label", { className: "nw-label", htmlFor: el.id, textContent: el.placeholder }), el);
       };
     if (entry?.family === "form") {
       const smallForm = findSmallForm(entry.docTypeId);
