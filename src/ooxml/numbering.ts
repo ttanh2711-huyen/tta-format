@@ -61,6 +61,22 @@ export function multilevelNumberingXml(levels: readonly LevelSpec[]): string {
 }
 
 /** Đoạn đánh số tự động ở cấp `levelId` của `levels`, gắn style `styleId`; `rawRuns` là các run đã dựng (ví dụ chỗ đánh dấu). */
+/** Chữ cái tiếng Việt dùng đánh Điểm, theo thứ tự (không có f, j, w, z và chữ có dấu phụ trừ "đ"). */
+export const VIETNAMESE_LETTERS = ["a", "b", "c", "d", "đ", "e", "g", "h", "i", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "x", "y"] as const;
+
+/** Nhãn Điểm thứ `index` (đếm từ 0): "a)", "b)", …, "đ)", "e)". */
+export function diemLabel(index: number): string {
+  return `${VIETNAMESE_LETTERS[index] ?? VIETNAMESE_LETTERS[VIETNAMESE_LETTERS.length - 1]})`;
+}
+
+/**
+ * Đoạn Điểm có nhãn gõ sẵn ("a) ", "đ) "…) thay vì đánh số tự động: danh sách tự động của Word chỉ có bảng chữ Latin
+ * (sau "d" là "e"), không có chữ "đ" như quy định.
+ */
+export function diemParagraph(styleId: string, index: number, text = ""): string {
+  return `<w:p><w:pPr><w:pStyle w:val="${styleId}"/></w:pPr><w:r><w:t xml:space="preserve">${escapeXml(`${diemLabel(index)} ${text}`)}</w:t></w:r></w:p>`;
+}
+
 export function numberedParagraph(levels: readonly LevelSpec[], levelId: string, styleId: string, text: string, rawRuns = ""): string {
   const index = levels.findIndex((spec) => spec.id === levelId);
   if (index < 0) throw new Error(`Không có cấp "${levelId}".`);

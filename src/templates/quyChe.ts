@@ -3,7 +3,7 @@ import { BODY_MARKER } from "../ooxml/documentAssembler";
 import { buildFooterBlock } from "../ooxml/footerBlock";
 import { mmToTwips } from "../ooxml/flatOpc";
 import { buildHeaderBlock, escapeXml } from "../ooxml/headerBlock";
-import { multilevelNumberingXml, numberedParagraph, regulationLevels, validateSubItems, type LevelSpec } from "../ooxml/numbering";
+import { diemParagraph, multilevelNumberingXml, numberedParagraph, regulationLevels, validateSubItems, type LevelSpec } from "../ooxml/numbering";
 import { styleIdFromName } from "../ooxml/styleXml";
 import { buildTitleBody } from "../ooxml/titleBlock";
 import type { FormatValues } from "../settings/formatOptions";
@@ -106,7 +106,7 @@ export function buildStructureBody(spec: StructureSpec): string {
       parts.push(numberedParagraph(spec.levels, "dieu", id(spec.styles.dieu), ""));
       for (let k = 0; k < (spec.khoanPerDieu ?? 1); k += 1) {
         parts.push(numberedParagraph(spec.levels, "khoan", id(spec.styles.khoan), ""));
-        for (let d = 0; d < (spec.diemPerKhoan ?? 0); d += 1) parts.push(numberedParagraph(spec.levels, "diem", id(spec.styles.diem), ""));
+        for (let d = 0; d < (spec.diemPerKhoan ?? 0); d += 1) parts.push(diemParagraph(id(spec.styles.diem), d));
       }
     }
   }

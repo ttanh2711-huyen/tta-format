@@ -116,10 +116,11 @@ describe("Khoản và Điểm dựng sẵn trong Điều", () => {
     expect(styles({ articleCount: 1, khoanPerDieu: 3 })).toEqual(["ND30NoiDung", "ND30Khoan", "ND30Khoan", "ND30Khoan"]);
   });
 
-  it("Khoản và Điểm đánh số tự động ở cấp 1 và 2; chữ đánh dấu vẫn chỉ ở Điều 1", () => {
-    const xml = buildDecisionBody({ ...base, articleCount: 1, khoanPerDieu: 1, diemPerKhoan: 1 });
+  it("Khoản đánh số tự động ở cấp 1; Điểm có nhãn gõ sẵn theo chữ cái tiếng Việt (a, b, c, d, đ…); chữ đánh dấu vẫn chỉ ở Điều 1", () => {
+    const xml = buildDecisionBody({ ...base, articleCount: 1, khoanPerDieu: 1, diemPerKhoan: 6 });
     expect(xml).toContain('<w:ilvl w:val="1"/>');
-    expect(xml).toContain('<w:ilvl w:val="2"/>');
+    expect(xml).not.toContain('<w:ilvl w:val="2"/>');
+    expect([...xml.matchAll(/<w:t xml:space="preserve">([a-zđ]\)) <\/w:t>/g)].map((m) => m[1])).toEqual(["a)", "b)", "c)", "d)", "đ)", "e)"]);
     expect(xml.split(BODY_MARKER)).toHaveLength(2);
   });
 

@@ -4,7 +4,7 @@ import { buildFooterBlock } from "../ooxml/footerBlock";
 import { mmToTwips } from "../ooxml/flatOpc";
 import { buildHeaderBlock, escapeXml } from "../ooxml/headerBlock";
 import { buildTitleBody } from "../ooxml/titleBlock";
-import { legalNumberingXml, legalParagraph, validateSubItems } from "../ooxml/numbering";
+import { diemParagraph, legalNumberingXml, legalParagraph, validateSubItems } from "../ooxml/numbering";
 import { styleIdFromName } from "../ooxml/styleXml";
 import type { FormatValues } from "../settings/formatOptions";
 import type { StandardProfile } from "../standards/types";
@@ -120,7 +120,7 @@ export function buildDecisionBody(input: DecisionInput): string {
     parts.push(i === 0 ? legalParagraph("dieu", body, indirect ? INDIRECT_LEAD : "", MARKER_RUN) : legalParagraph("dieu", body, ""));
     for (let k = 0; k < (input.khoanPerDieu ?? 0); k += 1) {
       parts.push(legalParagraph("khoan", khoanStyle, ""));
-      for (let d = 0; d < (input.diemPerKhoan ?? 0); d += 1) parts.push(legalParagraph("diem", diemStyle, ""));
+      for (let d = 0; d < (input.diemPerKhoan ?? 0); d += 1) parts.push(diemParagraph(diemStyle, d));
     }
   }
   return parts.join("");
