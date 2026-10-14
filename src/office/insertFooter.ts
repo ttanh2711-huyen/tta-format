@@ -1,4 +1,5 @@
 import { flatOpc } from "../ooxml/flatOpc";
+import { readDocDefaults } from "./docDefaults";
 import type { InsertResult } from "./insertHeader";
 
 /**
@@ -7,7 +8,8 @@ import type { InsertResult } from "./insertHeader";
  */
 export async function insertFooterBlock(bodyXml: string, expectedText: string): Promise<InsertResult> {
   return Word.run(async (context) => {
-    context.document.body.insertOoxml(flatOpc({ bodyXml }), "End");
+    const docDefaultsXml = await readDocDefaults(context);
+    context.document.body.insertOoxml(flatOpc({ bodyXml, docDefaultsXml }), "End");
     await context.sync();
     const tables = context.document.body.tables;
     tables.load("items");

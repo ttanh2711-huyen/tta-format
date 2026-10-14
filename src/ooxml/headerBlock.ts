@@ -27,10 +27,12 @@ export interface RecipientsRow {
 }
 
 const DASH_HANGING_MM = 4;
+/** Khoảng cách giữa nhãn "Kính gửi:" và danh sách nơi nhận. */
+const LABEL_GAP_MM = 3;
 
 export function recipientsRowXml(row: RecipientsRow, leftWidth: number, rightWidth: number): string {
   const blank = () => textParagraph("", row.sizePt);
-  const label = textParagraph(row.label, row.sizePt, { italic: row.italicLabel, align: "right", afterPt: 12 });
+  const label = textParagraph(row.label, row.sizePt, { italic: row.italicLabel, align: "right", afterPt: 12, rightIndentMm: LABEL_GAP_MM });
   const names = row.lines.map((line, index) =>
     textParagraph(line, row.sizePt, { align: "left", hangingMm: line.startsWith("- ") ? DASH_HANGING_MM : undefined, afterPt: index === row.lines.length - 1 ? 12 : 0 }),
   );
@@ -85,13 +87,16 @@ export interface TextStyle {
   /** Thụt treo (mm) cho dòng gạch đầu dòng, để các dòng xuống hàng thẳng hàng sau dấu gạch. */
   hangingMm?: number;
   shape?: string;
+  /** Thụt lề phải (mm), để chữ canh phải không dính vào cột bên cạnh. */
+  rightIndentMm?: number;
 }
 
 export function textParagraph(text: string, sizePt: number, style: TextStyle = {}): string {
   const half = sizePt * 2;
   const before = (style.beforePt ?? 0) * 20;
   const after = (style.afterPt ?? 0) * 20;
-  const indent = style.hangingMm ? `<w:ind w:left="${mmToTwips(style.hangingMm)}" w:hanging="${mmToTwips(style.hangingMm)}"/>` : "";
+  // Luôn ghi thụt dòng rõ ràng: style Normal của máy người dùng có thể thụt dòng đầu, làm cột hẹp bị xuống dòng.
+  const indent = style.hangingMm ? `<w:ind w:left="${mmToTwips(style.hangingMm)}" w:hanging="${mmToTwips(style.hangingMm)}"/>` : `<w:ind w:left="0" w:right="${style.rightIndentMm ? mmToTwips(style.rightIndentMm) : 0}" w:firstLine="0"/>`;
   return (
     `<w:p><w:pPr><w:spacing w:before="${before}" w:after="${after}" w:line="240" w:lineRule="auto"/>${indent}<w:jc w:val="${style.align ?? "center"}"/></w:pPr>` +
     `${style.shape ?? ""}<w:r><w:rPr>${FONT}${style.bold ? "<w:b/>" : ""}${style.italic ? "<w:i/>" : ""}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr><w:t xml:space="preserve">${escapeXml(text)}</w:t></w:r></w:p>`
@@ -130,8 +135,8 @@ export function buildHeaderBlock(input: HeaderBlockInput): string {
 
   const total = mmToTwips(input.textWidthMm);
   const mm = (twips: number) => (twips * 25.4) / 1440;
-  // Cột phải phải đủ rộng để "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM" nằm trên một dòng (tối đa 70% vùng chữ).
-  const quocHieuTwips = mmToTwips(textWidthMm(QUOC_HIEU, input.sizes.quocHieu, true) * 1.02 + 1);
+  // Cột phải phải đủ rộng để "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM" nằm trên một dòng (tối đa 70% vùng chữ). Ước tính khớp Word thật (đo 95 mm); cộng dư 1,5% và 1 mm.
+  const quocHieuTwips = mmToTwips(textWidthMm(QUOC_HIEU, input.sizes.quocHieu, true) * 1.015 + 1);
   const rightWidth = Math.min(Math.max(total - Math.round(total * LEFT_COLUMN_RATIO), quocHieuTwips), Math.round(total * 0.7));
   const leftWidth = total - rightWidth;
 
@@ -140,7 +145,8 @@ export function buildHeaderBlock(input: HeaderBlockInput): string {
   const issuerLine = Math.min(textWidthMm(issuer, input.sizes.issuer, true), mm(leftWidth)) * input.agencyLineRatio;
   const tieuNguLine = Math.min(textWidthMm(TIEU_NGU, input.sizes.tieuNgu, true), mm(rightWidth));
 
-  const issuerShape = lineShapeRun({ lengthMm: issuerLine, columnTwips: leftWidth, textSizePt: input.sizes.issuer, id: 101 });
+  const issuerLines = Math.max(1, Math.ceil(textWidthMm(issuer, input.sizes.issuer, true) / mm(leftWidth)));
+  const issuerShape = lineShapeRun({ lengthMm: issuerLine, columnTwips: leftWidth, textSizePt: input.sizes.issuer, textLines: issuerLines, id: 101 });
   const tieuNguShape = lineShapeRun({ lengthMm: tieuNguLine, columnTwips: rightWidth, textSizePt: input.sizes.tieuNgu, id: 102 });
   const left = [...parents.map((line) => textParagraph(line, input.sizes.parent)), textParagraph(issuer, input.sizes.issuer, { bold: true, shape: issuerShape })];
   const right = [textParagraph(QUOC_HIEU, input.sizes.quocHieu, { bold: true }), textParagraph(TIEU_NGU, input.sizes.tieuNgu, { bold: true, shape: tieuNguShape })];

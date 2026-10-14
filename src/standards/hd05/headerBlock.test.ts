@@ -73,7 +73,7 @@ describe("buildPartyHeaderBlock", () => {
 
   it("tên cơ quan dài xuống dòng trong ô, không thụt", () => {
     const [left] = tableOf({ ...base, issuerLines: ["Ban Chấp hành Đảng bộ Khối các cơ quan và doanh nghiệp tỉnh Đồng Tháp nhiệm kỳ 2025-2030"] }).rows[0];
-    expect(left[1].leftIndentMm).toBeUndefined();
+    expect(left[1].leftIndentMm ?? 0).toBe(0);
   });
 
   it("golden: hai dòng cấp trên, cơ quan ban hành một dòng", () => {

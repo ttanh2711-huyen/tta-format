@@ -22,13 +22,15 @@ export interface LineShapeInput {
   columnTwips: number;
   /** Cỡ chữ của dòng chữ mà đường kẻ nằm dưới (pt). */
   textSizePt: number;
+  /** Số dòng mà chữ của đoạn chiếm (mặc định 1); đường kẻ nằm dưới dòng cuối. */
+  textLines?: number;
   /** Mã hình, duy nhất trong tài liệu. */
   id: number;
 }
 
 /** Khoảng cách (pt) từ đỉnh đoạn tới đường kẻ. */
-export function lineOffsetPt(textSizePt: number): number {
-  return textSizePt * SINGLE_LINE_FACTOR + GAP_BELOW_TEXT_PT;
+export function lineOffsetPt(textSizePt: number, textLines = 1): number {
+  return textSizePt * SINGLE_LINE_FACTOR * Math.max(1, textLines) + GAP_BELOW_TEXT_PT;
 }
 
 /** Run chứa đường thẳng nổi; chèn vào đầu đoạn mà đường kẻ nằm dưới. */
@@ -36,7 +38,7 @@ export function lineShapeRun(input: LineShapeInput): string {
   const length = Math.round(input.lengthMm * EMU_PER_MM);
   const columnEmu = input.columnTwips * EMU_PER_TWIP;
   const left = Math.max(0, Math.round((columnEmu - length) / 2));
-  const top = Math.round(lineOffsetPt(input.textSizePt) * EMU_PER_PT);
+  const top = Math.round(lineOffsetPt(input.textSizePt, input.textLines) * EMU_PER_PT);
   const name = `Straight Connector ${input.id}`;
   return (
     `<w:r><w:rPr><w:noProof/></w:rPr><mc:AlternateContent><mc:Choice Requires="wps"><w:drawing>` +

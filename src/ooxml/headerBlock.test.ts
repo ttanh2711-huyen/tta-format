@@ -104,7 +104,7 @@ describe("buildHeaderBlock: đường kẻ (Insert > Shapes > Line)", () => {
 
   it("tên cơ quan dài tự xuống dòng, không thụt", () => {
     const [left] = table({ ...base, issuer: "Chi cục Thủy lợi và Phòng chống thiên tai thành phố Cần Thơ" }).rows[0];
-    expect(left[left.length - 1].leftIndentMm).toBeUndefined();
+    expect(left[left.length - 1].leftIndentMm ?? 0).toBe(0);
   });
 });
 
@@ -232,10 +232,27 @@ describe("buildHeaderBlock: hàng Kính gửi (nhãn canh phải ở ô trái, n
   it("một nơi nhận không có gạch đầu dòng, không thụt treo", () => {
     const [, right] = table({ ...withRow, recipientsRow: { label: "Kính gửi:", lines: ["Sở Nông nghiệp"], sizePt: 14 } }).rows[3];
     expect(right[1].text).toBe("Sở Nông nghiệp");
-    expect(right[1].leftIndentMm).toBeUndefined();
+    expect(right[1].leftIndentMm ?? 0).toBe(0);
   });
 
   it("golden", () => {
     expectMatchesGolden("header-block-recipients.xml", buildHeaderBlock(withRow).replace(/></g, ">\n<"));
+  });
+});
+
+describe("buildHeaderBlock: quốc hiệu một dòng, đường kẻ dưới tên cơ quan nhiều dòng", () => {
+  it("cột phải đủ rộng cho quốc hiệu ở mọi cỡ chữ thường dùng", () => {
+    for (const size of [12, 13, 14]) {
+      const t = table({ ...base, sizes: { ...base.sizes, quocHieu: size } });
+      expect(t.columnsMm[1]).toBeGreaterThan(textWidthMm("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", size, true));
+    }
+  });
+
+  it("đường kẻ nằm thấp hơn khi tên cơ quan phải xuống dòng", () => {
+    const offset = (issuer: string): number => {
+      const xml = buildHeaderBlock({ ...base, issuer });
+      return Number(/<wp:positionV[^>]*><wp:posOffset>(\d+)<\/wp:posOffset>/.exec(xml)![1]);
+    };
+    expect(offset("TÊN CƠ QUAN BAN HÀNH CỦA ĐƠN VỊ RẤT DÀI ĐỂ XUỐNG DÒNG")).toBeGreaterThan(offset("Chi cục"));
   });
 });

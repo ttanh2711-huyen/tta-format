@@ -1,4 +1,5 @@
 import { flatOpc } from "../ooxml/flatOpc";
+import { readDocDefaults } from "./docDefaults";
 
 /** Chèn khối đầu văn bản cần WordApi 1.3 (đọc bảng sau khi chèn để kiểm tra). */
 export function isInsertHeaderSupported(): boolean {
@@ -27,7 +28,8 @@ export interface InsertResult {
  */
 export async function insertHeaderBlock(bodyXml: string, expectedText: string): Promise<InsertResult> {
   return Word.run(async (context) => {
-    context.document.body.insertOoxml(flatOpc({ bodyXml: `${bodyXml}<w:p/>` }), "Start");
+    const docDefaultsXml = await readDocDefaults(context);
+    context.document.body.insertOoxml(flatOpc({ bodyXml: `${bodyXml}<w:p/>`, docDefaultsXml }), "Start");
     await context.sync();
     const tables = context.document.body.tables;
     tables.load("items");

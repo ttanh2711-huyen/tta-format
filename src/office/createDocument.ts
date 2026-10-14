@@ -1,5 +1,6 @@
 import { BODY_MARKER, type BodyParagraph } from "../ooxml/documentAssembler";
 import { flatOpc } from "../ooxml/flatOpc";
+import { readDocDefaults } from "./docDefaults";
 import { hasExactLineRule } from "../ooxml/facts";
 import { styleIdFromName } from "../ooxml/styleXml";
 import { pageNumberStep, pageStep, styleStep, type FixAllContext } from "../pipeline/steps";
@@ -32,7 +33,8 @@ const insertStep: PipelineStep<LetterContext> = {
     const exactPt = spec?.paragraph.lineSpacing.kind === "exactly" ? spec.paragraph.lineSpacing.pt : undefined;
     return Word.run(async (context) => {
       const body = context.document.body;
-      body.insertOoxml(flatOpc({ bodyXml: ctx.buildBody({ styleId: styleIdFromName(bodyStyle), exactPt }), numberingXml: ctx.numberingXml }), "Replace");
+      const docDefaultsXml = await readDocDefaults(context);
+      body.insertOoxml(flatOpc({ bodyXml: ctx.buildBody({ styleId: styleIdFromName(bodyStyle), exactPt }), numberingXml: ctx.numberingXml, docDefaultsXml }), "Replace");
       await context.sync();
 
       const paragraphs = body.paragraphs;

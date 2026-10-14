@@ -28,6 +28,7 @@
 <w:p>
 <w:pPr>
 <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+<w:ind w:left="0" w:right="0" w:firstLine="0"/>
 <w:jc w:val="center"/>
 </w:pPr>
 <w:r>
@@ -43,6 +44,7 @@
 <w:p>
 <w:pPr>
 <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+<w:ind w:left="0" w:right="0" w:firstLine="0"/>
 <w:jc w:val="center"/>
 </w:pPr>
 <w:r>
@@ -58,6 +60,7 @@
 <w:p>
 <w:pPr>
 <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+<w:ind w:left="0" w:right="0" w:firstLine="0"/>
 <w:jc w:val="center"/>
 </w:pPr>
 <w:r>
@@ -77,6 +80,7 @@
 <w:p>
 <w:pPr>
 <w:spacing w:before="0" w:after="0" w:line="240" w:lineRule="auto"/>
+<w:ind w:left="0" w:right="0" w:firstLine="0"/>
 <w:jc w:val="center"/>
 </w:pPr>
 <w:r>
