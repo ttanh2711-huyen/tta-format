@@ -1,4 +1,5 @@
 import { bodyPart, hasPageField, readJustification } from "./facts";
+import { extractDocDefaults } from "./flatOpc";
 
 /**
  * Đánh số trang (T11): trường PAGE canh giữa ở header mặc định, trang đầu khác biệt để trang 1 không hiện số.
@@ -32,7 +33,9 @@ export function readPageNumberState(headerXml: string): PageNumberState {
   const paragraphs = xml.match(/<w:p(?:\s[^>]*)?>[\s\S]*?<\/w:p>/g) ?? [];
   const holder = paragraphs.find((paragraph) => hasPageField(paragraph));
   const scope = holder ?? xml;
-  const size = /<w:sz\s+w:val="(\d+)"/.exec(scope)?.[1];
+  // Word bỏ cỡ chữ trực tiếp khi bằng cỡ mặc định của tài liệu (docDefaults), nên lấy cỡ mặc định thay cho "không rõ".
+  const defaults = extractDocDefaults(headerXml);
+  const size = /<w:sz\s+w:val="(\d+)"/.exec(scope)?.[1] ?? (defaults === undefined ? undefined : /<w:sz\s+w:val="(\d+)"/.exec(defaults)?.[1]);
   return {
     hasPage: holder !== undefined || hasPageField(xml),
     centered: readJustification(scope) === "center",

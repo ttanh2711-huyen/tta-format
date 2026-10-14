@@ -27,6 +27,13 @@ describe("readPageNumberState: đọc header Word trả về", () => {
     expect(readPageNumberState(pkg(pageNumberParagraph(14)))).toEqual({ hasPage: true, centered: true, sizePt: 14 });
   });
 
+  it("Word bỏ cỡ chữ trực tiếp khi bằng cỡ mặc định của tài liệu: lấy cỡ docDefaults", () => {
+    const noSize = `<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:fldSimple w:instr=" PAGE "><w:r><w:t>1</w:t></w:r></w:fldSimple></w:p>`;
+    const withDefault = (half: number) => pkg(noSize).replace('<w:sz w:val="22"/>', `<w:sz w:val="${half}"/>`);
+    expect(readPageNumberState(withDefault(28))).toEqual({ hasPage: true, centered: true, sizePt: 14 });
+    expect(readPageNumberState(`<w:hdr>${noSize}</w:hdr>`).sizePt).toBeUndefined();
+  });
+
   it("nhận ra header đã có số trang đúng cỡ và căn giữa", () => {
     expect(readPageNumberState(`<w:hdr>${pageNumberParagraph(14)}</w:hdr>`)).toEqual({ hasPage: true, centered: true, sizePt: 14 });
   });
