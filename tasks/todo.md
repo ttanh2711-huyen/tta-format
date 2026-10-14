@@ -704,6 +704,18 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 **Trạng thái:** mã và test xong. **Đã thử trong Word thật (14/10/2026)**: tạo công văn bỏ trống (chữ giả định), quyết định có Khoản/Điểm (đánh số 1., a), b) đúng, khởi động lại mỗi Điều), bản sao y, Sửa nhanh + Hoàn tác (lề sai thành đúng rồi về lại), mở báo cáo .docx. Lỗi tìm thấy và đã sửa: quốc hiệu xuống dòng (Word bỏ thụt dòng/giãn đoạn 0 khi gói thiếu docDefaults của tài liệu đích; nay gói mang docDefaults), báo "đọc lại chưa đúng" số trang (Word bỏ cỡ chữ bằng mặc định), ô số Điều/Khoản/Điểm thiếu nhãn. Thử tiếp (14/10/2026): công văn và báo cáo chuẩn Đảng tạo được; xoá dấu * rồi Sửa thì dấu * được chèn lại đúng chỗ; xoá dòng 5 gạch nối rồi Sửa thì dòng được chèn lại, căn giữa (cách sửa `insertAfter` chạy đúng trong Word thật). **Chưa thử trong Word**: sửa họ tên, học hàm, gạch đầu dòng nơi nhận (chỉ có test giả lập), các họ mẫu quy chế, biên bản, hợp đồng, nghị quyết Đảng. **Lưu ý khi tự thử**: Word WebView2 đổi phiên bản thì phải cấp lại quyền xem `msedgewebview2.exe` cho công cụ điều khiển máy, nếu không pane trông như treo ở "Loading". **Lưu ý**: bố cục bản sao y, trích sao, sao lục là đề xuất (Phụ lục III chỉ nêu chữ viết tắt), cần bạn duyệt; xem `docs/nd30-ambiguities.md` mục 17.
 **Kích cỡ:** L
 
+### T27: Bổ sung cho công tác hành chính và Đảng (đợt 1)
+**Mô tả:** theo đề xuất sau khi đưa bản phát hành lên GitHub Pages; làm theo thứ tự người dùng chọn 1 → 2 → 4 → 7.
+**Tiêu chí nghiệm thu:**
+- [x] (1) Kiểm tra viết hoa theo Phụ lục II NĐ 30: đầu câu, sau dấu kết câu, tên cơ quan cố định, tên văn bản và điều, khoản khi viện dẫn; sửa được (cách sửa `edits`, gộp nhiều chỗ trên một đoạn)
+- [x] (2) Điểm đánh chữ cái tiếng Việt a, b, c, d, đ, e… trong mẫu; kiểm tra và sửa nhãn Điểm sai thứ tự
+- [x] (4) Sổ đăng ký văn bản đi: tự ghi khi tạo văn bản, xem theo năm, xuất Excel (.xlsx), mở bảng trong Word, đi kèm xuất nhập cấu hình
+- [x] (7) Mẫu chi bộ: nghị quyết hằng tháng, biên bản sinh hoạt, báo cáo kiểm điểm tập thể, bản kiểm điểm cá nhân (không số)
+- [ ] Thủ công trong Word
+**Trạng thái:** mã và test xong (1227 test), phát hành v1.0.3. **Chưa thử trong Word**: cách sửa `edits` thay chữ nhiều chỗ, tải .xlsx trong pane (WebView2), mở bảng sổ trong Word, các mẫu chi bộ. Đề mục mẫu chi bộ là đề xuất, cần người dùng duyệt (`docs/hd05-ambiguities.md`).
+**Kích cỡ:** L
+
+### Checkpoint cuối
 - [ ] Mọi tiêu chí nghiệm thu đạt; ma trận kiểm thử hoàn thành
 - [ ] Bạn dùng thử trên văn bản thật và xác nhận
 - [x] Rà soát bảo mật và quyền riêng tư xong (14/10/2026: không `innerHTML`, `eval`, lời gọi mạng; quyền chỉ `ReadWriteDocument`; `npm audit --omit=dev` 0 lỗ hổng; nhập cấu hình kiểm kiểu từng trường; xuất .docx thoát ký tự XML)
