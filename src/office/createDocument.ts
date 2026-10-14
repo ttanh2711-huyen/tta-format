@@ -1,6 +1,8 @@
 import { BODY_MARKER, type BodyParagraph } from "../ooxml/documentAssembler";
 import { flatOpc } from "../ooxml/flatOpc";
 import { readDocDefaults } from "./docDefaults";
+import { installStyles } from "./installStyles";
+import { summarizeInstall } from "./styleVerify";
 import { hasExactLineRule } from "../ooxml/facts";
 import { styleIdFromName } from "../ooxml/styleXml";
 import { pageNumberStep, pageStep, styleStep, type FixAllContext } from "../pipeline/steps";
@@ -86,8 +88,18 @@ const insertStep: PipelineStep<LetterContext> = {
 };
 
 /** Các bước tạo văn bản: thiết lập trang, cài style, dựng nội dung, đánh số trang. */
+/** Như bước cài style thường, nhưng thân văn bản sắp được thay hẳn nên style Exactly đang có đoạn dùng vẫn được dựng lại. */
+const createStyleStep: PipelineStep<LetterContext> = {
+  ...styleStep,
+  async run(ctx) {
+    const result = await installStyles(ctx.specs, { bodyWillBeReplaced: true });
+    const summary = summarizeInstall(result.items);
+    return { status: "done", kind: summary.kind, text: [summary.text, ...result.notes].join(" ") };
+  },
+};
+
 export function letterSteps(): Array<PipelineStep<LetterContext>> {
-  return [pageStep, styleStep, insertStep, pageNumberStep];
+  return [pageStep, createStyleStep, insertStep, pageNumberStep];
 }
 
 export function createLetter(ctx: LetterContext, onProgress?: (event: ProgressEvent) => void): Promise<PipelineReport> {

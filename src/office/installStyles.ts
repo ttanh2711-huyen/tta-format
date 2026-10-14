@@ -1,6 +1,9 @@
-import { readLineRule, styleDefinition, styleIdByName } from "../ooxml/facts";
+import { flatOpc } from "../ooxml/flatOpc";
+import { paragraphStyleIds, readLineRule, styleDefinition, styleIdByName } from "../ooxml/facts";
 import { toStyleImportJson } from "../ooxml/styleJson";
 import type { StyleSpec } from "../ooxml/styleSpecs";
+import { styleIdFromName, toStyleDefinitionsXml } from "../ooxml/styleXml";
+import { planExactRepair } from "./exactStyles";
 import { findStyleMismatches, type StyleInstallItem, type StyleReadback } from "./styleVerify";
 
 export interface InstallResult {
@@ -14,7 +17,13 @@ export function isStyleInstallSupported(): boolean {
   return Office.context.requirements.isSetSupported("WordApi", "1.6");
 }
 
-async function readStyles(context: Word.RequestContext, specs: readonly StyleSpec[]): Promise<Map<string, StyleReadback>> {
+interface StylesRead {
+  readbacks: Map<string, StyleReadback>;
+  /** Mã style đang có đoạn dùng trong thân văn bản. */
+  usedIds: Set<string>;
+}
+
+async function readStyles(context: Word.RequestContext, specs: readonly StyleSpec[]): Promise<StylesRead> {
   const styles = specs.map((spec) => {
     const style = context.document.getStyles().getByNameOrNullObject(spec.name);
     style.load("isNullObject");
@@ -51,7 +60,30 @@ async function readStyles(context: Word.RequestContext, specs: readonly StyleSpe
       lineRule: definition ? readLineRule(definition) : undefined,
     });
   }
-  return result;
+  return { readbacks: result, usedIds: new Set(paragraphStyleIds(ooxml.value)) };
+}
+
+/**
+ * Cài style bằng OOXML để có giãn dòng Exactly. Word chỉ nhập style mà nội dung chèn có dùng, nên chèn mỗi style một
+ * đoạn mẫu ở đầu thân rồi xoá đoạn mẫu đi; style ở lại trong tài liệu.
+ */
+async function insertStylesFromOoxml(context: Word.RequestContext, specs: readonly StyleSpec[]): Promise<void> {
+  const body = context.document.body;
+  const paragraphs = body.paragraphs;
+  paragraphs.load("items");
+  await context.sync();
+  const countBefore = paragraphs.items.length;
+  const bodyXml = specs.map((spec) => `<w:p><w:pPr><w:pStyle w:val="${styleIdFromName(spec.name)}"/></w:pPr><w:r><w:t>.</w:t></w:r></w:p>`).join("");
+  const inserted = paragraphs.getFirst().getRange("Start").insertOoxml(flatOpc({ bodyXml, stylesXml: toStyleDefinitionsXml(specs) }), "Replace");
+  await context.sync();
+  inserted.delete();
+  await context.sync();
+  // Đoạn mẫu không được để lại đoạn rỗng thừa ở đầu tài liệu.
+  const after = body.paragraphs;
+  after.load("items/text");
+  await context.sync();
+  for (let extra = after.items.length - countBefore, i = 0; extra > 0 && i < after.items.length && after.items[i].text.trim() === ""; extra -= 1, i += 1) after.items[i].delete();
+  await context.sync();
 }
 
 /**
@@ -62,24 +94,39 @@ async function readStyles(context: Word.RequestContext, specs: readonly StyleSpe
  * Giới hạn đã biết (spike T3): importStylesFromJson cho ra quy tắc giãn dòng atLeast, không phải
  * Exactly; kết quả đọc lại sẽ báo rõ điều đó cho các style của chuẩn Đảng.
  */
-export async function installStyles(specs: readonly StyleSpec[]): Promise<InstallResult> {
+export async function installStyles(specs: readonly StyleSpec[], options: { bodyWillBeReplaced?: boolean } = {}): Promise<InstallResult> {
   if (!isStyleInstallSupported()) {
     throw new Error("Cài style cần Microsoft 365 bản 2308 trở lên (WordApi 1.6). Hãy cập nhật Word rồi mở lại.");
   }
   return Word.run(async (context) => {
     const notes: string[] = [];
-    const before = await readStyles(context, specs);
+    const { readbacks: before, usedIds } = await readStyles(context, specs);
     const canOverwrite = Office.context.requirements.isSetSupported("WordApiDesktop", "1.1");
-    const json = toStyleImportJson(specs);
-    if (canOverwrite) {
-      context.document.importStylesFromJson(json, "Overwrite");
-    } else {
-      context.document.importStylesFromJson(json);
-      notes.push("Thiếu WordApiDesktop 1.1 nên style đã có không được cập nhật, chỉ thêm style mới.");
+    // Giãn dòng Exactly chỉ đặt được khi cài mới bằng OOXML: xoá style sai quy tắc rồi dựng lại (xem exactStyles).
+    const repair = planExactRepair(specs, before, usedIds, options.bodyWillBeReplaced === true);
+    if (repair.rebuild.length > 0) {
+      if (options.bodyWillBeReplaced) context.document.body.clear();
+      for (const spec of repair.rebuild) {
+        if (before.get(spec.name)?.exists) context.document.getStyles().getByNameOrNullObject(spec.name).delete();
+      }
+      await context.sync();
     }
-    await context.sync();
+    if (repair.blocked.length > 0) notes.push(`Không đặt được giãn dòng Exactly cho ${repair.blocked.map((spec) => spec.name).join(", ")} vì đang có đoạn dùng; bấm "Định dạng nội dung" để đặt trực tiếp.`);
+    const rebuilding = new Set(repair.rebuild.map((spec) => spec.name));
+    const importable = specs.filter((spec) => !rebuilding.has(spec.name));
+    if (importable.length > 0) {
+      const json = toStyleImportJson(importable);
+      if (canOverwrite) {
+        context.document.importStylesFromJson(json, "Overwrite");
+      } else {
+        context.document.importStylesFromJson(json);
+        notes.push("Thiếu WordApiDesktop 1.1 nên style đã có không được cập nhật, chỉ thêm style mới.");
+      }
+      await context.sync();
+    }
+    if (repair.rebuild.length > 0) await insertStylesFromOoxml(context, repair.rebuild);
 
-    const after = await readStyles(context, specs);
+    const { readbacks: after } = await readStyles(context, specs);
     const items: StyleInstallItem[] = specs.map((spec) => {
       const existedBefore = before.get(spec.name)?.exists === true;
       const readback = after.get(spec.name);
@@ -104,14 +151,15 @@ const KNOWN_LIMIT = /^quy tắc giãn dòng/;
 
 export async function planStyleInstall(specs: readonly StyleSpec[]): Promise<StyleInstallPlan> {
   return Word.run(async (context) => {
-    const current = await readStyles(context, specs);
+    const { readbacks: current, usedIds } = await readStyles(context, specs);
+    const rebuilding = new Set(planExactRepair(specs, current, usedIds, false).rebuild.map((spec) => spec.name));
     let toCreate = 0;
     let toUpdate = 0;
     for (const spec of specs) {
       const readback = current.get(spec.name);
       if (!readback || !readback.exists) {
         toCreate += 1;
-      } else if (findStyleMismatches(spec, readback).some((m) => !KNOWN_LIMIT.test(m))) {
+      } else if (rebuilding.has(spec.name) || findStyleMismatches(spec, readback).some((m) => !KNOWN_LIMIT.test(m))) {
         toUpdate += 1;
       }
     }
