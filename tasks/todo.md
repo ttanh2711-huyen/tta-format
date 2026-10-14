@@ -701,7 +701,7 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 - [x] Xuất báo cáo kiểm tra ra .docx (zip không nén tự dựng, mở bằng `createDocument`), vẫn giữ .txt
 - [x] Bản sao y, trích sao, sao lục (SY, TrS, SL) cho chuẩn Chính quyền, họ mẫu giấy tờ
 - [ ] Thủ công trong Word
-**Trạng thái:** mã và test xong. **Chưa kiểm trong Word thật**: tạo văn bản từng họ mẫu, numbering Khoản/Điểm, cách sửa `insertAfter`, Sửa nhanh, mở .docx bằng `createDocument`. **Lưu ý**: bố cục bản sao y, trích sao, sao lục là đề xuất (Phụ lục III chỉ nêu chữ viết tắt), cần bạn duyệt; xem `docs/nd30-ambiguities.md` mục 17.
+**Trạng thái:** mã và test xong. **Đã thử trong Word thật (14/10/2026)**: tạo công văn bỏ trống (chữ giả định), quyết định có Khoản/Điểm (đánh số 1., a), b) đúng, khởi động lại mỗi Điều), bản sao y, Sửa nhanh + Hoàn tác (lề sai thành đúng rồi về lại), mở báo cáo .docx. Lỗi tìm thấy và đã sửa: quốc hiệu xuống dòng (Word bỏ thụt dòng/giãn đoạn 0 khi gói thiếu docDefaults của tài liệu đích; nay gói mang docDefaults), báo "đọc lại chưa đúng" số trang (Word bỏ cỡ chữ bằng mặc định), ô số Điều/Khoản/Điểm thiếu nhãn. **Chưa thử trong Word**: cách sửa `insertAfter` (dấu *, 5 gạch nối) và sửa họ tên, học hàm, gạch đầu dòng (chỉ có test giả lập), các họ mẫu khác (quy chế, biên bản, hợp đồng, chuẩn Đảng). **Lưu ý**: bố cục bản sao y, trích sao, sao lục là đề xuất (Phụ lục III chỉ nêu chữ viết tắt), cần bạn duyệt; xem `docs/nd30-ambiguities.md` mục 17.
 **Kích cỡ:** L
 
 - [ ] Mọi tiêu chí nghiệm thu đạt; ma trận kiểm thử hoàn thành
