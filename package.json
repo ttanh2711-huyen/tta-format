@@ -1,6 +1,6 @@
 {
   "name": "nd30-word-addin",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "Add-in Word định dạng văn bản theo Nghị định 30/2020/NĐ-CP và Hướng dẫn 05-HD/VPTW",
   "config": {
@@ -12,14 +12,15 @@
     "build:dev": "webpack --mode development",
     "build:release": "webpack --mode production --env release",
     "manifest:release": "node tools/make-manifest.js",
+    "manifest:root": "node tools/make-manifest.js https://ttanh2711-huyen.github.io/tta-format .",
     "check:release": "node tools/check-release.js",
     "dev-server": "webpack serve --mode development",
-    "start": "office-addin-debugging start manifest.xml desktop",
-    "stop": "office-addin-debugging stop manifest.xml",
+    "start": "office-addin-debugging start manifest.dev.xml desktop",
+    "stop": "office-addin-debugging stop manifest.dev.xml",
     "test": "jest",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "validate": "office-addin-manifest validate manifest.xml"
+    "validate": "office-addin-manifest validate manifest.dev.xml && office-addin-manifest validate manifest.xml"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

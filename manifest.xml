@@ -7,16 +7,16 @@
   xsi:type="TaskPaneApp">
 
   <Id>f47a9dbd-3e89-4ae6-a70d-f52558640c57</Id>
-  <Version>1.0.0.0</Version>
+  <Version>1.0.2.0</Version>
   <ProviderName>TTA-Format</ProviderName>
   <DefaultLocale>vi-VN</DefaultLocale>
   <DisplayName DefaultValue="TTA-Format"/>
   <Description DefaultValue="Soạn thảo và chuẩn hoá văn bản theo Nghị định 30/2020/NĐ-CP và Hướng dẫn 05-HD/VPTW."/>
-  <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png"/>
-  <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-80.png"/>
-  <SupportUrl DefaultValue="https://localhost:3000/taskpane.html"/>
+  <IconUrl DefaultValue="https://ttanh2711-huyen.github.io/tta-format/assets/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://ttanh2711-huyen.github.io/tta-format/assets/icon-80.png"/>
+  <SupportUrl DefaultValue="https://ttanh2711-huyen.github.io/tta-format/taskpane.html"/>
   <AppDomains>
-    <AppDomain>https://localhost:3000</AppDomain>
+    <AppDomain>https://ttanh2711-huyen.github.io</AppDomain>
   </AppDomains>
 
   <Hosts>
@@ -24,7 +24,7 @@
   </Hosts>
 
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://localhost:3000/taskpane.html"/>
+    <SourceLocation DefaultValue="https://ttanh2711-huyen.github.io/tta-format/taskpane.html"/>
   </DefaultSettings>
 
   <Permissions>ReadWriteDocument</Permissions>
@@ -68,12 +68,12 @@
 
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/assets/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/assets/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://ttanh2711-huyen.github.io/tta-format/assets/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://ttanh2711-huyen.github.io/tta-format/assets/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://ttanh2711-huyen.github.io/tta-format/assets/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://ttanh2711-huyen.github.io/tta-format/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="Tab.Label" DefaultValue="TTA-Format"/>

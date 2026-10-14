@@ -1,5 +1,5 @@
 /**
- * Tạo manifest phát hành (T24) từ manifest.xml dùng khi phát triển: thay địa chỉ https://localhost:3000 bằng địa chỉ
+ * Tạo manifest phát hành (T24) từ manifest.dev.xml dùng khi phát triển: thay địa chỉ https://localhost:3000 bằng địa chỉ
  * trang phát hành, đặt số phiên bản theo package.json (dạng bốn số của Office), ghi ra thư mục dist.
  *
  * Dùng: node tools/make-manifest.js <địa chỉ gốc, ví dụ https://tenban.github.io/nd30-word-addin> [thư mục ra, mặc định dist]
@@ -9,10 +9,13 @@ const { join, resolve } = require("node:path");
 
 const DEV_ORIGIN = "https://localhost:3000";
 /**
- * Mã add-in của bản phát hành, khác mã của bản chạy thử (manifest.xml). Word gắn bộ nhớ đệm manifest và đăng ký chạy thử
- * theo mã add-in; dùng chung mã thì bản phát hành bị lẫn với bản chạy thử trỏ localhost và báo "không tải được add-in".
+ * Mã add-in của bản phát hành; bản chạy thử (manifest.dev.xml) có mã riêng. Mã này là mã Word trên máy người dùng đã nhớ
+ * từ đầu (Word đọc lại manifest.xml ở gốc repo theo mã này), nên manifest.xml ở gốc repo là bản phát hành, trỏ GitHub Pages.
  */
-const RELEASE_ID = "1997e0af-fc75-4d8d-9618-b228e9049d9d";
+const RELEASE_ID = "f47a9dbd-3e89-4ae6-a70d-f52558640c57";
+/** Địa chỉ phát hành mặc định (GitHub Pages của repo). */
+const PAGES_BASE = "https://ttanh2711-huyen.github.io/tta-format";
+const DEV_MANIFEST = "manifest.dev.xml";
 
 /** "1.0.0" thành "1.0.0.0"; Office yêu cầu đúng bốn số nguyên không âm. */
 function officeVersion(packageVersion) {
@@ -41,12 +44,13 @@ function buildManifest(sourceXml, baseUrl, packageVersion) {
   const base = normalizeBase(baseUrl);
   const version = officeVersion(packageVersion);
   if (!sourceXml.includes(DEV_ORIGIN)) {
-    throw new Error(`manifest.xml không chứa ${DEV_ORIGIN} để thay.`);
+    throw new Error(`${DEV_MANIFEST} không chứa ${DEV_ORIGIN} để thay.`);
   }
   const appDomain = new URL(base).origin;
   let xml = sourceXml.replace(/<AppDomain>[^<]*<\/AppDomain>/, `<AppDomain>${appDomain}</AppDomain>`);
   xml = xml.split(DEV_ORIGIN).join(base);
   xml = xml.replace(/<Version>[^<]*<\/Version>/, `<Version>${version}</Version>`);
+  xml = xml.replace(/<DisplayName DefaultValue="[^"]*"\/>/, '<DisplayName DefaultValue="TTA-Format"/>');
   xml = xml.replace(/<Id>[^<]*<\/Id>/, `<Id>${RELEASE_ID}</Id>`);
   if (xml.includes("localhost")) {
     throw new Error("Manifest phát hành vẫn còn localhost.");
@@ -55,13 +59,10 @@ function buildManifest(sourceXml, baseUrl, packageVersion) {
 }
 
 function main(argv) {
-  const [baseUrl, outDir = "dist"] = argv;
-  if (!baseUrl) {
-    throw new Error("Thiếu địa chỉ phát hành. Dùng: node tools/make-manifest.js https://tenban.github.io/nd30-word-addin");
-  }
+  const [baseUrl = PAGES_BASE, outDir = "dist"] = argv;
   const root = resolve(__dirname, "..");
   const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-  const xml = buildManifest(readFileSync(join(root, "manifest.xml"), "utf8"), baseUrl, pkg.version);
+  const xml = buildManifest(readFileSync(join(root, DEV_MANIFEST), "utf8"), baseUrl, pkg.version);
   const out = resolve(root, outDir);
   mkdirSync(out, { recursive: true });
   writeFileSync(join(out, "manifest.xml"), xml, "utf8");
@@ -77,4 +78,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { buildManifest, officeVersion, normalizeBase, RELEASE_ID };
+module.exports = { buildManifest, officeVersion, normalizeBase, RELEASE_ID, PAGES_BASE, DEV_MANIFEST };

@@ -31,7 +31,7 @@ Cần Node.js 24 trở lên.
 ```bash
 npm ci                 # cài thư viện
 npm run dev-server     # máy chủ phát triển https://localhost:3000
-npm start              # mở Word với add-in từ manifest.xml
+npm start              # mở Word với bản thử từ manifest.dev.xml (manifest.xml là bản phát hành)
 npm run typecheck && npm run lint && npm test
 npm run build          # bản build thường
 ```

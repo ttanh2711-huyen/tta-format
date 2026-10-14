@@ -1,8 +1,10 @@
 const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
-const { buildManifest, normalizeBase, officeVersion, RELEASE_ID } = require("./make-manifest");
+const { buildManifest, normalizeBase, officeVersion, RELEASE_ID, PAGES_BASE } = require("./make-manifest");
 
-const source = readFileSync(join(__dirname, "..", "manifest.xml"), "utf8");
+const source = readFileSync(join(__dirname, "..", "manifest.dev.xml"), "utf8");
+const rootManifest = readFileSync(join(__dirname, "..", "manifest.xml"), "utf8");
+const pkgVersion = JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf8")).version;
 const BASE = "https://tenban.github.io/nd30-word-addin";
 
 describe("manifest phát hành", () => {
@@ -23,8 +25,8 @@ describe("manifest phát hành", () => {
   it("bản phát hành có mã add-in riêng, khác bản chạy thử; giữ nguyên các phần còn lại của manifest", () => {
     const xml = buildManifest(source, BASE, "1.0.0");
     expect(xml).toContain(`<Id>${RELEASE_ID}</Id>`);
-    expect(source).toContain("<Id>f47a9dbd-3e89-4ae6-a70d-f52558640c57</Id>");
-    expect(RELEASE_ID).not.toBe("f47a9dbd-3e89-4ae6-a70d-f52558640c57");
+    expect(RELEASE_ID).toBe("f47a9dbd-3e89-4ae6-a70d-f52558640c57");
+    expect(source).not.toContain(RELEASE_ID);
     expect(xml).toContain("<Permissions>ReadWriteDocument</Permissions>");
     expect(xml.match(/<bt:Image /g)?.length).toBe(source.match(/<bt:Image /g)?.length);
   });
@@ -48,9 +50,14 @@ describe("manifest phát hành", () => {
   });
 
   it("tên add-in là TTA-Format ở tên hiển thị, thẻ ribbon và nút", () => {
-    expect(source).toContain('<DisplayName DefaultValue="TTA-Format"/>');
+    expect(source).toContain('<DisplayName DefaultValue="TTA-Format (bản thử)"/>');
+    expect(buildManifest(source, BASE, "1.0.0")).toContain('<DisplayName DefaultValue="TTA-Format"/>');
     expect(source).toContain('<bt:String id="Tab.Label" DefaultValue="TTA-Format"/>');
     expect(source).toContain('<bt:String id="Button.Label" DefaultValue="Mở TTA-Format"/>');
     expect(source).not.toMatch(/NĐ 30 -|Mở NĐ 30|DefaultValue="NĐ 30"/);
+  });
+
+  it("manifest.xml ở gốc repo là bản phát hành trỏ GitHub Pages, đúng phiên bản hiện tại (chạy npm run manifest:root sau khi đổi phiên bản)", () => {
+    expect(rootManifest).toBe(buildManifest(source, PAGES_BASE, pkgVersion));
   });
 });
