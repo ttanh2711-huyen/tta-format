@@ -706,5 +706,5 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 
 - [ ] Mọi tiêu chí nghiệm thu đạt; ma trận kiểm thử hoàn thành
 - [ ] Bạn dùng thử trên văn bản thật và xác nhận
-- [ ] Rà soát bảo mật và quyền riêng tư xong
+- [x] Rà soát bảo mật và quyền riêng tư xong (14/10/2026: không `innerHTML`, `eval`, lời gọi mạng; quyền chỉ `ReadWriteDocument`; `npm audit --omit=dev` 0 lỗ hổng; nhập cấu hình kiểm kiểu từng trường; xuất .docx thoát ký tự XML)
 - [ ] Sẵn sàng dùng hằng ngày
