@@ -21,7 +21,7 @@ Kích cỡ: XS 1 file, S 1–2, M 3–5. Không task nào quá 5 file.
 **Kiểm chứng:**
 - [x] `npm test` xanh; `npm run build` thành công; `npm run lint` và `npm run typecheck` sạch
 - [ ] Thủ công: mở Word, bấm nút, thấy văn bản chèn đúng dấu
-**Trạng thái:** mã và hạ tầng xong, 2 commit (`3485b1b`, `06ef12d`) tại `C:\Users\The Anh\dev\nd30-word-addin`. Còn 3 mục thủ công trong Word chờ xác nhận.
+**Trạng thái:** mã và hạ tầng xong, 2 commit (`3485b1b`, `06ef12d`). Còn 3 mục thủ công trong Word chờ xác nhận.
 **Phụ thuộc:** không
 **File dự kiến:** `package.json`, `manifest.xml`, `src/taskpane/*`, `jest.config.js`, `tsconfig.json`
 **Kích cỡ:** M
