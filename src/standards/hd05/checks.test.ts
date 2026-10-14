@@ -140,6 +140,12 @@ describe("tiêu đề và cơ quan ban hành", () => {
     expect(run(doc(left()))).toEqual([]);
   });
 
+  it("ô trái trống (mất cả tên cơ quan và dấu *) bị báo, không có cách sửa tự động", () => {
+    const issues = run(doc([{ text: TITLE, col: 1, bold: true, sizePt: 15 }, { text: "", col: 0 }]));
+    expect(ids(issues)).toEqual(["header.coQuanBanHanh.missing"]);
+    expect(issues[0].fix).toBeUndefined();
+  });
+
   it("thiếu dấu *", () => {
     const d = doc(left().filter((p) => p.text !== "*"));
     expect(ids(run(d))).toEqual(["header.star"]);

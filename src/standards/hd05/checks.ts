@@ -111,7 +111,15 @@ function checkHeader(doc: CheckDocument, profile: StandardProfile): Issue[] {
   for (const [key, cell] of cells) {
     if (!cell.some((p) => matchTitle(p.resolved.text, profile.identifyingTitle) !== "no")) continue;
     const left = siblingCell(cells, key);
-    if (!left) continue;
+    if (!left) {
+      // Ô trái có nhưng trống: thiếu cả tên cơ quan ban hành lẫn dấu *.
+      const [table, row, col] = key.split(":").map(Number);
+      const empty = doc.paragraphs.find((p) => p.table && p.table.index === table && p.table.row === row && p.table.col !== col);
+      if (empty) {
+        issues.push(paragraphIssue(empty, { ruleId: "header.coQuanBanHanh.missing", severity: "error", message: `Ô bên trái tiêu đề trống: phải có tên cơ quan ban hành (in hoa, đậm) và dấu ${HEADER_MARKS.agencyStar} ngay dưới.`, reference: issuer.source }));
+      }
+      continue;
+    }
     const star = left.findIndex((p) => p.resolved.text.trim() === HEADER_MARKS.agencyStar);
     if (star < 0) {
       issues.push(paragraphIssue(left[0], { ruleId: "header.star", severity: "warning", message: `Dưới tên cơ quan ban hành phải có dấu ${HEADER_MARKS.agencyStar}.`, reference: HEADER_MARKS.source, fix: { kind: "insertAfter", index: left[left.length - 1].index, text: HEADER_MARKS.agencyStar, align: "center", sizePt: issuer.sizePt.min, label: `Thêm dấu ${HEADER_MARKS.agencyStar} dưới tên cơ quan` } }));

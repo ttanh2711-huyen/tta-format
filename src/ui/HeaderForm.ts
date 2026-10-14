@@ -57,7 +57,7 @@ export interface HeaderPreset {
   abbr?: string | null;
 }
 
-export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): { refresh: () => void; collect: (options?: { assumeDefaults?: boolean }) => HeaderCollect; preset: (preset: HeaderPreset) => void; applyAgency: (agency: AgencyProfile) => void; commitNumber: () => void } {
+export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): { refresh: () => void; collect: (options?: { assumeDefaults?: boolean; fallbackTypeAbbr?: string }) => HeaderCollect; preset: (preset: HeaderPreset) => void; applyAgency: (agency: AgencyProfile) => void; commitNumber: () => void } {
   let hasParent = false;
   let parentLines = [""];
   let issuer = "";
@@ -83,7 +83,7 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
   }
 
   /** Đọc và kiểm tra các ô đang nhập; dùng chung cho nút "Chèn khối đầu" và trình tạo công văn. */
-  function collect(options: { assumeDefaults?: boolean } = {}): HeaderCollect {
+  function collect(options: { assumeDefaults?: boolean; fallbackTypeAbbr?: string } = {}): HeaderCollect {
     const profile = deps.currentStandard();
     const party = profile.headerKind === "dang";
     const { draft, assumed } = assumeHeader(
@@ -103,7 +103,7 @@ export function mountHeaderForm(container: HTMLElement, deps: HeaderFormDeps): {
     );
     let numberRow: { so: string; placeDate: string } | undefined;
     if (withNumberRow) {
-      const so = soText(profile, { so: toInt(number.so), typeAbbr: number.typeAbbr.trim() === "" ? null : number.typeAbbr.trim(), agencyAbbrs: draft.agencyAbbrs.split("-").map((part) => part.trim()).filter((part) => part !== "") });
+      const so = soText(profile, { so: toInt(number.so), typeAbbr: number.typeAbbr.trim() !== "" ? number.typeAbbr.trim() : options.assumeDefaults === true && options.fallbackTypeAbbr ? options.fallbackTypeAbbr : null, agencyAbbrs: draft.agencyAbbrs.split("-").map((part) => part.trim()).filter((part) => part !== "") });
       const date = placeDateText({ place: draft.place, day: toInt(number.day), month: toInt(number.month), year: toInt(number.year) });
       if (!so.ok || !date.ok) return { ok: false, error: [so.ok ? "" : so.error, date.ok ? "" : date.error].filter(Boolean).join(" ") };
       numberRow = { so: so.text, placeDate: date.text };

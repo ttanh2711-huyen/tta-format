@@ -27,7 +27,7 @@ export interface NewDocWizardDeps {
   values: () => FormatValues;
   styleSpecs: () => StyleSpec[];
   behavior: () => { localFormatting: "keep" | "clear" };
-  collectHeader: (options?: { assumeDefaults?: boolean }) => HeaderCollect;
+  collectHeader: (options?: { assumeDefaults?: boolean; fallbackTypeAbbr?: string }) => HeaderCollect;
   /** Đặt sẵn Khối đầu theo loại văn bản được chọn. */
   presetHeader?: (preset: HeaderPreset) => void;
   collectFooter: (options?: { assumeDefaults?: boolean }) => FooterCollect;
@@ -231,11 +231,11 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
   async function onCreate(confirmed: boolean): Promise<void> {
     if (busy) return;
     // Mục còn trống được điền chữ giả định để vẫn tạo được văn bản theo mẫu (T26); người dùng sửa ngay trong văn bản.
-    const header = deps.collectHeader({ assumeDefaults: true });
-    const footer = deps.collectFooter({ assumeDefaults: true });
-    const assumedAll: string[] = [...(header.ok ? header.assumed : []), ...(footer.ok ? footer.assumed : [])];
     const profile = deps.currentStandard();
     const entry = findTemplate(profile, entryKey);
+    const header = deps.collectHeader({ assumeDefaults: true, fallbackTypeAbbr: entry?.abbr ?? undefined });
+    const footer = deps.collectFooter({ assumeDefaults: true });
+    const assumedAll: string[] = [...(header.ok ? header.assumed : []), ...(footer.ok ? footer.assumed : [])];
     // Biên bản và văn bản nhiều bên ký có khối ký riêng nên không dùng Khối cuối.
     const multiSign = entry?.family === "minutes" || entry?.family === "agreement" || entry?.family === "joint";
     if (!header.ok || (!multiSign && !footer.ok)) {
