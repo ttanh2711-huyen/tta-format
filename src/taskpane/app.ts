@@ -94,6 +94,8 @@ export function mountApp(): void {
   const sampleEl = element("div", "sample");
 
   acc(panelStandard, { id: "ws.tao", title: "Tạo văn bản mới", hint: "Chọn loại văn bản rồi tạo", defaultOpen: true }, wizardEl);
+  // Ngay dưới "Tạo văn bản mới" để dễ thấy (issue #2): tạo mẫu từ văn bản đang mở.
+  acc(panelStandard, { id: "ws.mau", title: "Biến văn bản này thành mẫu", hint: "Thay các vùng thay đổi bằng ô điền, lưu thành .dotx", defaultOpen: true }, templateEl);
   acc(panelStandard, { id: "ws.khoi-dau", title: "Khối đầu văn bản", hint: "Cơ quan, số và ký hiệu, ngày tháng, trích yếu", defaultOpen: true }, headerEl);
   acc(panelStandard, { id: "ws.khoi-cuoi", title: "Khối cuối văn bản", hint: "Nơi nhận, quyền hạn, chức vụ, họ tên người ký" }, footerEl);
   // Một mục "Định dạng" gom ba bảng chồng nhau (T26): tuỳ chọn nhanh, trang/style/số trang, định dạng nội dung.
@@ -119,7 +121,6 @@ export function mountApp(): void {
   panelCheck.append(chipsEl);
   acc(panelCheck, { id: "ck.kiem-tra", title: "Kiểm tra văn bản", hint: "Liệt kê lỗi thể thức, sửa từng lỗi hoặc sửa tất cả", defaultOpen: true }, reportEl);
   acc(panelCheck, { id: "ck.chinh-toan-bo", title: "Chỉnh toàn bộ", hint: "Áp dụng nhiều bước có xem trước và khôi phục" }, fixAllEl);
-  acc(panelCheck, { id: "ck.mau", title: "Biến văn bản này thành mẫu", hint: "Thay các vùng thay đổi bằng ô điền, lưu thành .dotx" }, templateEl);
 
   acc(panelAgency, { id: "ag.ho-so", title: "Hồ sơ cơ quan và cấu hình", hint: "Thêm, sửa, đặt mặc định; xuất và nhập cấu hình", defaultOpen: true }, settingsEl);
   const environment = mountEnvironmentPanel(environmentEl);

@@ -1,6 +1,6 @@
 {
   "name": "nd30-word-addin",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "private": true,
   "description": "Add-in Word định dạng văn bản theo Nghị định 30/2020/NĐ-CP và Hướng dẫn 05-HD/VPTW",
   "config": {
