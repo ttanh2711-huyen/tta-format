@@ -86,7 +86,7 @@ export function mountPageSetupPanel(container: HTMLElement, deps: PageSetupDeps)
     });
   } else {
     styleButton.disabled = true;
-    showStyle("error", "Cài style cần Microsoft 365 bản 2308 trở lên (WordApi 1.6). Hãy cập nhật Word rồi mở lại.");
+    showStyle("error", "Cài style cần Word 2016 trở lên. Hãy cập nhật Word rồi mở lại.");
   }
 
   async function onPageNumber(): Promise<void> {
@@ -115,12 +115,12 @@ export function mountPageSetupPanel(container: HTMLElement, deps: PageSetupDeps)
   } else {
     numberButton.disabled = true;
     numberMessage.className = "error";
-    numberMessage.textContent = "Đánh số trang cần Microsoft 365 bản 2507 trở lên (WordApiDesktop 1.3).";
+    numberMessage.textContent = "Đánh số trang cần Word 2016 trở lên.";
   }
 
   if (!isPageSetupSupported()) {
     apply.disabled = true;
-    show("error", "Tính năng này cần Microsoft 365 bản 2507 trở lên (WordApiDesktop 1.3). Hãy cập nhật Word rồi mở lại.");
+    show("error", "Thiết lập trang bằng add-in cần Microsoft 365 bản 2507 trở lên (WordApiDesktop 1.3); bản Word khác hãy đặt trong Layout > Margins hoặc dùng bộ macro VBA. Hãy cập nhật Word rồi mở lại.");
     return;
   }
 

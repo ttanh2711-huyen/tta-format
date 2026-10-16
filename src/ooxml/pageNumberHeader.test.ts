@@ -1,5 +1,5 @@
 import { hasPageField, readJustification } from "./facts";
-import { pageNumberParagraph, planPageNumbers, readPageNumberState, type SectionState } from "./pageNumberHeader";
+import { pageNumberParagraph, pageNumberParagraphHideFirst, planPageNumbers, readPageNumberState, type SectionState } from "./pageNumberHeader";
 
 const opts = { sizePt: 14, hideFirst: true };
 
@@ -102,5 +102,16 @@ describe("planPageNumbers", () => {
 
   it("phần sau không xoá header trang đầu của mình", () => {
     expect(planPageNumbers([state(), state({ first: { hasPage: true, empty: false } })], opts)[1].clearFirst).toBe(false);
+  });
+});
+
+describe("số trang ẩn ở trang 1 bằng trường IF (Word không có API trang đầu khác biệt)", () => {
+  it("có trường PAGE, căn giữa, đúng cỡ chữ; có điều kiện PAGE > 1", () => {
+    const xml = pageNumberParagraphHideFirst(14);
+    expect(readPageNumberState(`<w:hdr>${xml}</w:hdr>`)).toEqual({ hasPage: true, centered: true, sizePt: 14 });
+    expect(xml).toContain(" IF ");
+    expect(xml).toContain("&gt; 1");
+    expect(xml.match(/w:fldCharType="begin"/g)).toHaveLength(3);
+    expect(xml.match(/w:fldCharType="end"/g)).toHaveLength(3);
   });
 });

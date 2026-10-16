@@ -1,6 +1,6 @@
 # Hướng dẫn cài đặt và sử dụng
 
-Add-in "TTA-Format" chạy trong Microsoft Word 365 trên Windows. Add-in định dạng văn bản theo hai chuẩn: Chính quyền (Nghị định 30/2020/NĐ-CP) và Đảng (Hướng dẫn 05-HD/VPTW). Cần Microsoft 365 bản **2507 trở lên** để dùng đủ tính năng (mục "Môi trường Word" ở đầu add-in cho biết tính năng nào chạy được trên máy bạn).
+Add-in "TTA-Format" chạy trong Microsoft Word 365 trên Windows. Add-in định dạng văn bản theo hai chuẩn: Chính quyền (Nghị định 30/2020/NĐ-CP) và Đảng (Hướng dẫn 05-HD/VPTW). Dùng đủ tính năng trên Microsoft 365 bản **2507 trở lên**. Word 2016, 2019, 2021 bản mua đứt cũng chạy được hầu hết tính năng (style chỉ thêm mới, không cập nhật style đã có; số trang ẩn ở trang 1 bằng trường IF), riêng **thiết lập trang** phải đặt tay trong Layout > Margins. Word 2007, 2010, 2013 không chạy được add-in: dùng **bộ macro VBA** trong thư mục `vba/` của repo. Mục "Môi trường Word" ở đầu add-in cho biết tính năng nào chạy được trên máy bạn.
 
 Add-in là các file tĩnh đặt trên GitHub Pages; máy bạn chỉ cần file **manifest.xml** để Word biết nạp add-in từ đâu. Không cài thêm phần mềm nào khác.
 

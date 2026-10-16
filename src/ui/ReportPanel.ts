@@ -308,7 +308,7 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
     check.addEventListener("click", () => void onCheck());
   } else {
     check.disabled = quick.disabled = true;
-    show("error", "Kiểm tra văn bản cần Microsoft 365 bản 2507 trở lên (WordApiDesktop 1.3).");
+    show("error", "Kiểm tra văn bản cần Word 2016 trở lên.");
   }
 
   return {

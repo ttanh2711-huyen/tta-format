@@ -58,7 +58,7 @@ export const styleStep: PipelineStep<FixAllContext> = {
   label: "2. Cài bộ style",
   order: 20,
   async plan(ctx) {
-    if (!isStyleInstallSupported()) return unsupported("Word chưa hỗ trợ cài style (cần Microsoft 365 bản 2308 trở lên).");
+    if (!isStyleInstallSupported()) return unsupported("Word chưa hỗ trợ cài style (cần Word 2016 trở lên).");
     return stylePlan(await planStyleInstall(ctx.specs), ctx.profile.styles.prefix);
   },
   async run(ctx) {
@@ -78,7 +78,7 @@ const bodyStep: PipelineStep<FixAllContext> = {
   label: "3. Định dạng phần thân",
   order: 30,
   async plan(ctx) {
-    if (!isFormatBodySupported()) return unsupported("Word chưa hỗ trợ (cần Microsoft 365 bản 2308 trở lên).");
+    if (!isFormatBodySupported()) return unsupported("Word chưa hỗ trợ (cần Word 2016 trở lên).");
     return bodyPlan(await previewFormatBody(ctx.profile, "document"), exactPtOf(ctx), `${ctx.profile.styles.prefix}NoiDung`);
   },
   async run(ctx) {
@@ -92,7 +92,7 @@ const tableStep: PipelineStep<FixAllContext> = {
   label: "4. Định dạng bảng biểu",
   order: 40,
   async plan(ctx) {
-    if (!isFormatBodySupported()) return unsupported("Word chưa hỗ trợ (cần Microsoft 365 bản 2308 trở lên).");
+    if (!isFormatBodySupported()) return unsupported("Word chưa hỗ trợ (cần Word 2016 trở lên).");
     return tablePlan(await surveyTables(ctx.profile), `${ctx.profile.styles.prefix}BangDuLieu`);
   },
   async run(ctx) {
@@ -117,7 +117,7 @@ export const headerFooterStep: PipelineStep<FixAllContext> = {
   order: 45,
   async plan(ctx) {
     if (headerFooterRules(ctx.profile).length === 0) return unsupported(`chưa có bộ kiểm tra khối đầu, khối cuối cho chuẩn ${ctx.profile.name}.`);
-    if (!isPageNumberSupported()) return unsupported("Word chưa hỗ trợ đọc tài liệu (cần Microsoft 365 bản 2507 trở lên).");
+    if (!isReadDocumentSupported()) return unsupported("Word chưa hỗ trợ đọc tài liệu.");
     const issues = await headerFooterIssues(ctx.profile);
     const formatFixes = issues.filter((issue) => issue.fix && isFormatOnly(issue.fix));
     const manual = issues.length - formatFixes.length;
@@ -150,7 +150,7 @@ export const pageNumberStep: PipelineStep<FixAllContext> = {
   label: "6. Đánh số trang",
   order: 50,
   async plan(ctx) {
-    if (!isPageNumberSupported()) return unsupported("Word chưa hỗ trợ đánh số trang (cần Microsoft 365 bản 2507 trở lên).");
+    if (!isPageNumberSupported()) return unsupported("Word chưa hỗ trợ đánh số trang (cần Word 2016 trở lên).");
     const options = pageNumberOptions(ctx);
     return pageNumberPlan(await planPageNumberDocument(options), options);
   },
@@ -178,7 +178,7 @@ export const remainingFixStep: PipelineStep<FixAllContext> = {
   label: "7. Sửa các lỗi còn lại",
   order: 60,
   async plan(ctx) {
-    if (!isReadDocumentSupported()) return unsupported("Word chưa hỗ trợ đọc tài liệu (cần Microsoft 365 bản 2507 trở lên).");
+    if (!isReadDocumentSupported()) return unsupported("Word chưa hỗ trợ đọc tài liệu (cần Word 2016 trở lên).");
     const issues = await checkDocument(ctx.profile);
     const plan = planFixes(issues, remainingFixOptions(ctx));
     if (plan.fixes.length === 0) {

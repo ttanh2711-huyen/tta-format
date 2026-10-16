@@ -15,7 +15,7 @@ export interface ApplyOutcome {
 /** Áp lề, khổ giấy, khoảng cách header/footer, lề đối xứng theo tuỳ chọn hiện hành lên mọi phần. */
 export async function applyPageOptions(values: FormatValues): Promise<ApplyOutcome> {
   if (!isPageSetupSupported()) {
-    return { kind: "error", text: "Thiết lập trang cần Microsoft 365 bản 2507 trở lên (WordApiDesktop 1.3)." };
+    return { kind: "error", text: "Thiết lập trang bằng add-in cần Microsoft 365 bản 2507 trở lên (WordApiDesktop 1.3); bản Word khác hãy đặt trong Layout > Margins hoặc dùng bộ macro VBA." };
   }
   const settings = toPageSetupSettings(values);
   const result = await applyPageSetup(settings);
@@ -37,7 +37,7 @@ async function contentStyleExists(name: string): Promise<boolean> {
  */
 export async function applyStyleOptions(profile: StandardProfile, values: FormatValues): Promise<ApplyOutcome> {
   if (!isStyleInstallSupported()) {
-    return { kind: "error", text: "Cập nhật style cần Microsoft 365 bản 2308 trở lên (WordApi 1.6)." };
+    return { kind: "error", text: "Cập nhật style cần Word 2016 trở lên." };
   }
   if (!(await contentStyleExists(`${profile.styles.prefix}NoiDung`))) {
     return { kind: "ok", text: "Đã ghi nhận. Tài liệu chưa có bộ style, giá trị sẽ có hiệu lực khi bấm \"Cài bộ style\"." };

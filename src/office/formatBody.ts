@@ -25,10 +25,12 @@ export interface FormatBodyResult {
 
 const CHUNK = 50;
 
-/** Cùng mức với cài style (WordApi 1.6, Microsoft 365 bản 2308 trở lên). */
+/** Đọc style, danh sách, bảng của đoạn cần WordApi 1.3 (Word 2016 trở lên). Kiểm tra style đã có dùng API style (WordApi 1.6). */
 export function isFormatBodySupported(): boolean {
-  return Office.context.requirements.isSetSupported("WordApi", "1.6");
+  return Office.context.requirements.isSetSupported("WordApi", "1.3");
 }
+
+const hasStyleApi = (): boolean => Office.context.requirements.isSetSupported("WordApi", "1.6");
 
 function chunks<T>(items: readonly T[], size: number): T[][] {
   const out: T[][] = [];
@@ -96,7 +98,7 @@ async function selfTestExact(context: Word.RequestContext, pt: number): Promise<
  */
 export async function formatBody(profile: StandardProfile, options: FormatBodyOptions): Promise<FormatBodyResult> {
   if (!isFormatBodySupported()) {
-    throw new Error("Định dạng nội dung cần Microsoft 365 bản 2308 trở lên (WordApi 1.6). Hãy cập nhật Word rồi mở lại.");
+    throw new Error("Định dạng nội dung cần Word 2016 trở lên. Hãy cập nhật Word rồi mở lại.");
   }
   const specs = options.specs ?? buildStyleSpecs(profile);
   const styleName = `${profile.styles.prefix}NoiDung`;
@@ -107,12 +109,12 @@ export async function formatBody(profile: StandardProfile, options: FormatBodyOp
   const exactPt = spec.paragraph.lineSpacing.kind === "exactly" ? spec.paragraph.lineSpacing.pt : undefined;
 
   return Word.run(async (context) => {
-    const style = context.document.getStyles().getByNameOrNullObject(styleName);
-    style.load("isNullObject");
+    const style = hasStyleApi() ? context.document.getStyles().getByNameOrNullObject(styleName) : undefined;
+    style?.load("isNullObject");
     const scope = options.scope === "selection" ? context.document.getSelection().paragraphs : context.document.body.paragraphs;
     scope.load("items/text,items/style,items/styleBuiltIn,items/tableNestingLevel,items/isListItem");
     await context.sync();
-    if (style.isNullObject) {
+    if (style?.isNullObject) {
       throw new Error(`Chưa có style ${styleName}. Bấm "Cài bộ style" trước.`);
     }
 
@@ -126,7 +128,7 @@ export async function formatBody(profile: StandardProfile, options: FormatBodyOp
     const plan = planFormatBody(infos, profile);
     const targets = plan.targets.map((index) => scope.items[index]);
     // Style theo vai trò đoạn (issue #3); style nào chưa có trong tài liệu thì dùng style nội dung.
-    const wanted = [...new Set(plan.roles.map((r) => r.styleName))].filter((name) => name !== styleName);
+    const wanted = hasStyleApi() ? [...new Set(plan.roles.map((r) => r.styleName))].filter((name) => name !== styleName) : [];
     const roleStyles = wanted.map((name) => {
       const item = context.document.getStyles().getByNameOrNullObject(name);
       item.load("isNullObject");
@@ -206,8 +208,8 @@ export interface FormatBodyPreview {
 export async function previewFormatBody(profile: StandardProfile, scope: FormatScope): Promise<FormatBodyPreview> {
   const styleName = `${profile.styles.prefix}NoiDung`;
   return Word.run(async (context) => {
-    const style = context.document.getStyles().getByNameOrNullObject(styleName);
-    style.load("isNullObject");
+    const style = hasStyleApi() ? context.document.getStyles().getByNameOrNullObject(styleName) : undefined;
+    style?.load("isNullObject");
     const paragraphs = scope === "selection" ? context.document.getSelection().paragraphs : context.document.body.paragraphs;
     paragraphs.load("items/text,items/style,items/styleBuiltIn,items/tableNestingLevel,items/isListItem");
     await context.sync();
@@ -221,6 +223,6 @@ export async function previewFormatBody(profile: StandardProfile, scope: FormatS
       })),
       profile,
     );
-    return { targets: plan.targets.length, skipped: plan.skipped, styleMissing: style.isNullObject };
+    return { targets: plan.targets.length, skipped: plan.skipped, styleMissing: style?.isNullObject ?? false };
   });
 }

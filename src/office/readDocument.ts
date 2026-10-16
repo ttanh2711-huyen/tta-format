@@ -1,5 +1,6 @@
 import { buildCheckDocument } from "../checker/documentModel";
 import type { CheckDocument, PageInfo } from "../checker/types";
+import { pagesFromOoxml } from "../ooxml/sectionInfo";
 import { parseStyleTable } from "../ooxml/styleResolver";
 import { extractDocModel } from "../rules/docModel";
 
@@ -8,9 +9,9 @@ const PAGE_PROPS = "pageWidth,pageHeight,topMargin,bottomMargin,leftMargin,right
 
 const mm = (pt: number): number => Math.round((pt / PT_PER_MM) * 100) / 100;
 
-/** Đọc tài liệu cho bộ kiểm tra cần WordApiDesktop 1.3 (thiết lập trang từng phần). */
+/** Đọc tài liệu cho bộ kiểm tra cần WordApi 1.1 (OOXML của thân); có WordApiDesktop 1.3 thì đọc thiết lập trang qua API. */
 export function isReadDocumentSupported(): boolean {
-  return Office.context.requirements.isSetSupported("WordApiDesktop", "1.3");
+  return Office.context.requirements.isSetSupported("WordApi", "1.1");
 }
 
 /**
@@ -20,6 +21,12 @@ export function isReadDocumentSupported(): boolean {
 export async function readCheckDocument(): Promise<CheckDocument> {
   return Word.run(async (context) => {
     const ooxml = context.document.body.getOoxml();
+    if (!Office.context.requirements.isSetSupported("WordApiDesktop", "1.3")) {
+      // Word 2016, 2019, 2021: không có API thiết lập trang, đọc từ các thẻ w:sectPr của OOXML.
+      await context.sync();
+      const stylesXml = /<w:styles\b[\s\S]*<\/w:styles>/.exec(ooxml.value)?.[0] ?? "";
+      return buildCheckDocument(extractDocModel({ documentXml: ooxml.value }), parseStyleTable(stylesXml), pagesFromOoxml(ooxml.value));
+    }
     const sections = context.document.sections;
     sections.load("items");
     await context.sync();

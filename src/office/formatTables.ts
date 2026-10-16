@@ -20,8 +20,9 @@ interface SurveyedTable {
 
 async function survey(context: Word.RequestContext, profile: StandardProfile): Promise<{ tables: SurveyedTable[]; result: TableSurvey }> {
   const styleName = `${profile.styles.prefix}BangDuLieu`;
-  const style = context.document.getStyles().getByNameOrNullObject(styleName);
-  style.load("isNullObject");
+  // Kiểm tra style đã có dùng API style (WordApi 1.6); Word 2016, 2019, 2021 thì coi như đã cài ở bước trước.
+  const style = Office.context.requirements.isSetSupported("WordApi", "1.6") ? context.document.getStyles().getByNameOrNullObject(styleName) : undefined;
+  style?.load("isNullObject");
   const tables = context.document.body.tables;
   tables.load("items/nestingLevel");
   await context.sync();
@@ -52,7 +53,7 @@ async function survey(context: Word.RequestContext, profile: StandardProfile): P
       layout: kinds.filter((kind) => kind === "layout").length,
       nested: kinds.filter((kind) => kind === "nested").length,
       paragraphsToStyle: surveyed.reduce((sum, item) => sum + item.paragraphs.length, 0),
-      styleMissing: style.isNullObject,
+      styleMissing: style?.isNullObject ?? false,
     },
   };
 }

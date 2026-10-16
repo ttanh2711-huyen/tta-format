@@ -1,9 +1,39 @@
 import { flatOpc } from "../ooxml/flatOpc";
-import { describePageNumberState, isPlanEmpty, pageNumberParagraph, planPageNumbers, readPageNumberState, type PageNumberOptions, type SectionPlan, type SectionState } from "../ooxml/pageNumberHeader";
+import { describePageNumberState, isPlanEmpty, pageNumberParagraph, pageNumberParagraphHideFirst, planPageNumbers, readPageNumberState, type PageNumberOptions, type SectionPlan, type SectionState } from "../ooxml/pageNumberHeader";
 
-/** Đánh số trang cần WordApiDesktop 1.3 (đặt "trang đầu khác biệt" qua PageSetup). */
+/**
+ * Đánh số trang: có WordApiDesktop 1.3 (Microsoft 365) thì đặt "trang đầu khác biệt" qua PageSetup; Word 2016, 2019,
+ * 2021 thì ghi header bằng trường IF ẩn số ở trang 1 (chỉ cần WordApi 1.3).
+ */
 export function isPageNumberSupported(): boolean {
-  return Office.context.requirements.isSetSupported("WordApiDesktop", "1.3");
+  return Office.context.requirements.isSetSupported("WordApi", "1.3");
+}
+
+const hasPageSetupApi = (): boolean => Office.context.requirements.isSetSupported("WordApiDesktop", "1.3");
+
+/** Header đã có số trang đúng cỡ, căn giữa thì không ghi lại. */
+const primaryOk = (state: SectionState["primary"], options: PageNumberOptions): boolean => state.hasPage && state.centered && state.sizePt === options.sizePt;
+
+async function applyLegacy(context: Word.RequestContext, options: PageNumberOptions): Promise<PageNumberResult> {
+  const collection = context.document.sections;
+  collection.load("items");
+  await context.sync();
+  const headers = collection.items.map((section) => section.getHeader("Primary"));
+  const reads = headers.map((header) => header.getOoxml());
+  await context.sync();
+  let changed = 0;
+  headers.forEach((header, index) => {
+    if (primaryOk(readPageNumberState(reads[index].value), options)) return;
+    // Chỉ phần đầu ẩn số ở trang 1, như bản Microsoft 365.
+    const paragraph = index === 0 && options.hideFirst ? pageNumberParagraphHideFirst(options.sizePt) : pageNumberParagraph(options.sizePt);
+    header.insertOoxml(flatOpc({ bodyXml: paragraph }), "Replace");
+    changed += 1;
+  });
+  await context.sync();
+  const after = headers.map((header) => header.getOoxml());
+  await context.sync();
+  const problems = after.flatMap((read, index) => (primaryOk(readPageNumberState(read.value), options) ? [] : [`${headers.length > 1 ? `Phần ${index + 1}: ` : ""}header chưa có số trang đúng (đọc lại: ${describePageNumberState(readPageNumberState(read.value))})`]));
+  return { sections: headers.length, changed, problems };
 }
 
 async function readStates(context: Word.RequestContext): Promise<{ sections: Word.Section[]; states: SectionState[] }> {
@@ -31,6 +61,16 @@ async function readStates(context: Word.RequestContext): Promise<{ sections: Wor
 
 /** Chỉ đọc: việc cần làm cho từng phần của tài liệu. */
 export async function planPageNumberDocument(options: PageNumberOptions): Promise<SectionPlan[]> {
+  if (!hasPageSetupApi()) {
+    return Word.run(async (context) => {
+      const collection = context.document.sections;
+      collection.load("items");
+      await context.sync();
+      const reads = collection.items.map((section) => section.getHeader("Primary").getOoxml());
+      await context.sync();
+      return reads.map((read) => ({ setDifferentFirst: undefined, writePrimary: !primaryOk(readPageNumberState(read.value), options), clearFirst: false }));
+    });
+  }
   return Word.run(async (context) => planPageNumbers((await readStates(context)).states, options));
 }
 
@@ -44,6 +84,7 @@ export interface PageNumberResult {
 
 /** Áp dụng đánh số trang cho mọi phần rồi đọc lại để kiểm tra. Idempotent. */
 export async function applyPageNumbers(options: PageNumberOptions): Promise<PageNumberResult> {
+  if (!hasPageSetupApi()) return Word.run((context) => applyLegacy(context, options));
   return Word.run(async (context) => {
     const { sections, states } = await readStates(context);
     const plan = planPageNumbers(states, options);

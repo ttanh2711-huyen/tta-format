@@ -44,7 +44,7 @@ export function mountFormatPanel(container: HTMLElement, deps: FormatPanelDeps):
 
   if (!isFormatBodySupported()) {
     apply.disabled = true;
-    show("error", "Định dạng nội dung cần Microsoft 365 bản 2308 trở lên (WordApi 1.6). Hãy cập nhật Word rồi mở lại.");
+    show("error", "Định dạng nội dung cần Word 2016 trở lên. Hãy cập nhật Word rồi mở lại.");
     return;
   }
 

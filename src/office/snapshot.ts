@@ -19,6 +19,8 @@ export interface SectionSnapshot {
   footerDistance: number;
   mirrorMargins: boolean;
   differentFirst: boolean;
+  /** Có chụp thiết lập trang không (Word 2016, 2019, 2021 không có API thiết lập trang thì chỉ chụp thân và header). */
+  pageSaved: boolean;
   /** OOXML của header mặc định và header trang đầu (bước Đánh số trang sửa hai header này). */
   primaryHeaderOoxml: string;
   firstHeaderOoxml: string;
@@ -38,10 +40,11 @@ export async function takeSnapshot(): Promise<DocumentSnapshot> {
     const body = context.document.body;
     const ooxml = body.getOoxml();
     body.load("text");
+    const pageApi = Office.context.requirements.isSetSupported("WordApiDesktop", "1.3");
     const sections = context.document.sections;
     sections.load("items");
     await context.sync();
-    for (const section of sections.items) section.pageSetup.load(PAGE_PROPS);
+    if (pageApi) for (const section of sections.items) section.pageSetup.load(PAGE_PROPS);
     const headers = sections.items.map((section) => ({ primary: section.getHeader("Primary").getOoxml(), first: section.getHeader("FirstPage").getOoxml() }));
     await context.sync();
     return {
@@ -49,8 +52,12 @@ export async function takeSnapshot(): Promise<DocumentSnapshot> {
       bodyOoxml: ooxml.value,
       bodyText: body.text,
       sections: sections.items.map((section, index) => {
+        if (!pageApi) {
+          return { pageWidth: 0, pageHeight: 0, topMargin: 0, bottomMargin: 0, leftMargin: 0, rightMargin: 0, headerDistance: 0, footerDistance: 0, mirrorMargins: false, differentFirst: false, pageSaved: false, primaryHeaderOoxml: headers[index].primary.value, firstHeaderOoxml: headers[index].first.value };
+        }
         const ps = section.pageSetup;
         return {
+          pageSaved: true,
           pageWidth: ps.pageWidth,
           pageHeight: ps.pageHeight,
           topMargin: ps.topMargin,
@@ -87,7 +94,7 @@ export async function restoreSnapshot(snapshot: DocumentSnapshot): Promise<Resto
     const count = Math.min(sections.items.length, snapshot.sections.length);
     for (let index = 0; index < count; index += 1) {
       const saved = snapshot.sections[index];
-      sections.items[index].pageSetup.set({
+      if (saved.pageSaved) sections.items[index].pageSetup.set({
         topMargin: saved.topMargin,
         bottomMargin: saved.bottomMargin,
         leftMargin: saved.leftMargin,
@@ -106,13 +113,15 @@ export async function restoreSnapshot(snapshot: DocumentSnapshot): Promise<Resto
     }
 
     body.load("text");
-    for (const section of sections.items) section.pageSetup.load(PAGE_PROPS);
+    const pageSaved = snapshot.sections.some((saved) => saved.pageSaved);
+    if (pageSaved) for (const section of sections.items) section.pageSetup.load(PAGE_PROPS);
     await context.sync();
     if (body.text.trim() !== snapshot.bodyText.trim()) {
       problems.push("chữ trong thân văn bản không khớp bản chụp");
     }
     for (let index = 0; index < count; index += 1) {
       const saved = snapshot.sections[index];
+      if (!saved.pageSaved) continue;
       const ps = sections.items[index].pageSetup;
       const off = (["topMargin", "bottomMargin", "leftMargin", "rightMargin"] as const).some((key) => Math.abs(ps[key] - saved[key]) > 0.5);
       if (off) problems.push(`lề của phần ${index + 1} chưa về đúng giá trị cũ`);

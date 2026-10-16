@@ -22,6 +22,7 @@ export interface Feature {
   optional?: readonly Requirement[];
 }
 
+const WORD_API_1_1: Requirement = { set: "WordApi", version: "1.1", build: "2016 trở lên" };
 const WORD_API_1_3: Requirement = { set: "WordApi", version: "1.3", build: "2016 trở lên" };
 const WORD_API_1_6: Requirement = { set: "WordApi", version: "1.6", build: "2308" };
 const DESKTOP_1_1: Requirement = { set: "WordApiDesktop", version: "1.1", build: "2408" };
@@ -30,12 +31,12 @@ const DESKTOP_1_4: Requirement = { set: "WordApiDesktop", version: "1.4", build:
 
 export const FEATURES: readonly Feature[] = [
   { id: "pageSetup", label: "Thiết lập trang (khổ giấy, lề, khoảng cách header)", requires: [DESKTOP_1_3] },
-  { id: "styles", label: "Cài bộ style của chuẩn", requires: [WORD_API_1_6], optional: [DESKTOP_1_1] },
-  { id: "formatBody", label: "Định dạng phần thân và bảng biểu", requires: [WORD_API_1_6], optional: [DESKTOP_1_3, DESKTOP_1_4] },
-  { id: "pageNumber", label: "Đánh số trang", requires: [DESKTOP_1_3] },
-  { id: "check", label: "Kiểm tra văn bản và sửa lỗi", requires: [DESKTOP_1_3] },
+  { id: "styles", label: "Cài bộ style của chuẩn", requires: [WORD_API_1_3], optional: [WORD_API_1_6, DESKTOP_1_1] },
+  { id: "formatBody", label: "Định dạng phần thân và bảng biểu", requires: [WORD_API_1_3], optional: [WORD_API_1_6, DESKTOP_1_3, DESKTOP_1_4] },
+  { id: "pageNumber", label: "Đánh số trang", requires: [WORD_API_1_3], optional: [DESKTOP_1_3] },
+  { id: "check", label: "Kiểm tra văn bản và sửa lỗi", requires: [WORD_API_1_1], optional: [DESKTOP_1_3] },
   { id: "insertBlocks", label: "Chèn khối đầu, khối cuối, dấu khẩn, phụ lục", requires: [WORD_API_1_3] },
-  { id: "createDocument", label: "Tạo văn bản mới", requires: [WORD_API_1_6, DESKTOP_1_3] },
+  { id: "createDocument", label: "Tạo văn bản mới", requires: [WORD_API_1_3], optional: [WORD_API_1_6, DESKTOP_1_3] },
   { id: "documentStandard", label: "Ghi và đọc chuẩn của tài liệu", requires: [WORD_API_1_3] },
 ];
 

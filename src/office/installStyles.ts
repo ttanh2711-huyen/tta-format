@@ -12,10 +12,17 @@ export interface InstallResult {
   notes: string[];
 }
 
-/** Cài style bằng importStylesFromJson cần WordApi 1.6 (Microsoft 365 bản 2308 trở lên). */
+/**
+ * Cài style: có WordApi 1.6 (Microsoft 365) thì dùng importStylesFromJson và cập nhật được style đã có; Word 2016, 2019,
+ * 2021 (WordApi 1.3) thì thêm style còn thiếu bằng OOXML (style đã có giữ nguyên).
+ */
 export function isStyleInstallSupported(): boolean {
-  return Office.context.requirements.isSetSupported("WordApi", "1.6");
+  return Office.context.requirements.isSetSupported("WordApi", "1.3");
 }
+
+const hasFullStyleApi = (): boolean => Office.context.requirements.isSetSupported("WordApi", "1.6");
+
+export const LEGACY_STYLE_NOTE = "Bản Word này chưa có API cài style (cần Microsoft 365): add-in thêm các style còn thiếu bằng OOXML, style đã có trong tài liệu giữ nguyên giá trị cũ.";
 
 interface StylesRead {
   readbacks: Map<string, StyleReadback>;
@@ -96,7 +103,13 @@ async function insertStylesFromOoxml(context: Word.RequestContext, specs: readon
  */
 export async function installStyles(specs: readonly StyleSpec[], options: { bodyWillBeReplaced?: boolean } = {}): Promise<InstallResult> {
   if (!isStyleInstallSupported()) {
-    throw new Error("Cài style cần Microsoft 365 bản 2308 trở lên (WordApi 1.6). Hãy cập nhật Word rồi mở lại.");
+    throw new Error("Cài style cần Word 2016 trở lên. Hãy cập nhật Word rồi mở lại.");
+  }
+  if (!hasFullStyleApi()) {
+    return Word.run(async (context) => {
+      await insertStylesFromOoxml(context, specs);
+      return { items: specs.map((spec) => ({ name: spec.name, action: "created" as const, mismatches: [] })), notes: [LEGACY_STYLE_NOTE] };
+    });
   }
   return Word.run(async (context) => {
     const notes: string[] = [];
@@ -150,6 +163,7 @@ export interface StyleInstallPlan {
 const KNOWN_LIMIT = /^quy tắc giãn dòng/;
 
 export async function planStyleInstall(specs: readonly StyleSpec[]): Promise<StyleInstallPlan> {
+  if (!hasFullStyleApi()) return { toCreate: specs.length, toUpdate: 0 };
   return Word.run(async (context) => {
     const { readbacks: current, usedIds } = await readStyles(context, specs);
     const rebuilding = new Set(planExactRepair(specs, current, usedIds, false).rebuild.map((spec) => spec.name));

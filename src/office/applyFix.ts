@@ -18,6 +18,7 @@ export async function applyFixes(fixes: readonly Fix[]): Promise<ApplyFixResult>
   return Word.run(async (context) => {
     const paragraphs = context.document.body.paragraphs;
     paragraphs.load("items/text");
+    const pageApi = Office.context.requirements.isSetSupported("WordApiDesktop", "1.3");
     const sections = context.document.sections;
     sections.load("items");
     await context.sync();
@@ -55,6 +56,11 @@ export async function applyFixes(fixes: readonly Fix[]): Promise<ApplyFixResult>
     const exact: Array<{ paragraph: Word.Paragraph; pt: number }> = [];
     fixes.forEach((fix, i) => {
       if (fix.kind === "page") {
+        // Word 2016, 2019, 2021 không có API thiết lập trang: không sửa được khổ giấy, lề bằng add-in.
+        if (!pageApi) {
+          skipped.push(`${fix.label}: bản Word này không cho add-in đặt khổ giấy, lề (cần Microsoft 365); hãy đặt trong Layout > Margins hoặc dùng bộ macro VBA`);
+          return;
+        }
         const section = sections.items[fix.section - 1];
         if (!section) {
           skipped.push(`${fix.label}: không còn phần ${fix.section}`);
@@ -112,7 +118,7 @@ export async function applyFixes(fixes: readonly Fix[]): Promise<ApplyFixResult>
 
     // Lề đặt sau khổ giấy: đổi khổ giấy có thể làm Word tính lại lề.
     for (const fix of fixes) {
-      if (fix.kind !== "page") continue;
+      if (fix.kind !== "page" || !pageApi) continue;
       const section = sections.items[fix.section - 1];
       if (!section) continue;
       const m = fix.marginsMm ?? {};

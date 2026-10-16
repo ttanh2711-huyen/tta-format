@@ -17,6 +17,26 @@ export function pageNumberParagraph(sizePt: number): string {
   );
 }
 
+/**
+ * Đoạn số trang ẩn số ở trang 1 bằng trường { IF { PAGE } > 1 "{ PAGE }" "" } (T29): dùng cho Word không có API
+ * "trang đầu khác biệt" (Word 2016, 2019, 2021) và chạy được trên mọi bản Word.
+ */
+export function pageNumberParagraphHideFirst(sizePt: number): string {
+  const half = sizePt * 2;
+  const rPr = `<w:rPr>${FONT}<w:sz w:val="${half}"/><w:szCs w:val="${half}"/></w:rPr>`;
+  const run = (inner: string): string => `<w:r>${rPr}${inner}</w:r>`;
+  const begin = run('<w:fldChar w:fldCharType="begin"/>');
+  const separate = run('<w:fldChar w:fldCharType="separate"/>');
+  const end = run('<w:fldChar w:fldCharType="end"/>');
+  const instr = (text: string): string => run(`<w:instrText xml:space="preserve">${text}</w:instrText>`);
+  const page = begin + instr(" PAGE ") + separate + run("<w:t>2</w:t>") + end;
+  return (
+    `<w:p><w:pPr><w:spacing w:before="0" w:after="0"/><w:jc w:val="center"/></w:pPr>` +
+    begin + instr(" IF ") + page + instr(' &gt; 1 "') + page + instr('" "" ') + separate + run("<w:t></w:t>") + end +
+    `</w:p>`
+  );
+}
+
 export interface PageNumberState {
   hasPage: boolean;
   centered: boolean;

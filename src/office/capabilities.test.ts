@@ -6,7 +6,7 @@ const supports = (...sets: string[]): IsSetSupported => (set, version) => sets.i
 
 describe("đánh giá tính năng theo bộ API", () => {
   it("Word đủ bộ API: mọi tính năng chạy, không cảnh báo", () => {
-    const all = supports("WordApi 1.3", "WordApi 1.6", "WordApiDesktop 1.1", "WordApiDesktop 1.3", "WordApiDesktop 1.4");
+    const all = supports("WordApi 1.1", "WordApi 1.3", "WordApi 1.6", "WordApiDesktop 1.1", "WordApiDesktop 1.3", "WordApiDesktop 1.4");
     for (const status of evaluateFeatures(all)) {
       expect(status.supported).toBe(true);
       expect(describeMissing(status)).toBe("");
@@ -14,22 +14,19 @@ describe("đánh giá tính năng theo bộ API", () => {
     }
   });
 
-  it("Word cũ (chỉ WordApi 1.3): tính năng cần bộ mới bị tắt kèm lý do tiếng Việt nêu bản Word", () => {
-    const statuses = evaluateFeatures(supports("WordApi 1.3"));
+  it("Word 2016, 2019, 2021 (WordApi 1.1–1.3): chạy được gần hết, chỉ thiết lập trang bị tắt kèm lý do", () => {
+    const statuses = evaluateFeatures(supports("WordApi 1.1", "WordApi 1.3"));
     const byId = Object.fromEntries(statuses.map((s) => [s.feature.id, s]));
-    expect(byId.insertBlocks.supported).toBe(true);
-    expect(byId.documentStandard.supported).toBe(true);
-    for (const id of ["pageSetup", "styles", "pageNumber", "check", "createDocument", "formatBody"]) {
-      expect(byId[id].supported).toBe(false);
-      const text = describeMissing(byId[id]);
-      expect(text).toContain("Microsoft 365 bản");
-      expect(text).toContain("bị tắt");
-    }
+    // Word 2016, 2019, 2021: mọi tính năng chạy (một số bước dùng đường thay thế), trừ thiết lập trang.
+    for (const id of ["insertBlocks", "documentStandard", "styles", "pageNumber", "check", "createDocument", "formatBody"]) expect(byId[id].supported).toBe(true);
+    for (const id of ["styles", "pageNumber", "check", "createDocument", "formatBody"]) expect(describeDegraded(byId[id])).not.toBe("");
+    expect(byId.pageSetup.supported).toBe(false);
     expect(describeMissing(byId.pageSetup)).toContain("WordApiDesktop 1.3 (Microsoft 365 bản 2507 trở lên)");
+    expect(describeMissing(byId.pageSetup)).toContain("bị tắt");
   });
 
   it("thiếu bộ API tuỳ chọn: tính năng vẫn chạy nhưng có cảnh báo dùng cách thay thế", () => {
-    const status = evaluateFeatures(supports("WordApi 1.3", "WordApi 1.6", "WordApiDesktop 1.3")).find((s) => s.feature.id === "formatBody")!;
+    const status = evaluateFeatures(supports("WordApi 1.1", "WordApi 1.3", "WordApi 1.6", "WordApiDesktop 1.3")).find((s) => s.feature.id === "formatBody")!;
     expect(status.supported).toBe(true);
     expect(status.missingOptional.map((r) => `${r.set} ${r.version}`)).toEqual(["WordApiDesktop 1.4"]);
     expect(describeDegraded(status)).toContain("WordApiDesktop 1.4");
