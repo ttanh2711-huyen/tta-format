@@ -9,7 +9,7 @@ Giao diện tiếng Việt. Không gửi nội dung văn bản ra ngoài (xem [d
 
 ## Giao diện
 
-Bốn tab: **Nghị định 30** và **Hướng dẫn 05** (mỗi tab là một chuẩn, bấm tab thì đổi chuẩn đang dùng; gồm tạo văn bản, khối đầu, khối cuối, tuỳ chọn nhanh, trang và style, định dạng nội dung, chèn dấu khẩn và phụ lục), **Kiểm tra** (kiểm tra văn bản, sửa tất cả, chỉnh toàn bộ) và **Cơ quan** (hồ sơ cơ quan, xuất nhập cấu hình, môi trường, văn bản thử nghiệm). Mục nhiều tuỳ chọn gom thành mục xổ ra, nhớ trạng thái mở. Xem thử giao diện ngoài Word: `npm run build:dev` rồi mở `dist/preview.html` qua một máy chủ tĩnh (trang này giả lập Office, không có trong bản phát hành).
+Nút gạt chuẩn **Nghị định 30 | Hướng dẫn 05** ở đầu bảng; ribbon năm tab **Soạn thảo** (tạo mới, tạo mẫu, chèn thêm), **Khối** (khối đầu, khối cuối), **Định dạng** (nội dung, trang và style, tuỳ chọn), **Kiểm tra** (kiểm tra lỗi gom theo nhóm, chỉnh toàn bộ), **Cơ quan** (hồ sơ, môi trường, thử nghiệm); mỗi lần hiện một mục con, nhớ tab và mục đã mở. Xem thử giao diện ngoài Word: `npm run build:dev` rồi mở `dist/preview.html` qua một máy chủ tĩnh (trang này giả lập Office, không có trong bản phát hành).
 
 ## Tính năng chính
 

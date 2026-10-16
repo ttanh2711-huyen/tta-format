@@ -15,8 +15,8 @@ function create<K extends keyof HTMLElementTagNameMap>(tag: K, props: Partial<HT
 }
 
 /**
- * Danh sách "Môi trường Word" (T25): từng tính năng chạy được hay không trên bản Word đang mở, kèm lý do. Trả về dòng tóm tắt để
- * người gọi đặt làm mô tả của mục xổ ra và cho biết có tính năng nào không chạy được để mở sẵn mục đó.
+ * Danh sách "Môi trường Word" (T25): từng tính năng chạy được hay không trên bản Word đang mở, kèm lý do. Trả về dòng tóm tắt
+ * và số tính năng không chạy được.
  */
 export function mountEnvironmentPanel(container: HTMLElement, isSupported: IsSetSupported = officeIsSupported()): { unsupported: number; summary: string } {
   const statuses = evaluateFeatures(isSupported);

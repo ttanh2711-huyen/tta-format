@@ -67,8 +67,8 @@ describe("tương phản màu của giao diện (WCAG AA 4,5:1 cho chữ thườ
     expect(css).toContain(":focus-visible");
   });
 
-  it("trang khai báo ngôn ngữ tiếng Việt và có đủ vùng cho bốn tab", () => {
+  it("trang khai báo ngôn ngữ tiếng Việt và có vùng cho ribbon, nút gạt chuẩn, các tab và trạng thái", () => {
     expect(html).toContain('<html lang="vi">');
-    for (const id of ['id="tabs"', 'id="panel-standard"', 'id="panel-check"', 'id="panel-agency"']) expect(html).toContain(id);
+    for (const id of ['id="tabs"', 'id="standard-switch"', 'id="panels"', 'id="status"']) expect(html).toContain(id);
   });
 });

@@ -5,6 +5,30 @@ export interface TabSpec {
   label: string;
   /** Mã vùng nội dung mà tab điều khiển; nhiều tab có thể dùng chung một vùng. */
   panelId: string;
+  /** Biểu tượng kiểu ribbon: các nét vẽ (thuộc tính d của path SVG, khung 24×24). */
+  icon?: readonly string[];
+}
+
+export interface TabsOptions {
+  /** Tên của thanh tab cho trình đọc màn hình. */
+  label?: string;
+  /** Lớp CSS của thanh tab (mặc định "tabs"). */
+  className?: string;
+}
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function iconElement(paths: readonly string[]): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("class", "tab-icon");
+  for (const d of paths) {
+    const path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", d);
+    svg.append(path);
+  }
+  return svg;
 }
 
 export interface TabsHandle {
@@ -19,14 +43,14 @@ export const tabButtonId = (id: string): string => `tta-tab-${id}`;
 /**
  * Thanh tab theo mẫu ARIA (T25): `tablist` với các `tab`, tab đang chọn là điểm dừng duy nhất của phím Tab; mũi tên,
  * Home, End di chuyển và chọn tab. Bấm hoặc dùng phím chỉ gọi `onSelect`; người gọi quyết định có đổi tab thật không
- * (ví dụ tab chuẩn có thể phải hỏi xác nhận trước) rồi gọi `setActive`.
+ * (ví dụ phải hỏi xác nhận trước) rồi gọi `setActive`.
  */
-export function mountTabs(container: HTMLElement, tabs: readonly TabSpec[], initial: string, onSelect: (id: string) => void): TabsHandle {
+export function mountTabs(container: HTMLElement, tabs: readonly TabSpec[], initial: string, onSelect: (id: string) => void, options: TabsOptions = {}): TabsHandle {
   let active = tabs.some((tab) => tab.id === initial) ? initial : tabs[0].id;
   const list = document.createElement("div");
-  list.className = "tabs";
+  list.className = options.className ?? "tabs";
   list.setAttribute("role", "tablist");
-  list.setAttribute("aria-label", "Chức năng của TTA-Format");
+  list.setAttribute("aria-label", options.label ?? "Chức năng của TTA-Format");
   const buttons = tabs.map((tab) => {
     const button = document.createElement("button");
     button.type = "button";
@@ -34,7 +58,8 @@ export function mountTabs(container: HTMLElement, tabs: readonly TabSpec[], init
     button.className = "tab";
     button.setAttribute("role", "tab");
     button.setAttribute("aria-controls", tab.panelId);
-    button.textContent = tab.label;
+    if (tab.icon) button.append(iconElement(tab.icon));
+    button.append(Object.assign(document.createElement("span"), { className: "tab-label", textContent: tab.label }));
     return button;
   });
 

@@ -15,20 +15,16 @@
         <div class="brand">
           <span class="logo" aria-hidden="true">TTA</span>
           <div>
-            <h1>TTA-Format</h1>
+            <h1>TTA-Format <span id="app-version" class="chip"></span></h1>
             <p class="tagline">Soạn và chuẩn hoá văn bản hành chính</p>
           </div>
         </div>
-        <span id="app-version" class="chip"></span>
+        <div id="standard-switch" class="seg" role="group" aria-label="Chuẩn văn bản"></div>
       </header>
-      <div class="tab-bar"><div id="tabs"></div></div>
+      <nav class="ribbon" aria-label="Chức năng"><div id="tabs"></div></nav>
       <div id="notice" class="notice"></div>
-      <p id="status" role="status" aria-live="polite">Đang khởi động…</p>
-      <main>
-        <div id="panel-standard" role="tabpanel"></div>
-        <div id="panel-check" role="tabpanel" hidden></div>
-        <div id="panel-agency" role="tabpanel" hidden></div>
-      </main>
+      <main id="panels"></main>
+      <footer class="status-bar"><p id="status" role="status" aria-live="polite">Đang khởi động…</p></footer>
     </div>
   </body>
 </html>

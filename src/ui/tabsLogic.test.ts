@@ -1,6 +1,6 @@
 import { memoryStore } from "../settings/storage";
 import { STANDARDS } from "../standards";
-import { loadAccordionOpen, loadActiveTab, nextTabIndex, saveAccordionOpen, saveActiveTab } from "./tabsLogic";
+import { loadActiveSection, loadActiveTab, nextTabIndex, saveActiveSection, saveActiveTab } from "./tabsLogic";
 
 describe("phím di chuyển giữa các tab", () => {
   it.each([
@@ -23,23 +23,14 @@ describe("phím di chuyển giữa các tab", () => {
   });
 });
 
-describe("nhớ trạng thái mục xổ ra", () => {
-  it("chưa ghi nhớ thì theo mặc định; đã ghi nhớ thì theo lần cuối", () => {
+describe("mục con đang mở của từng tab", () => {
+  it("mỗi tab nhớ riêng; mục không còn thì về mục đầu", () => {
     const store = memoryStore();
-    expect(loadAccordionOpen(store, "khoi-dau", true)).toBe(true);
-    expect(loadAccordionOpen(store, "khoi-dau", false)).toBe(false);
-    saveAccordionOpen(store, "khoi-dau", false);
-    expect(loadAccordionOpen(store, "khoi-dau", true)).toBe(false);
-    saveAccordionOpen(store, "khoi-dau", true);
-    expect(loadAccordionOpen(store, "khoi-dau", false)).toBe(true);
-  });
-
-  it("mỗi mục xổ ra nhớ riêng; giá trị lạ trong kho bị bỏ qua", () => {
-    const store = memoryStore();
-    saveAccordionOpen(store, "a", true);
-    expect(loadAccordionOpen(store, "b", false)).toBe(false);
-    store.set("tta.open.c", "abc");
-    expect(loadAccordionOpen(store, "c", true)).toBe(true);
+    expect(loadActiveSection(store, "check", ["a", "b"])).toBe("a");
+    saveActiveSection(store, "check", "b");
+    saveActiveSection(store, "agency", "x");
+    expect(loadActiveSection(store, "check", ["a", "b"])).toBe("b");
+    expect(loadActiveSection(store, "agency", ["y", "z"])).toBe("y");
   });
 });
 

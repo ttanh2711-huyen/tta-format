@@ -174,7 +174,7 @@ export interface StandardProfile {
   effectiveDate: string;
   /** Dòng chữ nhận diện chuẩn ở đầu văn bản (dùng khi tự nhận diện chuẩn của tài liệu). */
   identifyingTitle: string;
-  /** Nhãn của tab chuẩn trong giao diện, ví dụ "Nghị định 30". */
+  /** Nhãn của chuẩn trên nút gạt chuẩn, ví dụ "Nghị định 30". */
   tabLabel: string;
   page: PageRules;
   pageDefaults: PageDefaults;

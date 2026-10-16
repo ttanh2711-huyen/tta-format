@@ -2,6 +2,7 @@ import { summarizeIssues } from "../checker/engine";
 import { buildReportDocx, toBase64 } from "../checker/exportDocx";
 import { formatReport } from "../checker/exportReport";
 import { planFixes, type FixPlan } from "../checker/fixAll";
+import { groupIssues, type IssueGroup } from "../checker/issueGroups";
 import type { Issue } from "../checker/types";
 import { applyFixes } from "../office/applyFix";
 import { checkDocument, runFixAll } from "../office/fixAll";
@@ -15,6 +16,8 @@ export interface ReportPanelDeps {
   currentStandard: () => StandardProfile;
   /** Ngữ cảnh của "Chỉnh toàn bộ" (tuỳ chọn nhanh, style); có thì hiện nút "Sửa nhanh". */
   pipelineContext?: () => FixAllContext;
+  /** Đọc và kiểm tra tài liệu; bỏ trống thì đọc từ Word (bản xem trước giao diện truyền lỗi mẫu). */
+  check?: (profile: StandardProfile) => Promise<Issue[]>;
   snapshots?: {
     take: () => Promise<DocumentSnapshot>;
     restore: (snapshot: DocumentSnapshot) => Promise<{ problems: string[] }>;
@@ -55,10 +58,9 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
   const exportButton = create("button", { id: "rp-export", type: "button", textContent: "Báo cáo", title: "Xuất báo cáo kiểm tra (sao chép, .txt, .docx)", hidden: true });
   const preview = create("div", { id: "rp-preview", className: "fa-box", hidden: true });
   const exported = create("div", { id: "rp-exported", hidden: true });
-  const list = create("ol", { id: "rp-list" });
+  const list = create("div", { id: "rp-list" });
   container.append(
-    create("h2", { textContent: "Kiểm tra văn bản" }),
-    create("p", { className: "note", textContent: "Đối chiếu trang, phông, cỡ chữ, căn lề, thụt dòng, giãn đoạn, giãn dòng, khối đầu và khối cuối của văn bản với chuẩn đang chọn. Kiểm tra chỉ đọc; nút \"Sửa\" sửa đúng chỗ của từng lỗi, \"Sửa tất cả\" cho xem trước rồi mới sửa." }),
+    create("p", { className: "note", textContent: "Đối chiếu văn bản với chuẩn đang chọn (chỉ đọc). Lỗi cùng loại gom thành một nhóm; bấm nhóm để xem từng chỗ, sửa từng chỗ hoặc sửa cả nhóm." }),
     create("div", { className: "rp-actions" }, check, quick, fixAll, undo, exportButton),
     summary,
     preview,
@@ -75,7 +77,6 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
     const where = issue.location.kind === "page" ? `Trang, phần ${issue.location.section}` : `Đoạn: "${issue.location.excerpt}"`;
     const item = create("li", { className: issue.severity });
     item.append(
-      create("strong", { textContent: issue.severity === "error" ? "Lỗi: " : "Cảnh báo: " }),
       issue.message,
       create("div", { className: "note", textContent: `${where} · ${issue.reference}` }),
     );
@@ -106,6 +107,52 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
     }
     if (actions.children.length > 0) item.append(actions);
     return item;
+  }
+
+  /** Một nhóm lỗi cùng quy tắc: bấm tiêu đề để xổ ra từng chỗ; sửa cả nhóm một lần. */
+  function renderGroup(group: IssueGroup): HTMLElement {
+    const details = create("details", { className: `rp-group ${group.severity}` });
+    details.dataset.rule = group.ruleId;
+    details.append(
+      create(
+        "summary",
+        {},
+        create("span", { className: "rp-dot", title: group.severity === "error" ? "Lỗi" : "Cảnh báo" }),
+        create("span", { className: "rp-group-title", textContent: group.title }),
+        create("span", { className: "badge", textContent: String(group.issues.length), title: `${group.issues.length} chỗ` }),
+      ),
+    );
+    const body = create("div", { className: "rp-group-body" });
+    const fixes = planFixes(group.issues).fixes;
+    if (fixes.length > 0) {
+      const all = create("button", { type: "button", className: "rp-fix-group", textContent: fixes.length > 1 ? `Sửa cả nhóm (${fixes.length})` : "Sửa" });
+      all.addEventListener("click", () => {
+        all.disabled = true;
+        void applyFixes(fixes)
+          .then((result) => {
+            if (result.skipped.length > 0) show("warning", result.skipped.join("; "));
+            return onCheck();
+          })
+          .catch((error: unknown) => show("error", `Không sửa được: ${errorText(error)}`));
+      });
+      body.append(create("div", { className: "rp-actions" }, all));
+    }
+    body.append(create("ol", { className: "rp-items" }, ...group.issues.map(renderIssue)));
+    details.append(body);
+    return details;
+  }
+
+  function renderList(issues: readonly Issue[]): void {
+    list.replaceChildren(
+      ...groupIssues(issues).map((category) =>
+        create(
+          "section",
+          { className: "rp-cat" },
+          create("h3", { className: "rp-cat-title" }, category.label, create("span", { className: "badge", textContent: String(category.count) })),
+          ...category.groups.map(renderGroup),
+        ),
+      ),
+    );
   }
 
   function planNow(): FixPlan {
@@ -285,10 +332,10 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
     show("ok", "Đang đọc tài liệu…");
     try {
       const profile = deps.currentStandard();
-      const issues = await checkDocument(profile);
+      const issues = await (deps.check ?? checkDocument)(profile);
       issuesNow = issues;
       const counts = summarizeIssues(issues);
-      for (const issue of issues) list.append(renderIssue(issue));
+      renderList(issues);
       const pending = planNow().fixes.length;
       fixAll.hidden = pending === 0;
       fixAll.textContent = `Sửa tất cả (${pending})`;
@@ -304,7 +351,7 @@ export function mountReportPanel(container: HTMLElement, deps: ReportPanelDeps):
     }
   }
 
-  if (isReadDocumentSupported()) {
+  if (deps.check || isReadDocumentSupported()) {
     check.addEventListener("click", () => void onCheck());
   } else {
     check.disabled = quick.disabled = true;

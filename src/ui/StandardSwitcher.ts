@@ -18,7 +18,7 @@ export interface StandardSwitcherHandle {
   onChange: (callback: () => void) => void;
   /** Đọc tài liệu, nhận diện chuẩn hoặc hỏi lại. Gọi một lần sau khi dựng các bảng khác. */
   start: () => Promise<void>;
-  /** Người dùng chọn chuẩn (bấm tab chuẩn): đổi ngay, hoặc hỏi xác nhận khi tài liệu đã có nội dung theo chuẩn khác. */
+  /** Người dùng chọn chuẩn (bấm nút gạt chuẩn): đổi ngay, hoặc hỏi xác nhận khi tài liệu đã có nội dung theo chuẩn khác. */
   choose: (id: StandardId) => void;
 }
 
@@ -46,7 +46,7 @@ function button(text: string, onClick: () => void): HTMLButtonElement {
 }
 
 /**
- * Quản lý "chuẩn văn bản" đang dùng (T25: không còn ô chọn riêng, người dùng chọn bằng tab). Chuẩn chỉ đổi khi người
+ * Quản lý "chuẩn văn bản" đang dùng (người dùng chọn bằng nút gạt ở đầu bảng). Chuẩn chỉ đổi khi người
  * dùng chọn hoặc khi tiêu đề ở đầu văn bản rõ ràng; không chắc thì hỏi. Đổi chuẩn không tự sửa nội dung văn bản.
  */
 export function mountStandardSwitcher(container: HTMLElement, deps: StandardSwitcherDeps): StandardSwitcherHandle {

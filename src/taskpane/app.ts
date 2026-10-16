@@ -1,9 +1,9 @@
 import { insertSampleParagraph } from "../office/insertSample";
 import { isDocumentStandardSupported, readDocumentSnapshot, writeDocumentNoAsk, writeDocumentStandard } from "../office/documentStandard";
 import { browserStore } from "../settings/storage";
+import type { Issue } from "../checker/types";
 import { STANDARDS } from "../standards";
-import type { StandardId } from "../standards/types";
-import { createAccordion, type AccordionSpec } from "../ui/Accordion";
+import type { StandardProfile } from "../standards/types";
 import { watchControls } from "../ui/a11y";
 import { appVersion, mountEnvironmentPanel } from "../ui/EnvironmentPanel";
 import { mountFixAllButton } from "../ui/FixAllButton";
@@ -19,14 +19,30 @@ import { mountReportPanel } from "../ui/ReportPanel";
 import { mountSettingsPanel } from "../ui/SettingsPanel";
 import { addEntry, entryFromDocument } from "../settings/soDangKy";
 import { mountStandardSwitcher } from "../ui/StandardSwitcher";
-import { mountTabs, tabButtonId, type TabSpec } from "../ui/Tabs";
-import { loadAccordionOpen, loadActiveTab, saveAccordionOpen, saveActiveTab } from "../ui/tabsLogic";
+import { mountTabs, tabButtonId } from "../ui/Tabs";
+import { loadActiveSection, loadActiveTab, saveActiveSection, saveActiveTab } from "../ui/tabsLogic";
 
-const CHECK_TAB = "check";
-const AGENCY_TAB = "agency";
-const PANEL_STANDARD = "panel-standard";
-const PANEL_CHECK = "panel-check";
-const PANEL_AGENCY = "panel-agency";
+/** Biểu tượng của các tab kiểu ribbon (nét vẽ SVG, khung 24×24). */
+const ICONS = {
+  compose: ["M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z", "M14 3v5h5", "M12 11v6", "M9 14h6"],
+  blocks: ["M4 4h16v6H4z", "M4 14h7v6H4z", "M15 14h5v6h-5z"],
+  format: ["M4 6h16", "M4 10h16", "M4 14h16", "M4 18h10"],
+  check: ["M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z", "m8 12 3 3 5-6"],
+  agency: ["M4 21V8l8-5 8 5v13", "M9 21v-6h6v6", "M3 21h18"],
+} as const;
+
+interface Section {
+  id: string;
+  label: string;
+  content: HTMLElement;
+}
+
+interface RibbonTab {
+  id: string;
+  label: string;
+  icon: readonly string[];
+  sections: Section[];
+}
 
 export function setStatus(message: string): void {
   const status = document.getElementById("status");
@@ -60,23 +76,13 @@ function need(id: string): HTMLElement {
 }
 
 /**
- * Dựng toàn bộ giao diện TTA-Format (T25): bốn tab. Hai tab chuẩn (Nghị định 30, Hướng dẫn 05) dùng chung một vùng làm việc
- * gồm các mục xổ ra; bấm tab nào thì chuẩn đang dùng đổi theo tab đó. Tab Kiểm tra gồm kiểm tra văn bản và chỉnh toàn bộ;
- * tab Cơ quan gồm hồ sơ cơ quan, xuất nhập cấu hình, môi trường và văn bản thử nghiệm.
+ * Dựng toàn bộ giao diện TTA-Format: chuẩn văn bản (Nghị định 30 hay Hướng dẫn 05) chọn bằng nút gạt ở đầu trang; năm
+ * tab kiểu ribbon (Soạn thảo, Khối, Định dạng, Kiểm tra, Cơ quan), mỗi tab có các mục con, mỗi lần hiện một mục.
  */
-export function mountApp(): void {
+export function mountApp(options: { check?: (profile: StandardProfile) => Promise<Issue[]> } = {}): void {
   const store = browserStore();
   const noticeEl = need("notice");
-  const panelStandard = need(PANEL_STANDARD);
-  const panelCheck = need(PANEL_CHECK);
-  const panelAgency = need(PANEL_AGENCY);
   need("app-version").textContent = `v${appVersion()}`;
-
-  const acc = (parent: HTMLElement, spec: AccordionSpec, content: HTMLElement): void => {
-    const handle = createAccordion(spec, store);
-    handle.body.append(content);
-    parent.append(handle.element);
-  };
 
   // Vùng nội dung của từng bảng (giữ mã cũ để CSS và test tìm được).
   const wizardEl = element("div", "new-doc");
@@ -93,42 +99,95 @@ export function mountApp(): void {
   const environmentEl = element("div", "environment");
   const sampleEl = element("div", "sample");
 
-  acc(panelStandard, { id: "ws.tao", title: "Tạo văn bản mới", hint: "Chọn loại văn bản rồi tạo", defaultOpen: true }, wizardEl);
-  // Ngay dưới "Tạo văn bản mới" để dễ thấy (issue #2): tạo mẫu từ văn bản đang mở.
-  acc(panelStandard, { id: "ws.mau", title: "Biến văn bản này thành mẫu", hint: "Thay các vùng thay đổi bằng ô điền, lưu thành .dotx", defaultOpen: true }, templateEl);
-  acc(panelStandard, { id: "ws.khoi-dau", title: "Khối đầu văn bản", hint: "Cơ quan, số và ký hiệu, ngày tháng, trích yếu", defaultOpen: true }, headerEl);
-  acc(panelStandard, { id: "ws.khoi-cuoi", title: "Khối cuối văn bản", hint: "Nơi nhận, quyền hạn, chức vụ, họ tên người ký" }, footerEl);
-  // Một mục "Định dạng" gom ba bảng chồng nhau (T26): tuỳ chọn nhanh, trang/style/số trang, định dạng nội dung.
-  const formatEls = element("div", "format-group");
-  for (const [key, title, content] of [
-    ["tuy-chon", "Tuỳ chọn nhanh (chữ, đoạn, trang, bảng, preset)", quickEl],
-    ["trang", "Trang, style và số trang", pageEl],
-    ["noi-dung", "Định dạng nội dung", formatEl],
-  ] as const) {
-    const details = document.createElement("details");
-    details.id = `fg-${key}`;
-    details.open = loadAccordionOpen(store, `ws.dinh-dang.${key}`, key === "tuy-chon");
-    details.addEventListener("toggle", () => saveAccordionOpen(store, `ws.dinh-dang.${key}`, details.open));
-    const summary = document.createElement("summary");
-    summary.textContent = title;
-    details.append(summary, content);
-    formatEls.append(details);
-  }
-  acc(panelStandard, { id: "ws.dinh-dang", title: "Định dạng", hint: "Tuỳ chọn nhanh, trang và style, định dạng nội dung" }, formatEls);
-  acc(panelStandard, { id: "ws.chen", title: "Dấu khẩn, phụ lục và thành phần bổ sung", hint: "Chèn tại con trỏ hoặc cuối tài liệu" }, extrasEl);
-
-  const chipsEl = element("div", "check-standard", { className: "chips" });
-  panelCheck.append(chipsEl);
-  acc(panelCheck, { id: "ck.kiem-tra", title: "Kiểm tra văn bản", hint: "Liệt kê lỗi thể thức, sửa từng lỗi hoặc sửa tất cả", defaultOpen: true }, reportEl);
-  acc(panelCheck, { id: "ck.chinh-toan-bo", title: "Chỉnh toàn bộ", hint: "Áp dụng nhiều bước có xem trước và khôi phục" }, fixAllEl);
-
-  acc(panelAgency, { id: "ag.ho-so", title: "Hồ sơ cơ quan và cấu hình", hint: "Thêm, sửa, đặt mặc định; xuất và nhập cấu hình", defaultOpen: true }, settingsEl);
-  const environment = mountEnvironmentPanel(environmentEl);
-  acc(panelAgency, { id: "ag.moi-truong", title: "Môi trường Word và phiên bản", hint: environment.summary, defaultOpen: environment.unsupported > 0 }, environmentEl);
+  mountEnvironmentPanel(environmentEl);
   const sampleButton = element("button", "btn-sample", { type: "button", textContent: "Chèn văn bản thử nghiệm" });
   sampleButton.addEventListener("click", () => void onInsertSample());
-  sampleEl.append(element("p", "sample-note", { className: "note", textContent: "Chèn một đoạn văn bản mẫu vào cuối tài liệu để thử nhanh các nút." }), sampleButton);
-  acc(panelAgency, { id: "ag.thu-nghiem", title: "Văn bản thử nghiệm", hint: "Chèn đoạn mẫu để thử" }, sampleEl);
+  sampleEl.append(sampleButton);
+
+  // Năm tab theo trình tự công việc: soạn, khối đầu và cuối, định dạng, kiểm tra, cơ quan. Mỗi tab chia mục con
+  // (chỉ hiện một mục mỗi lần) để hạn chế cuộn trang.
+  const ribbon: RibbonTab[] = [
+    {
+      id: "compose",
+      label: "Soạn thảo",
+      icon: ICONS.compose,
+      sections: [
+        { id: "new", label: "Tạo mới", content: wizardEl },
+        { id: "template", label: "Tạo mẫu", content: templateEl },
+        { id: "extras", label: "Chèn thêm", content: extrasEl },
+      ],
+    },
+    {
+      id: "blocks",
+      label: "Khối",
+      icon: ICONS.blocks,
+      sections: [
+        { id: "head", label: "Khối đầu", content: headerEl },
+        { id: "foot", label: "Khối cuối", content: footerEl },
+      ],
+    },
+    {
+      id: "format",
+      label: "Định dạng",
+      icon: ICONS.format,
+      sections: [
+        { id: "body", label: "Nội dung", content: formatEl },
+        { id: "page", label: "Trang, style", content: pageEl },
+        { id: "options", label: "Tuỳ chọn", content: quickEl },
+      ],
+    },
+    {
+      id: "check",
+      label: "Kiểm tra",
+      icon: ICONS.check,
+      sections: [
+        { id: "report", label: "Kiểm tra lỗi", content: reportEl },
+        { id: "fixall", label: "Chỉnh toàn bộ", content: fixAllEl },
+      ],
+    },
+    {
+      id: "agency",
+      label: "Cơ quan",
+      icon: ICONS.agency,
+      sections: [
+        { id: "profiles", label: "Hồ sơ", content: settingsEl },
+        { id: "environment", label: "Môi trường", content: environmentEl },
+        { id: "sample", label: "Thử nghiệm", content: sampleEl },
+      ],
+    },
+  ];
+
+  const panels = need("panels");
+  for (const tab of ribbon) {
+    const panel = element("div", `panel-${tab.id}`, { className: "panel" });
+    panel.setAttribute("role", "tabpanel");
+    panel.setAttribute("aria-labelledby", tabButtonId(tab.id));
+    const nav = element("div", `subnav-${tab.id}`, { className: "subnav-bar" });
+    const sectionEls = tab.sections.map((section) => {
+      const el = element("section", `sec-${tab.id}-${section.id}`, { className: "sec" });
+      el.setAttribute("role", "tabpanel");
+      el.setAttribute("aria-labelledby", tabButtonId(`${tab.id}-${section.id}`));
+      el.append(section.content);
+      return el;
+    });
+    panel.append(nav, ...sectionEls);
+    panels.append(panel);
+    const ids = tab.sections.map((section) => section.id);
+    const initial = loadActiveSection(store, tab.id, ids);
+    const subTabs = mountTabs(
+      nav,
+      tab.sections.map((section) => ({ id: `${tab.id}-${section.id}`, label: section.label, panelId: `sec-${tab.id}-${section.id}` })),
+      `${tab.id}-${initial}`,
+      (id) => showSection(id.slice(tab.id.length + 1)),
+      { className: "subnav", label: `Mục của tab ${tab.label}` },
+    );
+    function showSection(id: string): void {
+      sectionEls.forEach((el, index) => (el.hidden = ids[index] !== id));
+      subTabs.setActive(`${tab.id}-${id}`);
+      saveActiveSection(store, tab.id, id);
+    }
+    showSection(initial);
+  }
 
   const documentSupported = isDocumentStandardSupported();
   const switcher = mountStandardSwitcher(noticeEl, {
@@ -173,59 +232,38 @@ export function mountApp(): void {
   const report = mountReportPanel(reportEl, {
     currentStandard: switcher.currentStandard,
     pipelineContext: () => ({ profile: switcher.currentStandard(), values: quick.values(), specs: quick.styleSpecs(), localFormatting: quick.behavior().localFormatting }),
+    check: options.check,
   });
   mountFixAllButton(fixAllEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs, behavior: quick.behavior });
   mountTemplateMaker(templateEl, { currentStandard: switcher.currentStandard });
   mountPageSetupPanel(pageEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs });
   mountFormatPanel(formatEl, { currentStandard: switcher.currentStandard, behavior: quick.behavior, styleSpecs: quick.styleSpecs });
 
-  // Thanh tab: hai tab chuẩn (đổi chuẩn đang dùng), Kiểm tra, Cơ quan.
-  const standardIds: readonly string[] = STANDARDS.map((standard) => standard.id);
-  const tabSpecs: TabSpec[] = [
-    ...STANDARDS.map((standard) => ({ id: standard.id, label: standard.tabLabel, panelId: PANEL_STANDARD })),
-    { id: CHECK_TAB, label: "Kiểm tra", panelId: PANEL_CHECK },
-    { id: AGENCY_TAB, label: "Cơ quan", panelId: PANEL_AGENCY },
-  ];
-  let pendingStandardTab: string | null = null;
-
+  // Thanh tab kiểu ribbon.
+  const tabIds = ribbon.map((tab) => tab.id);
+  const tabs = mountTabs(
+    need("tabs"),
+    ribbon.map((tab) => ({ id: tab.id, label: tab.label, panelId: `panel-${tab.id}`, icon: tab.icon })),
+    loadActiveTab(store, tabIds),
+    activate,
+    { className: "tabs ribbon-tabs" },
+  );
   function activate(id: string): void {
-    const onStandard = standardIds.includes(id);
-    panelStandard.hidden = !onStandard;
-    panelCheck.hidden = id !== CHECK_TAB;
-    panelAgency.hidden = id !== AGENCY_TAB;
-    if (onStandard) panelStandard.setAttribute("aria-labelledby", tabButtonId(id));
-    panelCheck.setAttribute("aria-labelledby", tabButtonId(CHECK_TAB));
-    panelAgency.setAttribute("aria-labelledby", tabButtonId(AGENCY_TAB));
+    for (const tab of ribbon) need(`panel-${tab.id}`).hidden = tab.id !== id;
     tabs.setActive(id);
     saveActiveTab(store, id);
   }
+  activate(tabs.active());
 
-  function onTab(id: string): void {
-    pendingStandardTab = null;
-    if (!standardIds.includes(id) || id === switcher.currentStandard().id) {
-      activate(id);
-      return;
-    }
-    // Đổi chuẩn có thể phải hỏi xác nhận; tab chỉ đổi khi chuẩn thật sự đổi (xem onChange bên dưới).
-    pendingStandardTab = id;
-    switcher.choose(id as StandardId);
-  }
-
-  const savedTab = loadActiveTab(store, tabSpecs.map((tab) => tab.id));
-  const initialTab = standardIds.includes(savedTab) ? switcher.currentStandard().id : savedTab;
-  const tabs = mountTabs(need("tabs"), tabSpecs, initialTab, onTab);
-  activate(initialTab);
-
-  const chips = STANDARDS.map((standard) => {
-    const chip = document.createElement("button");
-    chip.type = "button";
-    chip.textContent = standard.tabLabel;
-    chip.addEventListener("click", () => switcher.choose(standard.id));
-    return { id: standard.id, chip };
+  // Chuẩn văn bản: nút gạt ở đầu trang, dùng chung cho mọi tab.
+  const standardButtons = STANDARDS.map((standard) => {
+    const button = element("button", `std-${standard.id}`, { type: "button", textContent: standard.tabLabel, title: standard.name });
+    button.addEventListener("click", () => switcher.choose(standard.id));
+    return { id: standard.id, button };
   });
-  chipsEl.append(Object.assign(document.createElement("span"), { textContent: "Kiểm tra theo chuẩn:" }), ...chips.map((item) => item.chip));
-  const paintChips = (): void => chips.forEach(({ id, chip }) => chip.setAttribute("aria-pressed", String(id === switcher.currentStandard().id)));
-  paintChips();
+  need("standard-switch").append(...standardButtons.map((item) => item.button));
+  const paintStandard = (): void => standardButtons.forEach(({ id, button }) => button.setAttribute("aria-pressed", String(id === switcher.currentStandard().id)));
+  paintStandard();
 
   switcher.onChange(() => {
     report.refresh();
@@ -236,10 +274,7 @@ export function mountApp(): void {
     extras.refresh();
     settings.refresh();
     settings.applyDefault();
-    paintChips();
-    const current = switcher.currentStandard().id;
-    if (pendingStandardTab === current || standardIds.includes(tabs.active())) activate(current);
-    pendingStandardTab = null;
+    paintStandard();
   });
 
   watchControls(document.body);
