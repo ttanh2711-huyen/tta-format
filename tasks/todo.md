@@ -722,6 +722,11 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 - [ ] Thủ công trong Word (chưa thử: chèn Content Control nhiều đoạn, áp style đề mục trên văn bản thật)
 **Trạng thái:** phát hành v1.0.4.
 
+### T29: Chạy trên Word 2016 trở về sau, bộ macro cho Word 2007 trở về sau
+- [x] Add-in trên Word 2016, 2019, 2021: kiểm tra (WordApi 1.1, trang đọc từ OOXML), style thêm bằng OOXML, định dạng thân và bảng (WordApi 1.3), số trang ẩn trang 1 bằng trường IF, bản chụp không cần API trang; chỉ thiết lập trang cần Microsoft 365 (v1.0.5)
+- [x] Bộ macro VBA `vba/TTA_Config.bas`, `vba/TTA_Format.bas` sinh từ hồ sơ chuẩn (`src/vba/`), mã chỉ ASCII (chuỗi có dấu giải mã bằng `U()`, thông báo bằng MessageBoxW); macro chọn chuẩn, thiết lập trang, cài style (cả Exactly), định dạng nội dung theo vai trò đoạn, số trang, khối đầu, khối cuối, kiểm tra cơ bản; hướng dẫn `vba/HUONG-DAN.md`
+- [ ] Thủ công: chưa thử add-in trên Word 2016, 2019, 2021; chưa nhập và chạy macro trên Word 2007, 2010, 2013 (không có máy)
+
 ### Checkpoint cuối
 - [ ] Mọi tiêu chí nghiệm thu đạt; ma trận kiểm thử hoàn thành
 - [ ] Bạn dùng thử trên văn bản thật và xác nhận
