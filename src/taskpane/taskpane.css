@@ -621,3 +621,45 @@ textarea {
   color: var(--muted);
   font-size: 0.92em;
 }
+
+/* Chọn loại văn bản: danh sách xổ ra trong khung add-in */
+.nw-kind-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.nw-kind-option {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 6px 8px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.nw-kind-option:hover:not(:disabled),
+.nw-kind-option[aria-current="true"] {
+  background: var(--accent-soft);
+}
+
+.nw-kind-option[aria-current="true"] {
+  font-weight: 600;
+}
+
+.nw-kind-option:disabled {
+  color: var(--muted);
+  cursor: default;
+}
+
+.nw-kind-reason {
+  display: block;
+  font-size: 12px;
+}

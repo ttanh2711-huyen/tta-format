@@ -120,23 +120,21 @@ export function mountNewDocWizard(container: HTMLElement, deps: NewDocWizardDeps
   /** Chọn loại văn bản từ registry (T17) và các ô riêng của nghị quyết, quyết định cá biệt. */
   function renderForm(profile: StandardProfile): void {
     formBox.replaceChildren();
-    const entries = visibleTemplates(profile);
-    const select = create("select", { id: "nw-form-kind" });
-    for (const entry of entries) {
-      const option = create("option", { value: entry.key, textContent: entry.supported ? entry.label : `${entry.label} — chưa hỗ trợ: ${entry.reason ?? ""}` });
-      option.disabled = !entry.supported;
-      select.append(option);
-    }
-    select.value = entryKey;
-    select.addEventListener("change", () => {
-      const chosen = findTemplate(profile, select.value);
-      if (!chosen?.supported) return;
-      entryKey = chosen.key;
-      applyPreset(chosen);
-      refresh();
-    });
-    formBox.append(create("label", {}, "Loại văn bản ", select));
+    // Danh sách xổ ra ngay trong khung add-in: ô chọn gốc của trình duyệt mở lệch ra ngoài khung hẹp của Word.
     const entry = findTemplate(profile, entryKey);
+    const list = create("div", { id: "nw-form-kind", className: "nw-kind-list" });
+    for (const item of visibleTemplates(profile)) {
+      const option = create("button", { type: "button", className: "nw-kind-option", textContent: item.label, disabled: !item.supported });
+      if (item.key === entryKey) option.setAttribute("aria-current", "true");
+      if (!item.supported) option.append(create("span", { className: "nw-kind-reason", textContent: `Chưa hỗ trợ: ${item.reason ?? ""}` }));
+      option.addEventListener("click", () => {
+        entryKey = item.key;
+        applyPreset(item);
+        refresh();
+      });
+      list.append(option);
+    }
+    formBox.append(create("details", { className: "nw-kind" }, create("summary", { textContent: `Loại văn bản: ${entry?.label ?? ""}` }), list));
     const field =
       (el: HTMLInputElement | HTMLTextAreaElement, onInput: (v: string) => void): HTMLElement => {
         el.addEventListener("input", () => onInput(el.value));
