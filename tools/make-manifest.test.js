@@ -11,7 +11,7 @@ describe("manifest phát hành", () => {
   it("không còn localhost; mọi địa chỉ trỏ về trang phát hành", () => {
     const xml = buildManifest(source, BASE, "1.0.0");
     expect(xml).not.toContain("localhost");
-    expect(xml).toContain(`<SourceLocation DefaultValue="${BASE}/taskpane.html"/>`);
+    expect(xml).toContain(`<SourceLocation DefaultValue="${BASE}/taskpane.html?v=1.0.0"/>`);
     expect(xml).toContain(`DefaultValue="${BASE}/assets/icon-32.png"`);
     expect(xml).toContain("<AppDomain>https://tenban.github.io</AppDomain>");
   });

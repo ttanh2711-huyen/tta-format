@@ -10,6 +10,8 @@ const { join, relative, resolve } = require("node:path");
 
 /** Tên file hoặc thư mục được phép ở gốc bản phát hành. */
 const ALLOWED_ROOT = new Set(["taskpane.html", "taskpane.js", "manifest.xml", "assets"]);
+/** Tệp JS bản phát hành có mã băm nội dung trong tên (chống bộ nhớ đệm). */
+const HASHED_JS = /^taskpane\.[0-9a-f]{8}\.js$/;
 /** Địa chỉ ngoài được phép xuất hiện trong bản build: thư viện Office.js và các địa chỉ định danh XML/tài liệu chuẩn. */
 const ALLOWED_HOSTS = new Set(["appsforoffice.microsoft.com", "schemas.microsoft.com", "schemas.openxmlformats.org", "www.w3.org", "purl.org", "schemas.xmlsoap.org"]);
 /** Dấu vết dữ liệu cá nhân không được có trong bản build. */
@@ -22,7 +24,7 @@ function scanRelease(files) {
   if (!manifest) problems.push("Thiếu manifest.xml (chạy npm run manifest:release trước).");
   for (const file of files) {
     const top = file.path.split("/")[0];
-    if (!ALLOWED_ROOT.has(top)) problems.push(`File không mong đợi trong bản phát hành: ${file.path}`);
+    if (!ALLOWED_ROOT.has(top) && !HASHED_JS.test(top)) problems.push(`File không mong đợi trong bản phát hành: ${file.path}`);
     if (file.content === null) continue;
     for (const pattern of PERSONAL) {
       if (pattern.test(file.content)) problems.push(`${file.path}: có dấu vết dữ liệu cá nhân (${pattern}).`);
@@ -35,7 +37,7 @@ function scanRelease(files) {
   }
   if (manifest && manifest.content) {
     if (/localhost/.test(manifest.content)) problems.push("manifest.xml còn localhost.");
-    if (!/<SourceLocation DefaultValue="https:\/\/[^"]+\/taskpane\.html"\/>/.test(manifest.content)) problems.push("manifest.xml thiếu địa chỉ taskpane.html dạng https.");
+    if (!/<SourceLocation DefaultValue="https:\/\/[^"]+\/taskpane\.html(\?v=[\d.]+)?"\/>/.test(manifest.content)) problems.push("manifest.xml thiếu địa chỉ taskpane.html dạng https.");
   }
   return problems;
 }

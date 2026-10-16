@@ -35,7 +35,8 @@ module.exports = async (env) => {
     entry: release ? { taskpane: "./src/taskpane/taskpane.ts" } : { taskpane: "./src/taskpane/taskpane.ts", preview: "./src/taskpane/preview.ts", selftest: "./src/selftest/selftest.ts" },
     output: {
       path: path.resolve(__dirname, "dist"),
-      filename: "[name].js",
+      // Bản phát hành: tên tệp kèm mã băm nội dung để Word không dùng lại bản cũ trong bộ nhớ đệm sau khi cập nhật.
+      filename: release ? "[name].[contenthash:8].js" : "[name].js",
       clean: true,
     },
     resolve: { extensions: [".ts", ".js"] },

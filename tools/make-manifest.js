@@ -49,6 +49,8 @@ function buildManifest(sourceXml, baseUrl, packageVersion) {
   const appDomain = new URL(base).origin;
   let xml = sourceXml.replace(/<AppDomain>[^<]*<\/AppDomain>/, `<AppDomain>${appDomain}</AppDomain>`);
   xml = xml.split(DEV_ORIGIN).join(base);
+  // Địa chỉ trang add-in kèm số phiên bản: mỗi bản mới là một địa chỉ mới, Word phải tải lại thay vì dùng bộ nhớ đệm.
+  xml = xml.split(`${base}/taskpane.html"`).join(`${base}/taskpane.html?v=${packageVersion}"`);
   xml = xml.replace(/<Version>[^<]*<\/Version>/, `<Version>${version}</Version>`);
   xml = xml.replace(/<DisplayName DefaultValue="[^"]*"\/>/, '<DisplayName DefaultValue="TTA-Format"/>');
   xml = xml.replace(/<Id>[^<]*<\/Id>/, `<Id>${RELEASE_ID}</Id>`);

@@ -8,6 +8,12 @@ describe("kiểm tra bản phát hành", () => {
     expect(scanRelease(good)).toEqual([]);
   });
 
+  it("chấp nhận tên JS có mã băm và địa chỉ trang kèm phiên bản", () => {
+    const versioned = { path: "manifest.xml", content: '<SourceLocation DefaultValue="https://tenban.github.io/nd30-word-addin/taskpane.html?v=1.0.7"/>' };
+    expect(scanRelease([versioned, ...good.slice(1), { path: "taskpane.1a2b3c4d.js", content: "" }])).toEqual([]);
+    expect(scanRelease([...good, { path: "taskpane.evil.js", content: "" }]).join(" ")).toContain("không mong đợi");
+  });
+
   it("thiếu manifest", () => {
     expect(scanRelease(good.filter((f) => f.path !== "manifest.xml")).join(" ")).toContain("Thiếu manifest.xml");
   });
