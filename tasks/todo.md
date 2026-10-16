@@ -715,6 +715,13 @@ Danh sách loại và họ mẫu lấy từ `docTypes` của từng chuẩn (NĐ
 **Trạng thái:** mã và test xong (1227 test), phát hành v1.0.3. **Chưa thử trong Word**: cách sửa `edits` thay chữ nhiều chỗ, tải .xlsx trong pane (WebView2), mở bảng sổ trong Word, các mẫu chi bộ. Đề mục mẫu chi bộ là đề xuất, cần người dùng duyệt (`docs/hd05-ambiguities.md`).
 **Kích cỡ:** L
 
+### T28: Xử lý issue trên GitHub (#1, #2, #3)
+- [x] #1 Viện dẫn: chỉ viết hoa Phần, Chương, Mục, Tiểu mục, Điều; khoản, điểm viết thường (sửa quy tắc `cap.reference`, thêm `cap.referenceLower`)
+- [x] #3 Phân vai trò đoạn trước khi định dạng (`src/office/paragraphRoles.ts`): chương, tên chương, mục, tên mục, điều, khoản, điểm, đề mục La Mã, ý gạch đầu dòng, thân bài; áp style tương ứng; test cả ca dễ nhầm
+- [x] #2 "Biến văn bản này thành mẫu" (`src/checker/templatePlan.ts`, `src/office/makeTemplate.ts`, `src/ui/TemplateMaker.ts`): Content Control có tiêu đề, tag `tta.*`, giữ bố cục; lưu .dotx bằng Save As
+- [ ] Thủ công trong Word (chưa thử: chèn Content Control nhiều đoạn, áp style đề mục trên văn bản thật)
+**Trạng thái:** phát hành v1.0.4.
+
 ### Checkpoint cuối
 - [ ] Mọi tiêu chí nghiệm thu đạt; ma trận kiểm thử hoàn thành
 - [ ] Bạn dùng thử trên văn bản thật và xác nhận

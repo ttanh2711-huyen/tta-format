@@ -32,6 +32,8 @@ Bảng TTA-Format có bốn tab ở đầu: **Nghị định 30**, **Hướng d�
 
 - **Văn bản mới**: mục **Tạo văn bản mới**, chọn loại văn bản, điền Khối đầu và Khối cuối, bấm tạo. Add-in thiết lập trang, cài style, dựng khối đầu, thân, khối cuối và đánh số trang; sau đó bạn gõ nội dung vào chỗ con trỏ. Dùng **Khôi phục** nếu muốn quay lại bản trước khi tạo.
 - **Văn bản có sẵn**: **Chỉnh toàn bộ** áp dụng các bước (trang, style, thân, bảng, khối đầu và cuối, số trang, lỗi còn lại) có xem trước. Add-in chụp bản trước khi chỉnh để khôi phục.
+- **Biến văn bản này thành mẫu** (tab Kiểm tra): thay số, ngày tháng, trích yếu, căn cứ, thân, nơi nhận, người ký bằng ô điền có tiêu đề, giữ bố cục và style; lưu bằng File > Save As > Word Template (*.dotx). Nên làm trên bản sao; có nút Khôi phục bản gốc.
+- **Định dạng nội dung** nhận ra đề mục (Chương, Mục, Điều, khoản "1.", điểm "a)", đề mục "I.") và áp style đề mục tương ứng thay vì style thân bài.
 - **Kiểm tra văn bản**: liệt kê lỗi thể thức theo chuẩn đang chọn; "Sửa" từng lỗi hoặc "Sửa tất cả" có xem trước và hoàn tác; "Sửa nhanh" chạy Chỉnh toàn bộ rồi Sửa tất cả chỉ bằng một nút (hoàn tác được); "Xuất báo cáo" để lưu danh sách lỗi, mở được thành tệp Word.
 - **Sổ đăng ký văn bản đi** (tab Cơ quan): mỗi lần tạo văn bản, add-in ghi một dòng (số, ký hiệu, ngày tháng, tên loại, trích yếu, nơi nhận, người ký); xem theo năm, xoá dòng, **Tải Excel (.xlsx)** hoặc **Mở bảng trong Word** để in, lưu.
 - **Hồ sơ cơ quan**: lưu cơ quan, địa danh, ký hiệu, người ký để điền sẵn. Dùng **Xuất cấu hình** để sao lưu hoặc chuyển sang máy khác.

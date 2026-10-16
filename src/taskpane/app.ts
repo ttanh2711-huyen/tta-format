@@ -7,6 +7,7 @@ import { createAccordion, type AccordionSpec } from "../ui/Accordion";
 import { watchControls } from "../ui/a11y";
 import { appVersion, mountEnvironmentPanel } from "../ui/EnvironmentPanel";
 import { mountFixAllButton } from "../ui/FixAllButton";
+import { mountTemplateMaker } from "../ui/TemplateMaker";
 import { mountFooterForm } from "../ui/FooterForm";
 import { mountFormatPanel } from "../ui/FormatPanel";
 import { mountHeaderForm } from "../ui/HeaderForm";
@@ -87,6 +88,7 @@ export function mountApp(): void {
   const extrasEl = element("div", "insert-extras");
   const reportEl = element("div", "report");
   const fixAllEl = element("div", "fix-all");
+  const templateEl = element("div", "template-maker");
   const settingsEl = element("div", "settings-panel");
   const environmentEl = element("div", "environment");
   const sampleEl = element("div", "sample");
@@ -117,6 +119,7 @@ export function mountApp(): void {
   panelCheck.append(chipsEl);
   acc(panelCheck, { id: "ck.kiem-tra", title: "Kiểm tra văn bản", hint: "Liệt kê lỗi thể thức, sửa từng lỗi hoặc sửa tất cả", defaultOpen: true }, reportEl);
   acc(panelCheck, { id: "ck.chinh-toan-bo", title: "Chỉnh toàn bộ", hint: "Áp dụng nhiều bước có xem trước và khôi phục" }, fixAllEl);
+  acc(panelCheck, { id: "ck.mau", title: "Biến văn bản này thành mẫu", hint: "Thay các vùng thay đổi bằng ô điền, lưu thành .dotx" }, templateEl);
 
   acc(panelAgency, { id: "ag.ho-so", title: "Hồ sơ cơ quan và cấu hình", hint: "Thêm, sửa, đặt mặc định; xuất và nhập cấu hình", defaultOpen: true }, settingsEl);
   const environment = mountEnvironmentPanel(environmentEl);
@@ -171,6 +174,7 @@ export function mountApp(): void {
     pipelineContext: () => ({ profile: switcher.currentStandard(), values: quick.values(), specs: quick.styleSpecs(), localFormatting: quick.behavior().localFormatting }),
   });
   mountFixAllButton(fixAllEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs, behavior: quick.behavior });
+  mountTemplateMaker(templateEl, { currentStandard: switcher.currentStandard });
   mountPageSetupPanel(pageEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs });
   mountFormatPanel(formatEl, { currentStandard: switcher.currentStandard, behavior: quick.behavior, styleSpecs: quick.styleSpecs });
 
