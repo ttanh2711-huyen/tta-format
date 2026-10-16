@@ -84,7 +84,7 @@ describe("planFormatBody", () => {
   });
 
   it("danh sách rỗng thì không có gì để làm", () => {
-    expect(planFormatBody([], ND30)).toEqual({ targets: [], skipped: { empty: 0, table: 0, standardStyle: 0, list: 0, heading: 0 }, styleName: "ND30_NoiDung" });
+    expect(planFormatBody([], ND30)).toEqual({ targets: [], roles: [], skipped: { empty: 0, table: 0, standardStyle: 0, list: 0, heading: 0 }, styleName: "ND30_NoiDung" });
   });
 });
 

@@ -1,5 +1,6 @@
 import { STANDARDS } from "../standards";
 import type { StandardProfile } from "../standards/types";
+import { assignRoles, roleStyle, type ParagraphRole } from "./paragraphRoles";
 
 /** Thông tin một đoạn đọc từ Word, đủ để quyết định có áp style nội dung hay không. */
 export interface ParagraphInfo {
@@ -36,9 +37,20 @@ export function classifyParagraph(info: ParagraphInfo): Classification {
 
 export type SkippedCounts = Record<SkipReason, number>;
 
+export interface RoleTarget {
+  index: number;
+  role: ParagraphRole;
+  /** Style áp cho đoạn theo vai trò (issue #3). */
+  styleName: string;
+  /** Đề mục số La Mã dùng style nội dung nhưng in đậm. */
+  bold?: true;
+}
+
 export interface FormatPlan {
   /** Chỉ số các đoạn sẽ được áp style. */
   targets: number[];
+  /** Vai trò và style của từng đoạn sẽ áp, cùng thứ tự với `targets`. */
+  roles: RoleTarget[];
   skipped: SkippedCounts;
   /** Tên style nội dung sẽ áp, ví dụ "ND30_NoiDung". */
   styleName: string;
@@ -47,15 +59,21 @@ export interface FormatPlan {
 export function planFormatBody(paragraphs: readonly ParagraphInfo[], profile: StandardProfile): FormatPlan {
   const skipped: SkippedCounts = { empty: 0, table: 0, standardStyle: 0, list: 0, heading: 0 };
   const targets: number[] = [];
+  // Vai trò xét trên dãy đoạn ngoài bảng, không trống (để "tên chương" nhận ra dòng ngay sau "Chương").
+  const flow = paragraphs.map((info, index) => ({ info, index })).filter(({ info }) => info.tableNestingLevel === 0 && info.text.trim() !== "");
+  const roleOf = new Map(assignRoles(flow.map(({ info }) => info.text)).map((role, i) => [flow[i].index, role]));
+  const roles: RoleTarget[] = [];
   paragraphs.forEach((info, index) => {
     const result = classifyParagraph(info);
     if (result.apply) {
       targets.push(index);
+      const role = roleOf.get(index) ?? "noiDung";
+      roles.push({ index, role, ...roleStyle(role, profile) });
     } else {
       skipped[result.reason] += 1;
     }
   });
-  return { targets, skipped, styleName: `${profile.styles.prefix}NoiDung` };
+  return { targets, roles, skipped, styleName: `${profile.styles.prefix}NoiDung` };
 }
 
 const SKIP_LABEL: ReadonlyArray<[SkipReason, string]> = [

@@ -3,6 +3,7 @@ import { verifyExactPass } from "../ooxml/exactVerify";
 import { buildStyleSpecs, type StyleSpec } from "../ooxml/styleSpecs";
 import type { StandardProfile } from "../standards/types";
 import { planFormatBody, summarizeFormat, type ParagraphInfo, type SkippedCounts } from "./paragraphClassifier";
+import { CENTERED_ROLES } from "./paragraphRoles";
 
 export type FormatScope = "selection" | "document";
 /** keep: giữ định dạng cục bộ (đậm, nghiêng, căn lề…); clear: xoá định dạng cục bộ để theo đúng style. */
@@ -124,20 +125,37 @@ export async function formatBody(profile: StandardProfile, options: FormatBodyOp
     }));
     const plan = planFormatBody(infos, profile);
     const targets = plan.targets.map((index) => scope.items[index]);
+    // Style theo vai trò đoạn (issue #3); style nào chưa có trong tài liệu thì dùng style nội dung.
+    const wanted = [...new Set(plan.roles.map((r) => r.styleName))].filter((name) => name !== styleName);
+    const roleStyles = wanted.map((name) => {
+      const item = context.document.getStyles().getByNameOrNullObject(name);
+      item.load("isNullObject");
+      return { name, item };
+    });
+    await context.sync();
+    const missing = new Set(roleStyles.filter(({ item }) => item.isNullObject).map(({ name }) => name));
 
     const canResetParagraph = Office.context.requirements.isSetSupported("WordApiDesktop", "1.4");
     const canResetFont = Office.context.requirements.isSetSupported("WordApiDesktop", "1.3");
     const notes: string[] = [];
     let warn = false;
 
-    for (const paragraph of targets) {
-      paragraph.style = styleName;
+    plan.roles.forEach((role, i) => {
+      const paragraph = targets[i];
+      paragraph.style = missing.has(role.styleName) ? styleName : role.styleName;
       if (options.localFormatting === "clear") {
         if (canResetFont) paragraph.font.reset();
         if (canResetParagraph) paragraph.reset();
       }
-    }
+      if (role.bold) paragraph.font.bold = true;
+    });
     await context.sync();
+    const headings = plan.roles.filter((r) => r.role !== "noiDung" && r.role !== "y").length;
+    if (headings > 0) notes.push(`Nhận ra ${headings} đề mục (chương, mục, điều, khoản, điểm, đề mục La Mã) và áp style đề mục tương ứng.`);
+    if (missing.size > 0) {
+      notes.push(`Chưa có style ${[...missing].join(", ")} nên các đoạn đó dùng style nội dung; bấm "Cài bộ style" rồi định dạng lại.`);
+      warn = true;
+    }
     if (options.localFormatting === "clear" && (!canResetFont || !canResetParagraph)) {
       notes.push("Chưa xoá hết định dạng cục bộ vì Word chưa hỗ trợ đủ (cần Microsoft 365 bản 2508 trở lên).");
       warn = true;
@@ -150,7 +168,9 @@ export async function formatBody(profile: StandardProfile, options: FormatBodyOp
         warn = true;
       } else {
         const before = await readTexts(context, context.document.body);
-        await rewriteWithExact(context, targets, exactPt);
+        // Tên chương, mục căn giữa không ghi lại giãn dòng Exactly như đoạn văn.
+        const prose = targets.filter((_, i) => !CENTERED_ROLES.has(plan.roles[i].role));
+        await rewriteWithExact(context, prose, exactPt);
         const after = await readTexts(context, context.document.body);
         const ooxml = context.document.body.getOoxml();
         await context.sync();
@@ -159,7 +179,7 @@ export async function formatBody(profile: StandardProfile, options: FormatBodyOp
           after,
           ooxml: ooxml.value,
           twips: Math.round(exactPt * 20),
-          expectedExact: targets.length,
+          expectedExact: prose.length,
         });
         if (verdict.ok) {
           notes.push(`Giãn dòng Exactly ${exactPt} pt đã đặt trên từng đoạn; bình luận hoặc đánh dấu gắn trong đoạn có thể không còn.`);
