@@ -4,7 +4,8 @@ import type { CheckDocument, CheckParagraph, Issue } from "./types";
 
 /**
  * Kiểm tra viết hoa (Phụ lục II Nghị định 30/2020/NĐ-CP): đầu câu, sau dấu kết câu, tên cơ quan, tổ chức, chức vụ cố
- * định, tên loại văn bản khi viện dẫn và (chỉ chuẩn Chính quyền) phần, chương, mục, điều, khoản, điểm khi viện dẫn.
+ * định, tên loại văn bản khi viện dẫn và (chỉ chuẩn Chính quyền) Phần, Chương, Mục, Tiểu mục, Điều viết hoa, khoản, điểm
+ * viết thường khi viện dẫn.
  * Đây là quy tắc dựa trên mẫu chữ nên mọi lỗi đều là cảnh báo; chỉ xét đoạn văn ngoài bảng, không in hoa toàn bộ.
  */
 
@@ -44,8 +45,13 @@ const FIXED_NAMES = [
 /** Tên loại văn bản viết hoa chữ đầu khi là tên của một văn bản cụ thể (đi với "số" hoặc tên riêng). */
 const DOC_KIND = /(?<![\p{L}])(bộ luật|(?<![Bb]ộ\s)luật|pháp lệnh)(?=\s+[\p{Lu}])|(?<![\p{L}])(nghị định|thông tư|quyết định|nghị quyết|chỉ thị|kết luận|quy định|hướng dẫn|công văn)(?=\s+số\s)/gu;
 
-/** Phần, chương, mục, điều, khoản, điểm khi viện dẫn (chuẩn Chính quyền). Khoản, điểm chỉ khi đi tiếp tới điều, khoản. */
-const REFERENCE = /(?<![\p{L}])(phần|chương|mục|điều)(?=\s+(?:[0-9]+|[IVXLC]+)(?![\p{L}]))|(?<![\p{L}])(khoản)(?=\s+[0-9]+\s+(?:điều|Điều)\s)|(?<![\p{L}])(điểm)(?=\s+[a-zđ]\s+(?:khoản|Khoản|điều|Điều)\s)/gu;
+/** Phần, Chương, Mục, Tiểu mục, Điều khi viện dẫn viết hoa chữ đầu (chuẩn Chính quyền, Phụ lục II). */
+const REFERENCE = /(?<![\p{L}])(tiểu mục|phần|chương|(?<![Tt]iểu\s)mục|điều)(?=\s+(?:[0-9]+|[IVXLC]+)(?![\p{L}]))/gu;
+/**
+ * Còn khoản, điểm khi viện dẫn viết thường ("căn cứ điểm a khoản 2 Điều 103"). Chỉ xét khi khoản, điểm đi tiếp tới
+ * khoản, Điều để không nhầm khoản tiền, điểm số; đầu câu thì vẫn viết hoa như mọi chữ đầu câu.
+ */
+const REFERENCE_LOWER = /(?<![\p{L}])(Khoản)(?=\s+[0-9]+\s+(?:điều|Điều)\s)|(?<![\p{L}])(Điểm)(?=\s+[a-zđ]\s+(?:khoản|Khoản|điều|Điều)\s)/gu;
 
 const fold = (s: string): string => s.normalize("NFC").replace(/Uỷ|uỷ/g, (m) => (m[0] === "U" ? "Ủy" : "ủy"));
 
@@ -116,7 +122,16 @@ function references(text: string): Finding[] {
     const word = m[0];
     if (!isLower(word[0])) continue;
     const next = text.slice((m.index ?? 0) + word.length).match(/^\s+\S+/)?.[0] ?? "";
-    out.push({ ruleId: "cap.reference", message: `Viện dẫn phần, chương, mục, điều, khoản, điểm phải viết hoa chữ đầu: "${word}${next}".`, find: `${word}${next}`, replacement: `${capitalize(word)}${next}` });
+    out.push({ ruleId: "cap.reference", message: `Viện dẫn Phần, Chương, Mục, Tiểu mục, Điều phải viết hoa chữ đầu: "${word}${next}".`, find: `${word}${next}`, replacement: `${capitalize(word)}${next}` });
+  }
+  for (const m of text.matchAll(REFERENCE_LOWER)) {
+    const word = m[0];
+    const start = m.index ?? 0;
+    const before = text.slice(0, start);
+    // Đầu đoạn (sau nhãn đầu dòng) hoặc đầu câu: giữ viết hoa.
+    if (LEADING_LABEL.exec(before)?.[0] === before || /[.!?]\s*$/.test(before)) continue;
+    const next = text.slice(start + word.length).match(/^\s+\S+/)?.[0] ?? "";
+    out.push({ ruleId: "cap.referenceLower", message: `Khi viện dẫn, "khoản", "điểm" viết thường: "${word}${next}".`, find: `${word}${next}`, replacement: `${word.charAt(0).toLowerCase()}${word.slice(1)}${next}` });
   }
   return out;
 }
@@ -145,7 +160,7 @@ export function checkCapitalization(doc: CheckDocument, profile: StandardProfile
       ...(profile.headerKind === "quocHieu" ? references(text) : []),
     ];
     for (const f of findings) {
-      issues.push(paragraphIssue(p, { ruleId: f.ruleId, severity: "warning", message: f.message, reference, actual: f.find.trim(), expected: f.replacement.trim(), fix: { kind: "edits", index: p.index, edits: [{ find: f.find, replacement: f.replacement }], label: `Viết hoa: ${f.replacement.trim()}` } }));
+      issues.push(paragraphIssue(p, { ruleId: f.ruleId, severity: "warning", message: f.message, reference, actual: f.find.trim(), expected: f.replacement.trim(), fix: { kind: "edits", index: p.index, edits: [{ find: f.find, replacement: f.replacement }], label: `${f.ruleId === "cap.referenceLower" ? "Viết thường" : "Viết hoa"}: ${f.replacement.trim()}` } }));
     }
   }
   return issues;

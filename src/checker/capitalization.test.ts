@@ -72,8 +72,17 @@ describe("viết hoa tên văn bản và phần, chương, điều, khoản, đi
     expect(fixedText("Theo bộ luật Dân sự.")).toBe("Theo Bộ luật Dân sự.");
   });
 
-  it("chuẩn Chính quyền: viện dẫn điều, khoản, điểm, chương viết hoa chữ đầu", () => {
-    expect(fixedText("Căn cứ điểm a khoản 1 điều 5 chương II của Luật.")).toBe("Căn cứ Điểm a Khoản 1 Điều 5 Chương II của Luật.");
+  it("chuẩn Chính quyền: viện dẫn Phần, Chương, Mục, Tiểu mục, Điều viết hoa; khoản, điểm viết thường (issue #1)", () => {
+    expect(fixedText("Căn cứ điểm a khoản 1 điều 5 chương II của Luật.")).toBe("Căn cứ điểm a khoản 1 Điều 5 Chương II của Luật.");
+    expect(fixedText("Theo tiểu mục 2 mục 5 phần I.")).toBe("Theo Tiểu mục 2 Mục 5 Phần I.");
+    expect(run(doc(["Căn cứ điểm a khoản 2 Điều 103 Mục 5 Chương XII Phần I của Bộ luật Hình sự."]))).toEqual([]);
+  });
+
+  it("khoản, điểm viết hoa giữa câu khi viện dẫn bị báo, sửa về viết thường; đầu câu thì giữ viết hoa", () => {
+    expect(ids(run(doc(["Căn cứ Điểm a Khoản 2 Điều 103 của Luật."])))).toEqual(["cap.referenceLower", "cap.referenceLower"]);
+    expect(fixedText("Căn cứ Điểm a Khoản 2 Điều 103 của Luật.")).toBe("Căn cứ điểm a khoản 2 Điều 103 của Luật.");
+    expect(run(doc(["Khoản 1 Điều 5 quy định như sau."]))).toEqual([]);
+    expect(run(doc(["Đã rõ. Điểm a khoản 1 Điều 5 quy định như sau."]))).toEqual([]);
   });
 
   it("không nhầm khoản tiền, điểm số", () => {
