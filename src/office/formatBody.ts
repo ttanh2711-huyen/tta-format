@@ -25,6 +25,26 @@ export interface FormatBodyResult {
 
 const CHUNK = 50;
 
+/** Tài liệu chưa có style nội dung của chuẩn: bảng Định dạng cài bộ style rồi chạy lại. */
+export class StyleMissingError extends Error {}
+
+export const NO_SELECTION = "Chưa tô đen nội dung. Hãy bôi đen các đoạn cần định dạng rồi bấm lại.";
+
+/**
+ * Phần tô đen: ghi thẳng phông, cỡ chữ, căn lề, thụt dòng, giãn đoạn, giãn dòng của style lên đoạn, để đoạn đúng chuẩn
+ * dù trước đó có định dạng cục bộ khác (đậm, nghiêng, gạch chân trong đoạn giữ nguyên).
+ */
+function applyDirect(paragraph: Word.Paragraph, spec: StyleSpec): void {
+  paragraph.font.name = spec.font.name;
+  paragraph.font.size = spec.font.sizePt;
+  paragraph.alignment = spec.paragraph.alignment;
+  paragraph.leftIndent = 0;
+  paragraph.firstLineIndent = spec.paragraph.firstLineIndentPt;
+  paragraph.spaceBefore = spec.paragraph.spaceBeforePt;
+  paragraph.spaceAfter = spec.paragraph.spaceAfterPt;
+  if (spec.paragraph.lineSpacing.kind === "multiple") paragraph.lineSpacing = spec.paragraph.lineSpacing.lines * 12;
+}
+
 /** Đọc style, danh sách, bảng của đoạn cần WordApi 1.3 (Word 2016 trở lên). Kiểm tra style đã có dùng API style (WordApi 1.6). */
 export function isFormatBodySupported(): boolean {
   return Office.context.requirements.isSetSupported("WordApi", "1.3");
@@ -111,11 +131,15 @@ export async function formatBody(profile: StandardProfile, options: FormatBodyOp
   return Word.run(async (context) => {
     const style = hasStyleApi() ? context.document.getStyles().getByNameOrNullObject(styleName) : undefined;
     style?.load("isNullObject");
-    const scope = options.scope === "selection" ? context.document.getSelection().paragraphs : context.document.body.paragraphs;
+    const selected = options.scope === "selection";
+    const selection = context.document.getSelection();
+    if (selected) selection.load("text");
+    const scope = selected ? selection.paragraphs : context.document.body.paragraphs;
     scope.load("items/text,items/style,items/styleBuiltIn,items/tableNestingLevel,items/isListItem");
     await context.sync();
+    if (selected && selection.text.trim() === "") throw new Error(NO_SELECTION);
     if (style?.isNullObject) {
-      throw new Error(`Chưa có style ${styleName}. Bấm "Cài bộ style" trước.`);
+      throw new StyleMissingError(`Chưa có style ${styleName}. Bấm "Cài bộ style" trước.`);
     }
 
     const infos: ParagraphInfo[] = scope.items.map((paragraph) => ({
@@ -125,7 +149,7 @@ export async function formatBody(profile: StandardProfile, options: FormatBodyOp
       tableNestingLevel: paragraph.tableNestingLevel,
       isListItem: paragraph.isListItem,
     }));
-    const plan = planFormatBody(infos, profile);
+    const plan = planFormatBody(infos, profile, { selection: selected });
     const targets = plan.targets.map((index) => scope.items[index]);
     // Style theo vai trò đoạn (issue #3); style nào chưa có trong tài liệu thì dùng style nội dung.
     const wanted = hasStyleApi() ? [...new Set(plan.roles.map((r) => r.styleName))].filter((name) => name !== styleName) : [];
@@ -144,11 +168,13 @@ export async function formatBody(profile: StandardProfile, options: FormatBodyOp
 
     plan.roles.forEach((role, i) => {
       const paragraph = targets[i];
-      paragraph.style = missing.has(role.styleName) ? styleName : role.styleName;
+      const applied = missing.has(role.styleName) ? styleName : role.styleName;
+      paragraph.style = applied;
       if (options.localFormatting === "clear") {
         if (canResetFont) paragraph.font.reset();
         if (canResetParagraph) paragraph.reset();
       }
+      if (selected) applyDirect(paragraph, specs.find((item) => item.name === applied) ?? spec);
       if (role.bold) paragraph.font.bold = true;
     });
     await context.sync();

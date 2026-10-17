@@ -88,7 +88,7 @@ describe("registry: cấu trúc", () => {
     expect(ids(nd, "paragraph")).toEqual(["alignment", "firstLineIndent", "spacing", "lineSpacing"]);
     expect(ids(nd, "table")).toEqual(["tableFontSize", "tableSpacing", "tableBorder", "tableHeaderBold"]);
     expect(ids(nd, "pageNumber")).toEqual(["pageNumberSize", "pageNumberHideFirst", "pageNumberAppendixSeparate"]);
-    expect(ids(nd, "behavior")).toEqual(["scope", "localFormatting"]);
+    expect(ids(nd, "behavior")).toEqual(["localFormatting"]);
     expect(ids(nd, "header")).toContain("size.quocHieu");
     expect(ids(hd, "header")).toContain("size.theLoai");
     expect(ids(nd, "footer")).toEqual(expect.arrayContaining(["signGap", "size.noiNhanDanhSach"]));
@@ -101,7 +101,7 @@ describe("registry: cấu trúc", () => {
     expect(option(nd, "tableBorder").effect).toBe("onCreate");
     expect(option(nd, "size.quocHieu").effect).toBe("onCreate");
     expect(option(nd, "pageNumberSize").effect).toBe("onCreate");
-    expect(option(nd, "scope").effect).toBe("behavior");
+    expect(option(nd, "localFormatting").effect).toBe("behavior");
   });
 });
 
@@ -121,7 +121,6 @@ describe("mặc định khớp bảng quy tắc và file mẫu", () => {
       lineSpacing: 1.17,
       tableFontSize: 14,
       tableSpacing: 3,
-      scope: "selection",
       localFormatting: "keep",
     });
   });

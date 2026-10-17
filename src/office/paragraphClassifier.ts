@@ -15,6 +15,14 @@ export interface ParagraphInfo {
 
 export type SkipReason = "empty" | "table" | "standardStyle" | "list" | "heading";
 
+export interface PlanOptions {
+  /**
+   * Định dạng phần người dùng tô đen: áp lại cả đoạn đã dùng style của bộ chuẩn (người dùng đã chọn rõ đoạn cần chuẩn
+   * hoá). Đoạn trống, trong bảng, tiêu đề có sẵn, danh sách tự động vẫn bỏ qua.
+   */
+  selection?: boolean;
+}
+
 export type Classification = { apply: true } | { apply: false; reason: SkipReason };
 
 const BUILT_IN_HEADINGS = /^(Heading[1-9]|Title|Subtitle)$/;
@@ -24,10 +32,10 @@ const BUILT_IN_HEADINGS = /^(Heading[1-9]|Title|Subtitle)$/;
  * dùng style của bất kỳ bộ chuẩn nào, tiêu đề có sẵn của Word và mục danh sách tự động (áp style có thể
  * làm hỏng đánh số).
  */
-export function classifyParagraph(info: ParagraphInfo): Classification {
+export function classifyParagraph(info: ParagraphInfo, options: PlanOptions = {}): Classification {
   if (info.tableNestingLevel > 0) return { apply: false, reason: "table" };
   if (info.text.trim() === "") return { apply: false, reason: "empty" };
-  if (STANDARDS.some((standard) => info.styleName.startsWith(standard.styles.prefix))) {
+  if (!options.selection && STANDARDS.some((standard) => info.styleName.startsWith(standard.styles.prefix))) {
     return { apply: false, reason: "standardStyle" };
   }
   if (BUILT_IN_HEADINGS.test(info.styleBuiltIn)) return { apply: false, reason: "heading" };
@@ -56,7 +64,7 @@ export interface FormatPlan {
   styleName: string;
 }
 
-export function planFormatBody(paragraphs: readonly ParagraphInfo[], profile: StandardProfile): FormatPlan {
+export function planFormatBody(paragraphs: readonly ParagraphInfo[], profile: StandardProfile, options: PlanOptions = {}): FormatPlan {
   const skipped: SkippedCounts = { empty: 0, table: 0, standardStyle: 0, list: 0, heading: 0 };
   const targets: number[] = [];
   // Vai trò xét trên dãy đoạn ngoài bảng, không trống (để "tên chương" nhận ra dòng ngay sau "Chương").
@@ -64,7 +72,7 @@ export function planFormatBody(paragraphs: readonly ParagraphInfo[], profile: St
   const roleOf = new Map(assignRoles(flow.map(({ info }) => info.text)).map((role, i) => [flow[i].index, role]));
   const roles: RoleTarget[] = [];
   paragraphs.forEach((info, index) => {
-    const result = classifyParagraph(info);
+    const result = classifyParagraph(info, options);
     if (result.apply) {
       targets.push(index);
       const role = roleOf.get(index) ?? "noiDung";

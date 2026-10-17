@@ -1,4 +1,5 @@
-import { formatBody, isFormatBodySupported, type FormatBodyOptions } from "../office/formatBody";
+import { formatBody, isFormatBodySupported, StyleMissingError, type FormatBodyOptions, type FormatScope } from "../office/formatBody";
+import { installStyles } from "../office/installStyles";
 import type { StyleSpec } from "../ooxml/styleSpecs";
 import type { StandardProfile } from "../standards/types";
 
@@ -13,16 +14,21 @@ function create<K extends keyof HTMLElementTagNameMap>(
   return element;
 }
 
-/** Bảng "Định dạng nội dung" (T6): áp style nội dung của chuẩn đang chọn lên văn bản có sẵn. */
+/**
+ * Bảng "Định dạng nội dung" (T6): áp style của chuẩn đang chọn lên văn bản có sẵn, cho phần đang tô đen hoặc cả văn bản.
+ * Tài liệu chưa có bộ style thì tự cài trước.
+ */
 export interface FormatPanelDeps {
   currentStandard: () => StandardProfile;
-  /** Phạm vi và cách xử lý định dạng cục bộ, lấy từ nhóm "Hành vi" của tuỳ chọn nhanh. */
-  behavior: () => Pick<FormatBodyOptions, "scope" | "localFormatting">;
+  /** Cách xử lý định dạng cục bộ, lấy từ nhóm "Hành vi" của tuỳ chọn nhanh. */
+  behavior: () => Pick<FormatBodyOptions, "localFormatting">;
   styleSpecs: () => StyleSpec[];
 }
 
 export function mountFormatPanel(container: HTMLElement, deps: FormatPanelDeps): void {
-  const apply = create("button", { id: "fb-apply", type: "button", textContent: "Định dạng nội dung" });
+  const applySelection = create("button", { id: "fb-selection", type: "button", textContent: "Định dạng phần tô đen", className: "btn-primary", title: "Bôi đen các đoạn cần định dạng trong văn bản rồi bấm" });
+  const applyDocument = create("button", { id: "fb-apply", type: "button", textContent: "Định dạng cả văn bản" });
+  const buttons = [applySelection, applyDocument];
   const message = create("p", { id: "fb-message" });
   message.setAttribute("role", "status");
 
@@ -31,9 +37,9 @@ export function mountFormatPanel(container: HTMLElement, deps: FormatPanelDeps):
     create("p", {
       className: "note",
       textContent:
-        "Áp style nội dung của chuẩn đang chọn lên các đoạn thường. Bỏ qua đoạn trống, đoạn trong bảng, tiêu đề có sẵn, danh sách tự động và đoạn đã dùng style của bộ chuẩn. Cần cài bộ style trước. Phạm vi và việc giữ hay xoá định dạng cục bộ chọn ở Tuỳ chọn nhanh, nhóm Hành vi.",
+        "Nhận ra chương, mục, điều, khoản, điểm, thân bài rồi áp style của chuẩn đang chọn. Phần tô đen: đưa phông, cỡ chữ, căn lề, thụt dòng, giãn đoạn, giãn dòng về đúng chuẩn, kể cả đoạn đã có style chuẩn; giữ chữ đậm, nghiêng trong đoạn. Cả văn bản: chỉ áp cho đoạn chưa dùng style chuẩn. Luôn bỏ qua đoạn trống, trong bảng, tiêu đề Heading và danh sách tự động. Chưa có bộ style thì add-in tự cài.",
     }),
-    apply,
+    create("div", { className: "rp-actions" }, ...buttons),
     message,
   );
 
@@ -43,25 +49,32 @@ export function mountFormatPanel(container: HTMLElement, deps: FormatPanelDeps):
   }
 
   if (!isFormatBodySupported()) {
-    apply.disabled = true;
+    for (const button of buttons) button.disabled = true;
     show("error", "Định dạng nội dung cần Word 2016 trở lên. Hãy cập nhật Word rồi mở lại.");
     return;
   }
 
-  async function onApply(): Promise<void> {
-    apply.disabled = true;
+  async function onApply(scope: FormatScope): Promise<void> {
+    for (const button of buttons) button.disabled = true;
     show("ok", "Đang định dạng…");
+    const options = { ...deps.behavior(), scope, specs: deps.styleSpecs() };
     try {
-      const result = await formatBody(deps.currentStandard(), { ...deps.behavior(), specs: deps.styleSpecs() });
-      show(result.summary.kind, result.summary.text);
+      let installed = "";
+      const result = await formatBody(deps.currentStandard(), options).catch(async (error: unknown) => {
+        if (!(error instanceof StyleMissingError)) throw error;
+        show("ok", "Tài liệu chưa có bộ style của chuẩn; đang cài…");
+        await installStyles(options.specs);
+        installed = "Đã cài bộ style của chuẩn. ";
+        return formatBody(deps.currentStandard(), options);
+      });
+      show(result.summary.kind, installed + result.summary.text);
     } catch (error) {
       show("error", `Không định dạng được: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
-      apply.disabled = false;
+      for (const button of buttons) button.disabled = false;
     }
   }
 
-  apply.addEventListener("click", () => {
-    void onApply();
-  });
+  applySelection.addEventListener("click", () => void onApply("selection"));
+  applyDocument.addEventListener("click", () => void onApply("document"));
 }

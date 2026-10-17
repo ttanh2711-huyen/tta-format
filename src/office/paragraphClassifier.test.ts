@@ -44,6 +44,17 @@ describe("classifyParagraph", () => {
     expect(classifyParagraph(para({ styleName: "ND30_NoiDung" }))).toEqual({ apply: false, reason: "standardStyle" });
   });
 
+  it("phần tô đen: áp lại cả đoạn đã có style của chuẩn, vẫn bỏ qua đoạn trống, bảng, tiêu đề, danh sách", () => {
+    const selection = { selection: true };
+    expect(classifyParagraph(para({ styleName: "ND30_NoiDung" }), selection)).toEqual({ apply: true });
+    expect(classifyParagraph(para({ styleName: "HD05_Dieu" }), selection)).toEqual({ apply: true });
+    expect(classifyParagraph(para({ text: " " }), selection)).toEqual({ apply: false, reason: "empty" });
+    expect(classifyParagraph(para({ tableNestingLevel: 1 }), selection)).toEqual({ apply: false, reason: "table" });
+    expect(classifyParagraph(para({ styleBuiltIn: "Heading2" }), selection)).toEqual({ apply: false, reason: "heading" });
+    expect(classifyParagraph(para({ isListItem: true }), selection)).toEqual({ apply: false, reason: "list" });
+    expect(planFormatBody([para({ styleName: "ND30_NoiDung" }), para({ text: "Điều 3. Hiệu lực", styleName: "ND30_NoiDung" })], ND30, selection).roles.map((r) => r.styleName)).toEqual(["ND30_NoiDung", "ND30_Dieu"]);
+  });
+
   it("bỏ qua tiêu đề có sẵn của Word, không phụ thuộc ngôn ngữ giao diện", () => {
     expect(classifyParagraph(para({ styleName: "Tiêu đề 1", styleBuiltIn: "Heading1" }))).toEqual({
       apply: false,

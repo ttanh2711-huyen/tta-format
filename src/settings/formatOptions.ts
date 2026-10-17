@@ -293,19 +293,6 @@ export function buildRegistry(profile: StandardProfile): FormatRegistry {
   options.push({ id: "pageNumberAppendixSeparate", group: "pageNumber", label: "Phụ lục đánh số riêng", kind: "boolean", effect: "onCreate", choices: [], default: pageNumber.appendixNumberedSeparately, custom: false });
 
   options.push({
-    id: "scope",
-    group: "behavior",
-    label: "Phạm vi áp dụng",
-    kind: "choice",
-    effect: "behavior",
-    choices: [
-      { value: "selection", label: "Phần đang chọn" },
-      { value: "document", label: "Cả tài liệu" },
-    ],
-    default: "selection",
-    custom: false,
-  });
-  options.push({
     id: "localFormatting",
     group: "behavior",
     label: "Định dạng cục bộ (đậm, nghiêng…)",
@@ -462,9 +449,8 @@ export function toPageSetupSettings(values: FormatValues): PageSetupSettings {
   };
 }
 
-export function behaviorOf(values: FormatValues): { scope: "selection" | "document"; localFormatting: "keep" | "clear" } {
+export function behaviorOf(values: FormatValues): { localFormatting: "keep" | "clear" } {
   return {
-    scope: values.scope === "document" ? "document" : "selection",
     localFormatting: values.localFormatting === "clear" ? "clear" : "keep",
   };
 }
