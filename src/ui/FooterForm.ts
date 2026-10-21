@@ -43,6 +43,7 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
   let luu = "VT";
   let authority = "";
   let positionLines = [""];
+  let secondTitle = "";
   let signerName = "";
   let confirmTitle: string | null = null;
   let drafter = "";
@@ -71,13 +72,14 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
         drafter,
         authority,
         positionLines: draft.positionLines,
+        secondTitle,
         signerName: draft.signerName,
         confirmation: withConfirmation ? confirmation : "",
       });
       const partyProblems = validatePartyFooter(party);
       return partyProblems.length > 0 ? { ok: false, error: partyProblems.join(" ") } : { ok: true, kind: "dang", input: party, academicTitle, assumed };
     }
-    const input = footerInputFromOptions(profile, deps.values(), { recipients: draft.recipients.split(/\r?\n/), luu, authority, positionLines: draft.positionLines, signerName: draft.signerName });
+    const input = footerInputFromOptions(profile, deps.values(), { recipients: draft.recipients.split(/\r?\n/), luu, authority, positionLines: draft.positionLines, secondTitle, signerName: draft.signerName });
     const problems = validateFooterInput(input);
     return problems.length > 0 ? { ok: false, error: problems.join(" ") } : { ok: true, kind: "quocHieu", input, academicTitle, assumed };
   }
@@ -163,6 +165,7 @@ export function mountFooterForm(container: HTMLElement, deps: FooterFormDeps): {
         if (positionLines.length > 1) positionLines = positionLines.slice(0, -1);
         render();
       }, { id: "ff-remove-position", disabled: positionLines.length <= 1 }),
+      create("div", {}, text("ff-second-title", "Chức danh thứ hai, dưới chữ ký (nếu có, ví dụ Thủ tướng)", secondTitle, (v) => (secondTitle = v))),
       create("div", {}, text("ff-name", "Họ và tên người ký (không ghi học hàm, học vị)", signerName, (v) => (signerName = v))),
     );
     if (party) {

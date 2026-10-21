@@ -22,6 +22,11 @@ export interface FooterBlockInput {
   authority: string;
   /** Chức vụ, một hoặc hai dòng; dòng đầu đi cùng quyền hạn. */
   positionLines: readonly string[];
+  /**
+   * Chức danh thứ hai của người ký có hai chức danh (ví dụ "TRƯỞNG BAN" ở trên, "THỦ TƯỚNG" ở dưới): in hoa, đậm, đặt
+   * dưới chỗ ký, ngay trên họ tên. Trống thì không có.
+   */
+  secondTitle?: string;
   signerName: string;
   /** Số dòng trống chừa chỗ ký. */
   signGapLines: number;
@@ -64,6 +69,12 @@ export function stripAcademicTitles(name: string): string {
     rest = rest.slice(found.length).replace(/^[.\s]+/, "");
   }
   return rest;
+}
+
+/** Chức danh thứ hai dưới chỗ ký, in hoa; trống thì không có dòng nào. */
+export function secondTitleLines(secondTitle: string | undefined): string[] {
+  const text = clean(secondTitle ?? "");
+  return text === "" ? [] : [text.toUpperCase()];
 }
 
 export function validateFooterInput(input: FooterBlockInput): string[] {
@@ -119,6 +130,7 @@ export function buildFooterBlock(input: FooterBlockInput): string {
   const right = [
     ...positions.map((line) => paragraph(line, sizes.quyenHanChucVu, { bold: true, align: "center" })),
     ...Array.from({ length: input.signGapLines }, () => paragraph("", sizes.quyenHanChucVu, { bold: true, align: "center" })),
+    ...secondTitleLines(input.secondTitle).map((line) => paragraph(line, sizes.quyenHanChucVu, { bold: true, align: "center" })),
     paragraph(clean(input.signerName), sizes.hoTen, { bold: true, align: "center" }),
   ];
 
@@ -135,7 +147,7 @@ export function buildFooterBlock(input: FooterBlockInput): string {
 export function footerInputFromOptions(
   profile: StandardProfile,
   values: FormatValues,
-  text: { recipients: readonly string[]; luu: string; authority: string; positionLines: readonly string[]; signerName: string },
+  text: { recipients: readonly string[]; luu: string; authority: string; positionLines: readonly string[]; secondTitle?: string; signerName: string },
 ): FooterBlockInput {
   const num = (id: string, fallback: number): number => (typeof values[id] === "number" ? (values[id] as number) : fallback);
   const fixed = profile.pageDefaults.marginsMm;

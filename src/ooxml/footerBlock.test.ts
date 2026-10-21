@@ -90,6 +90,16 @@ describe("buildFooterBlock: cấu trúc và khớp fixture", () => {
     expect(tableOf({ ...base, signGapLines: 4 }).rows[0][1]).toHaveLength(2 + 4 + 1);
   });
 
+  it("người ký có hai chức danh: chức danh thứ nhất trên chỗ ký, chức danh thứ hai dưới chỗ ký, trên họ tên", () => {
+    const [, r] = tableOf({ ...base, authority: "", positionLines: ["Trưởng ban"], secondTitle: "Thủ tướng", signerName: "Phạm Minh Chính", signGapLines: 4 }).rows[0];
+    expect(r.map((p) => p.text)).toEqual(["TRƯỞNG BAN", "", "", "", "", "THỦ TƯỚNG", "Phạm Minh Chính"]);
+    expect(r[5]).toMatchObject({ bold: true, sizePt: 14, align: "center" });
+  });
+
+  it("chức danh thứ hai để trống thì như cũ", () => {
+    expect(tableOf({ ...base, secondTitle: "  " }).rows[0][1]).toHaveLength(2 + 6 + 1);
+  });
+
   it("không có quyền hạn thì chức vụ in hoa một mình; chức vụ một dòng", () => {
     const [, r] = tableOf({ ...base, authority: "", positionLines: ["Giám đốc"] }).rows[0];
     expect(r[0].text).toBe("GIÁM ĐỐC");

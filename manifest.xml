@@ -7,14 +7,14 @@
   xsi:type="TaskPaneApp">
 
   <Id>f47a9dbd-3e89-4ae6-a70d-f52558640c57</Id>
-  <Version>1.0.10.0</Version>
+  <Version>1.0.11.0</Version>
   <ProviderName>TTA-Format</ProviderName>
   <DefaultLocale>vi-VN</DefaultLocale>
   <DisplayName DefaultValue="TTA-Format"/>
   <Description DefaultValue="Soạn thảo và chuẩn hoá văn bản theo Nghị định 30/2020/NĐ-CP và Hướng dẫn 05-HD/VPTW."/>
   <IconUrl DefaultValue="https://ttanh2711-huyen.github.io/tta-format/assets/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://ttanh2711-huyen.github.io/tta-format/assets/icon-80.png"/>
-  <SupportUrl DefaultValue="https://ttanh2711-huyen.github.io/tta-format/taskpane.html?v=1.0.10"/>
+  <SupportUrl DefaultValue="https://ttanh2711-huyen.github.io/tta-format/taskpane.html?v=1.0.11"/>
   <AppDomains>
     <AppDomain>https://ttanh2711-huyen.github.io</AppDomain>
   </AppDomains>
@@ -24,7 +24,7 @@
   </Hosts>
 
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://ttanh2711-huyen.github.io/tta-format/taskpane.html?v=1.0.10"/>
+    <SourceLocation DefaultValue="https://ttanh2711-huyen.github.io/tta-format/taskpane.html?v=1.0.11"/>
   </DefaultSettings>
 
   <Permissions>ReadWriteDocument</Permissions>
@@ -73,7 +73,7 @@
         <bt:Image id="Icon.80x80" DefaultValue="https://ttanh2711-huyen.github.io/tta-format/assets/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="Taskpane.Url" DefaultValue="https://ttanh2711-huyen.github.io/tta-format/taskpane.html?v=1.0.10"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://ttanh2711-huyen.github.io/tta-format/taskpane.html?v=1.0.11"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="Tab.Label" DefaultValue="TTA-Format"/>

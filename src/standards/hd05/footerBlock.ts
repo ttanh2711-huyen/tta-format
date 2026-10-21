@@ -1,5 +1,5 @@
 import { mmToTwips } from "../../ooxml/flatOpc";
-import { MAX_POSITION_LINES, recipientLines } from "../../ooxml/footerBlock";
+import { MAX_POSITION_LINES, recipientLines, secondTitleLines } from "../../ooxml/footerBlock";
 import { borderlessTable, cell, escapeXml } from "../../ooxml/headerBlock";
 import type { FormatValues } from "../../settings/formatOptions";
 import type { StandardProfile } from "../types";
@@ -26,6 +26,8 @@ export interface PartyFooterInput {
   authority: string;
   /** Chức vụ, một hoặc hai dòng; dòng đầu đi cùng quyền hạn. */
   positionLines: readonly string[];
+  /** Chức danh thứ hai của người ký có hai chức danh: in hoa, dưới chỗ ký, ngay trên họ tên; trống thì không có. */
+  secondTitle?: string;
   signerName: string;
   /** Họ tên và chức vụ người được xác nhận chữ ký ("Xác nhận chữ ký của đồng chí ..."); trống thì bỏ. */
   confirmation: string;
@@ -93,6 +95,7 @@ export function buildPartyFooterBlock(input: PartyFooterInput): string {
     paragraph(first, sizes.chucVu, "center"),
     ...positions.slice(1).map((line) => paragraph([{ text: line }], sizes.chucVu, "center")),
     ...Array.from({ length: input.signGapLines }, () => paragraph([], sizes.chucVu, "center")),
+    ...secondTitleLines(input.secondTitle).map((line) => paragraph([{ text: line }], sizes.chucVu, "center")),
     paragraph([{ text: clean(input.signerName), bold: true }], sizes.hoTen, "center"),
     ...(confirmation === "" ? [] : [paragraph([{ text: `Xác nhận chữ ký của đồng chí ${confirmation}` }], sizes.chucVu, "center", 6)]),
   ];
@@ -105,7 +108,7 @@ export function buildPartyFooterBlock(input: PartyFooterInput): string {
 export function partyFooterFromOptions(
   profile: StandardProfile,
   values: FormatValues,
-  text: Pick<PartyFooterInput, "recipients" | "luu" | "drafter" | "authority" | "positionLines" | "signerName" | "confirmation">,
+  text: Pick<PartyFooterInput, "recipients" | "luu" | "drafter" | "authority" | "positionLines" | "secondTitle" | "signerName" | "confirmation">,
 ): PartyFooterInput {
   const num = (id: string, fallback: number): number => (typeof values[id] === "number" ? (values[id] as number) : fallback);
   const fixed = profile.pageDefaults.marginsMm;

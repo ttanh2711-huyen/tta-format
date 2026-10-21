@@ -82,6 +82,11 @@ describe("buildPartyFooterBlock: chữ ký", () => {
     expect(tableOf({ ...base, signGapLines: 4 }).rows[0][1]).toHaveLength(2 + 4 + 1);
   });
 
+  it("người ký có hai chức danh: chức danh thứ hai in hoa dưới chỗ ký, trên họ tên", () => {
+    const [, right] = tableOf({ ...base, authority: "", positionLines: ["Trưởng ban"], secondTitle: "Bí thư Tỉnh ủy", confirmation: "", signGapLines: 4 }).rows[0];
+    expect(right.map((p) => p.text)).toEqual(["TRƯỞNG BAN", "", "", "", "", "BÍ THƯ TỈNH ỦY", base.signerName]);
+  });
+
   it.each(["T/M", "K/T", "T/L", "Q."])("quyền hạn %s đứng trước dòng chức vụ đầu", (authority) => {
     const [, right] = tableOf({ ...base, authority, positionLines: ["Bí thư"] }).rows[0];
     expect(right[0].text).toBe(`${authority} BÍ THƯ`);
