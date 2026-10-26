@@ -14,6 +14,7 @@ import { mountHeaderForm } from "../ui/HeaderForm";
 import { mountInsertPanel } from "../ui/InsertPanel";
 import { mountNewDocWizard } from "../ui/NewDocWizard";
 import { mountPageSetupPanel } from "../ui/PageSetupPanel";
+import { mountQuickActions } from "../ui/QuickActions";
 import { mountQuickOptions } from "../ui/QuickOptions";
 import { mountReportPanel } from "../ui/ReportPanel";
 import { mountSettingsPanel } from "../ui/SettingsPanel";
@@ -24,6 +25,14 @@ import { loadActiveSection, loadActiveTab, saveActiveSection, saveActiveTab } fr
 
 /** Biểu tượng của các tab kiểu ribbon (nét vẽ SVG, khung 24×24). */
 const ICONS = {
+  home: ["M13 2 4 14h7l-1 8 9-12h-7z"],
+  selection: ["M4 7V4h3", "M17 4h3v3", "M20 17v3h-3", "M7 20H4v-3", "M8 10h8", "M8 14h5"],
+  sparkle: ["M12 3v4", "M12 17v4", "M3 12h4", "M17 12h4", "m6 6 2 2", "m16 16 2 2", "m6 18 2-2", "m16 8 2-2"],
+  page: ["M5 3h14v18H5z", "M8 6h8v12H8z"],
+  pageNumber: ["M5 3h14v18H5z", "M10 7h4", "M8 12h8", "M8 16h8"],
+  styles: ["M4 19 9 5l5 14", "M6.5 13h5", "M16 9h4", "M16 14h4", "M16 19h4"],
+  template: ["M4 4h16v4H4z", "M4 12h7v8H4z", "M15 12h5", "M15 16h5", "M15 20h5"],
+  list: ["M9 6h11", "M9 12h11", "M9 18h11", "m3 6 1 1 2-2", "m3 12 1 1 2-2", "m3 18 1 1 2-2"],
   compose: ["M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z", "M14 3v5h5", "M12 11v6", "M9 14h6"],
   blocks: ["M4 4h16v6H4z", "M4 14h7v6H4z", "M15 14h5v6h-5z"],
   format: ["M4 6h16", "M4 10h16", "M4 14h16", "M4 18h10"],
@@ -77,7 +86,8 @@ function need(id: string): HTMLElement {
 
 /**
  * Dựng toàn bộ giao diện TTA-Format: chuẩn văn bản (Nghị định 30 hay Hướng dẫn 05) chọn bằng nút gạt ở đầu trang; năm
- * tab kiểu ribbon (Soạn thảo, Khối, Định dạng, Kiểm tra, Cơ quan), mỗi tab có các mục con, mỗi lần hiện một mục.
+ * tab kiểu ribbon (Nhanh, Soạn, Khối, Định dạng, Kiểm tra, Cơ quan), mỗi tab có các mục con, mỗi lần hiện một mục; tab
+ * Nhanh gom các việc hay làm, mỗi việc một lần bấm.
  */
 export function mountApp(options: { check?: (profile: StandardProfile) => Promise<Issue[]> } = {}): void {
   const store = browserStore();
@@ -104,12 +114,40 @@ export function mountApp(options: { check?: (profile: StandardProfile) => Promis
   sampleButton.addEventListener("click", () => void onInsertSample());
   sampleEl.append(sampleButton);
 
-  // Năm tab theo trình tự công việc: soạn, khối đầu và cuối, định dạng, kiểm tra, cơ quan. Mỗi tab chia mục con
+  // Tab "Nhanh": việc hay làm nhất, một lần bấm (đi tới đúng mục rồi bấm nút ở đó).
+  const homeEl = element("div", "quick-actions");
+  mountQuickActions(homeEl, [
+    {
+      title: "Chạy ngay",
+      actions: [
+        { id: "format-selection", label: "Định dạng phần tô đen", hint: "Bôi đen đoạn cần sửa rồi bấm", icon: ICONS.selection, runs: true, onClick: () => go("format", "body", "fb-selection") },
+        { id: "check", label: "Kiểm tra văn bản", hint: "Liệt kê lỗi theo nhóm", icon: ICONS.check, runs: true, onClick: () => go("check", "report", "rp-check") },
+        { id: "quick-fix", label: "Sửa nhanh", hint: "Chuẩn hoá cả văn bản, hoàn tác được", icon: ICONS.sparkle, runs: true, onClick: () => go("check", "report", "rp-quick") },
+        { id: "page", label: "Thiết lập trang", hint: "Khổ A4, lề theo chuẩn", icon: ICONS.page, runs: true, onClick: () => go("format", "page", "ps-apply") },
+        { id: "page-number", label: "Đánh số trang", hint: "Giữa lề trên, ẩn trang 1", icon: ICONS.pageNumber, runs: true, onClick: () => go("format", "page", "ps-page-number") },
+        { id: "styles", label: "Cài bộ style", hint: "Style của chuẩn vào văn bản", icon: ICONS.styles, runs: true, onClick: () => go("format", "page", "ps-install-styles") },
+      ],
+    },
+    {
+      title: "Mở nhanh",
+      actions: [
+        { id: "new", label: "Tạo văn bản mới", hint: "Chọn loại, điền rồi tạo", icon: ICONS.compose, runs: false, onClick: () => go("compose", "new") },
+        { id: "template", label: "Tạo mẫu", hint: "Biến văn bản thành mẫu", icon: ICONS.template, runs: false, onClick: () => go("compose", "template") },
+        { id: "head", label: "Khối đầu", hint: "Cơ quan, số, ngày tháng", icon: ICONS.blocks, runs: false, onClick: () => go("blocks", "head") },
+        { id: "foot", label: "Khối cuối", hint: "Nơi nhận, người ký", icon: ICONS.blocks, runs: false, onClick: () => go("blocks", "foot") },
+        { id: "fixall", label: "Chỉnh toàn bộ", hint: "Nhiều bước, có xem trước", icon: ICONS.list, runs: false, onClick: () => go("check", "fixall") },
+        { id: "agency", label: "Hồ sơ cơ quan", hint: "Điền sẵn khối đầu, khối cuối", icon: ICONS.agency, runs: false, onClick: () => go("agency", "profiles") },
+      ],
+    },
+  ]);
+
+  // Sáu tab theo trình tự công việc: nhanh, soạn, khối đầu và cuối, định dạng, kiểm tra, cơ quan. Mỗi tab chia mục con
   // (chỉ hiện một mục mỗi lần) để hạn chế cuộn trang.
   const ribbon: RibbonTab[] = [
+    { id: "home", label: "Nhanh", icon: ICONS.home, sections: [{ id: "actions", label: "Việc hay làm", content: homeEl }] },
     {
       id: "compose",
-      label: "Soạn thảo",
+      label: "Soạn",
       icon: ICONS.compose,
       sections: [
         { id: "new", label: "Tạo mới", content: wizardEl },
@@ -158,11 +196,13 @@ export function mountApp(options: { check?: (profile: StandardProfile) => Promis
   ];
 
   const panels = need("panels");
+  const sectionShowers = new Map<string, (id: string) => void>();
   for (const tab of ribbon) {
     const panel = element("div", `panel-${tab.id}`, { className: "panel" });
     panel.setAttribute("role", "tabpanel");
     panel.setAttribute("aria-labelledby", tabButtonId(tab.id));
-    const nav = element("div", `subnav-${tab.id}`, { className: "subnav-bar" });
+    // Tab chỉ có một mục thì không cần thanh mục con.
+    const nav = element("div", `subnav-${tab.id}`, { className: "subnav-bar", hidden: tab.sections.length < 2 });
     const sectionEls = tab.sections.map((section) => {
       const el = element("section", `sec-${tab.id}-${section.id}`, { className: "sec" });
       el.setAttribute("role", "tabpanel");
@@ -187,6 +227,15 @@ export function mountApp(options: { check?: (profile: StandardProfile) => Promis
       saveActiveSection(store, tab.id, id);
     }
     showSection(initial);
+    sectionShowers.set(tab.id, showSection);
+  }
+
+  /** Đi tới mục `sectionId` của tab `tabId`; có `clickId` thì bấm luôn nút đó để chạy ngay. */
+  function go(tabId: string, sectionId: string, clickId?: string): void {
+    activate(tabId);
+    sectionShowers.get(tabId)?.(sectionId);
+    window.scrollTo(0, 0);
+    if (clickId) document.getElementById(clickId)?.click();
   }
 
   const documentSupported = isDocumentStandardSupported();
@@ -257,7 +306,9 @@ export function mountApp(options: { check?: (profile: StandardProfile) => Promis
 
   // Chuẩn văn bản: nút gạt ở đầu trang, dùng chung cho mọi tab.
   const standardButtons = STANDARDS.map((standard) => {
-    const button = element("button", `std-${standard.id}`, { type: "button", textContent: standard.tabLabel, title: standard.name });
+    // Nhãn gọn "NĐ 30", "HD 05" lấy trong tên chuẩn; tên đầy đủ ở chú thích.
+    const short = /\(([^)]+)\)/.exec(standard.name)?.[1] ?? standard.tabLabel;
+    const button = element("button", `std-${standard.id}`, { type: "button", textContent: short, title: `${standard.tabLabel}: ${standard.name}` });
     button.addEventListener("click", () => switcher.choose(standard.id));
     return { id: standard.id, button };
   });

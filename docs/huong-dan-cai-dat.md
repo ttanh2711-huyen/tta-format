@@ -28,11 +28,12 @@ Add-in nhớ bạn đã thêm: lần sau mở Word chỉ cần bấm nút trong 
 
 ## 4. Dùng hằng ngày
 
-Đầu bảng TTA-Format có nút gạt **Nghị định 30 | Hướng dẫn 05** để chọn chuẩn đang dùng. Dưới đó là thanh ribbon năm tab theo trình tự công việc:
+Đầu bảng TTA-Format có nút gạt **NĐ 30 | HD 05** để chọn chuẩn đang dùng (Nghị định 30 hay Hướng dẫn 05). Dưới đó là thanh ribbon sáu tab theo trình tự công việc:
 
 | Tab | Mục con |
 |---|---|
-| **Soạn thảo** | Tạo mới, Tạo mẫu, Chèn thêm (dấu khẩn, phụ lục) |
+| **Nhanh** | Việc hay làm, mỗi việc một lần bấm. *Chạy ngay*: Định dạng phần tô đen, Kiểm tra văn bản, Sửa nhanh, Thiết lập trang, Đánh số trang, Cài bộ style. *Mở nhanh*: Tạo văn bản mới, Tạo mẫu, Khối đầu, Khối cuối, Chỉnh toàn bộ, Hồ sơ cơ quan |
+| **Soạn** | Tạo mới, Tạo mẫu, Chèn thêm (dấu khẩn, phụ lục) |
 | **Khối** | Khối đầu, Khối cuối |
 | **Định dạng** | Nội dung, Trang và style, Tuỳ chọn |
 | **Kiểm tra** | Kiểm tra lỗi, Chỉnh toàn bộ |
@@ -43,7 +44,7 @@ Mỗi lần chỉ hiện một mục con nên ít phải cuộn; add-in nhớ ta
 - **Văn bản mới**: mục **Tạo văn bản mới**, chọn loại văn bản, điền Khối đầu và Khối cuối, bấm tạo. Add-in thiết lập trang, cài style, dựng khối đầu, thân, khối cuối và đánh số trang; sau đó bạn gõ nội dung vào chỗ con trỏ. Dùng **Khôi phục** nếu muốn quay lại bản trước khi tạo.
 - **Người ký có hai chức danh** (ví dụ Trưởng ban kiêm Thủ tướng): ở Khối cuối, nhóm Người ký, ghi chức danh thứ nhất vào ô Chức vụ (TRƯỞNG BAN, nằm trên chữ ký) và chức danh thứ hai vào ô **Chức danh thứ hai, dưới chữ ký** (THỦ TƯỚNG, nằm dưới chữ ký, ngay trên họ tên). Cả hai dòng in hoa theo chuẩn.
 - **Văn bản có sẵn**: **Chỉnh toàn bộ** áp dụng các bước (trang, style, thân, bảng, khối đầu và cuối, số trang, lỗi còn lại) có xem trước. Add-in chụp bản trước khi chỉnh để khôi phục.
-- **Biến văn bản này thành mẫu** (tab Soạn thảo, mục Tạo mẫu): thay số, ngày tháng, trích yếu, căn cứ, thân, nơi nhận, người ký bằng ô điền có tiêu đề, giữ bố cục và style; lưu bằng File > Save As > Word Template (*.dotx). Nên làm trên bản sao; có nút Khôi phục bản gốc.
+- **Biến văn bản này thành mẫu** (tab Soạn, mục Tạo mẫu): thay số, ngày tháng, trích yếu, căn cứ, thân, nơi nhận, người ký bằng ô điền có tiêu đề, giữ bố cục và style; lưu bằng File > Save As > Word Template (*.dotx). Nên làm trên bản sao; có nút Khôi phục bản gốc.
 - **Định dạng nội dung** (tab Định dạng, mục Nội dung) nhận ra đề mục (Chương, Mục, Điều, khoản "1.", điểm "a)", đề mục "I.") và áp style đề mục tương ứng thay vì style thân bài. Có hai nút:
   - **Định dạng phần tô đen**: bôi đen các đoạn cần sửa rồi bấm; phông, cỡ chữ, căn lề, thụt dòng, giãn đoạn, giãn dòng về đúng chuẩn, kể cả đoạn đã có style chuẩn; chữ đậm, nghiêng trong đoạn giữ nguyên.
   - **Định dạng cả văn bản**: áp cho mọi đoạn chưa dùng style chuẩn.

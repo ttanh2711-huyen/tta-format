@@ -18,11 +18,12 @@ export interface TabsOptions {
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
-function iconElement(paths: readonly string[]): SVGSVGElement {
+/** Biểu tượng nét vẽ (khung 24×24), ẩn với trình đọc màn hình vì luôn đi kèm chữ. */
+export function iconElement(paths: readonly string[], className = "tab-icon"): SVGSVGElement {
   const svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("viewBox", "0 0 24 24");
   svg.setAttribute("aria-hidden", "true");
-  svg.setAttribute("class", "tab-icon");
+  svg.setAttribute("class", className);
   for (const d of paths) {
     const path = document.createElementNS(SVG_NS, "path");
     path.setAttribute("d", d);
