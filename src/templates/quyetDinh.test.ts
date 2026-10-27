@@ -20,20 +20,20 @@ function paragraphsOf(xml: string): ParagraphModel[] {
 }
 
 describe("căn cứ", () => {
-  it("mỗi căn cứ cuối dòng bằng dấu chấm phẩy, căn cứ cuối bằng dấu phẩy; dấu cũ được thay", () => {
+  it("mỗi căn cứ cuối dòng bằng dấu chấm phẩy, căn cứ cuối bằng dấu chấm (Phụ lục I, II.6); dấu cũ được thay", () => {
     expect(basisLines(base.basis)).toEqual([
       "Căn cứ Luật Tổ chức chính quyền địa phương ngày 19 tháng 6 năm 2015;",
       "Căn cứ Nghị định số 30/2020/NĐ-CP;",
-      "Xét đề nghị của Giám đốc Sở Nội vụ,",
+      "Xét đề nghị của Giám đốc Sở Nội vụ.",
     ]);
   });
 
   it("bỏ dòng trống và gộp khoảng trắng", () => {
-    expect(basisLines(["  Căn cứ   A  ", "", "Căn cứ B;"])).toEqual(["Căn cứ A;", "Căn cứ B,"]);
+    expect(basisLines(["  Căn cứ   A  ", "", "Căn cứ B;"])).toEqual(["Căn cứ A;", "Căn cứ B."]);
   });
 
-  it("một căn cứ duy nhất kết thúc bằng dấu phẩy", () => {
-    expect(basisLines(["Căn cứ A"])).toEqual(["Căn cứ A,"]);
+  it("một căn cứ duy nhất kết thúc bằng dấu chấm", () => {
+    expect(basisLines(["Căn cứ A"])).toEqual(["Căn cứ A."]);
   });
 });
 
@@ -62,7 +62,7 @@ describe("thân văn bản", () => {
       "CHỦ TỊCH ỦY BAN NHÂN DÂN THÀNH PHỐ CẦN THƠ",
       "Căn cứ Luật Tổ chức chính quyền địa phương ngày 19 tháng 6 năm 2015;",
       "Căn cứ Nghị định số 30/2020/NĐ-CP;",
-      "Xét đề nghị của Giám đốc Sở Nội vụ,",
+      "Xét đề nghị của Giám đốc Sở Nội vụ.",
       "QUYẾT ĐỊNH:",
       BODY_MARKER,
       "",

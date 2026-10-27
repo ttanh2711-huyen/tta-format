@@ -28,6 +28,8 @@ export interface PartyTitleInput {
   sizes: { theLoai: number; trichYeu: number; trichYeuCongVan: number; kinhGui: number };
   /** Giãn dòng Exactly (pt) của các dòng danh sách, theo giãn dòng nội dung. */
   lineExactPt: number;
+  /** Thụt dòng đầu (mm) của các căn cứ, theo thụt dòng nội dung; mặc định 10 mm (6.2.2). */
+  basisIndentMm?: number;
   textWidthMm: number;
 }
 
@@ -88,8 +90,9 @@ function recipientList(input: PartyTitleInput): string[] {
   ];
 }
 
+/** Căn cứ (6.2.3): mỗi căn cứ một khổ, "-" đầu khổ, ";" cuối, căn cứ cuối "."; trình bày như nội dung (6.2.2): dàn đều hai lề, chữ đứng, dòng đầu lùi vào. */
 function basisList(input: PartyTitleInput): string[] {
-  return dashList(input.basis).map((line) => paragraph(line, { sizePt: input.sizes.kinhGui, align: "both", leftMm: 0, hangingMm: DASH_HANGING_MM, exactPt: input.lineExactPt }));
+  return dashList(input.basis).map((line) => paragraph(line, { sizePt: input.sizes.kinhGui, align: "both", firstLineMm: input.basisIndentMm ?? 10, exactPt: input.lineExactPt }));
 }
 
 /** XML thân văn bản (các đoạn) nằm ngay sau bảng đầu văn bản. */
@@ -119,6 +122,7 @@ export function partyTitleFromOptions(
       kinhGui: num("fontSize", 14),
     },
     lineExactPt: profile.content.lineSpacing.kind === "exactly" ? num("lineSpacing", 20) : 20,
+    basisIndentMm: num("firstLineIndent", profile.styles.defaults.firstLineIndentMm),
     textWidthMm: profile.page.paper.widthMm - num("marginLeft", fixed.left) - num("marginRight", fixed.right),
   };
 }

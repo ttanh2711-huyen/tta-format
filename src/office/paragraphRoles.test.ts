@@ -46,6 +46,12 @@ describe("nhận diện vai trò đoạn theo ký hiệu đầu đoạn (issue #
     expect(roles).toEqual(["chuong", "tenChuong", "muc", "tenMuc", "dieu", "noiDung"]);
     expect(assignRoles(["Chương I", "Quy định này áp dụng cho…"])).toEqual(["chuong", "noiDung"]);
   });
+
+  it("căn cứ: dòng 'Căn cứ…;', '- Căn cứ…;' (Đảng), dòng cuối '.'; câu thân bài mở đầu bằng 'Căn cứ' vẫn là nội dung", () => {
+    expect(assignRoles(["Căn cứ Luật A;", "Theo đề nghị của Văn phòng.", "Nội dung."])).toEqual(["canCu", "canCu", "noiDung"]);
+    expect(assignRoles(["- Căn cứ Điều lệ Đảng;", "- Căn cứ Quy định số 399-QĐ/TW."])).toEqual(["canCu", "canCu"]);
+    expect(assignRoles(["Căn cứ Kế hoạch số 12/KH-UBND, Phòng báo cáo như sau:"])).toEqual(["noiDung"]);
+  });
 });
 
 describe("style theo vai trò cho từng chuẩn", () => {
@@ -59,6 +65,9 @@ describe("style theo vai trò cho từng chuẩn", () => {
     expect(roleStyle("deMuc", ND30)).toEqual({ styleName: "ND30_NoiDung", bold: true });
     expect(roleStyle("y", ND30)).toEqual({ styleName: "ND30_NoiDung" });
     expect(roleStyle("noiDung", HD05)).toEqual({ styleName: "HD05_NoiDung" });
+    // Căn cứ: Chính quyền có style căn cứ (in nghiêng); Đảng trình bày như nội dung (chữ đứng).
+    expect(roleStyle("canCu", ND30)).toEqual({ styleName: "ND30_CanCu" });
+    expect(roleStyle("canCu", HD05)).toEqual({ styleName: "HD05_NoiDung" });
   });
 
   it("kế hoạch định dạng gắn style theo vai trò, vẫn bỏ qua bảng, đoạn trống, danh sách tự động", () => {

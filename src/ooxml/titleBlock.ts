@@ -67,6 +67,8 @@ export interface ParagraphStyle {
   exactPt?: number;
   leftMm?: number;
   hangingMm?: number;
+  /** Thụt dòng đầu (mm), như đoạn nội dung; dùng thay cho `leftMm`, `hangingMm`. */
+  firstLineMm?: number;
 }
 
 /** Một đoạn chữ đã định dạng trực tiếp (Times New Roman); dùng chung cho các khối tên loại của hai chuẩn. */
@@ -76,7 +78,9 @@ export function paragraph(text: string, style: ParagraphStyle): string {
   const line = style.exactPt === undefined ? Math.floor((style.lineMultiple ?? 1) * 240 + 1e-6) : Math.round(style.exactPt * 20);
   const rule = style.exactPt === undefined ? "auto" : "exact";
   const indent =
-    style.leftMm === undefined
+    style.firstLineMm !== undefined
+      ? `<w:ind w:left="0" w:firstLine="${mmToTwips(style.firstLineMm)}"/>`
+      : style.leftMm === undefined
       ? ""
       : `<w:ind w:left="${mmToTwips(style.leftMm + (style.hangingMm ?? 0))}"${style.hangingMm ? ` w:hanging="${mmToTwips(style.hangingMm)}"` : ""}/>`;
   return (

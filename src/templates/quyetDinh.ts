@@ -80,7 +80,8 @@ export function validateDecision(input: DecisionInput): string[] {
  */
 export function basisLines(basis: readonly string[]): string[] {
   const entries = basis.map((line) => clean(line).replace(/[;.,]+$/, "")).filter((line) => line !== "");
-  return entries.map((entry, index) => `${entry}${index === entries.length - 1 ? "," : ";"}`);
+  // Phụ lục I, II.6: cuối mỗi căn cứ có dấu chấm phẩy, dòng cuối cùng kết thúc bằng dấu chấm.
+  return entries.map((entry, index) => `${entry}${index === entries.length - 1 ? "." : ";"}`);
 }
 
 function plain(text: string, sizePt: number, options: { bold?: boolean; italic?: boolean; align: "center" | "both"; styleId?: string; keepNext?: boolean; beforePt?: number; afterPt?: number }): string {

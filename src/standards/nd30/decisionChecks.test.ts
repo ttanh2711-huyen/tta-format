@@ -34,7 +34,7 @@ const ids = (issues: Issue[]) => issues.map((i) => i.ruleId);
 const block = (over: Partial<P>[] = []): P[] => [
   { text: "CHỦ TỊCH ỦY BAN NHÂN DÂN", bold: true },
   { text: "Căn cứ Luật A;", italic: true, ...over[0] },
-  { text: "Xét đề nghị của Giám đốc Sở B,", italic: true, ...over[1] },
+  { text: "Xét đề nghị của Giám đốc Sở B.", italic: true, ...over[1] },
   { text: "QUYẾT ĐỊNH:", bold: true, ...over[2] },
   { text: "Nội dung điều 1." },
 ];
@@ -64,9 +64,11 @@ describe("phần căn cứ của quyết định", () => {
     expect(run(applyFix(d, run(d)[0].fix!))).toEqual([]);
   });
 
-  it("căn cứ giữa kết thúc không bằng chấm phẩy, căn cứ cuối không bằng phẩy", () => {
+  it("căn cứ giữa kết thúc không bằng chấm phẩy, căn cứ cuối không bằng dấu chấm (Phụ lục I, II.6)", () => {
     for (const [patch, rule] of [
       [[{ text: "Căn cứ Luật A." }], "basis.punctuation"],
+      [[{}, { text: "Xét đề nghị của Giám đốc Sở B," }], "basis.punctuation"],
+      [[{ text: "- Căn cứ Luật A;" }], "basis.dash"],
       [[{}, { text: "Xét đề nghị của Giám đốc Sở B;" }], "basis.punctuation"],
       [[{}, { text: "Xét đề nghị của Giám đốc Sở B" }], "basis.punctuation"],
     ] as const) {

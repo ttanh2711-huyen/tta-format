@@ -10,7 +10,7 @@ import type { StandardProfile } from "../standards/types";
  * - noiDung: còn lại.
  * Quy tắc đòi ký hiệu đứng đầu đoạn và theo sau đúng kiểu, để "Chương trình…", "Mục tiêu…", "1.500 hộ…" vẫn là thân bài.
  */
-export type ParagraphRole = "chuong" | "tenChuong" | "muc" | "tenMuc" | "dieu" | "deMuc" | "khoan" | "diem" | "y" | "noiDung";
+export type ParagraphRole = "chuong" | "tenChuong" | "muc" | "tenMuc" | "dieu" | "deMuc" | "khoan" | "diem" | "y" | "canCu" | "noiDung";
 
 const ROMAN = "[IVXLC]+";
 const CHAPTER = new RegExp(`^(?:(?:Chương|CHƯƠNG)\\s+(?:${ROMAN}|\\d+)(?![\\p{L}\\d])|(?:Phần|PHẦN)\\s+(?:thứ\\s+\\p{L}+|THỨ\\s+\\p{L}+|${ROMAN}|\\d+)(?![\\p{L}\\d]))`, "u");
@@ -22,6 +22,7 @@ const SUB_NUMBER = /^\d{1,2}\.\d{1,2}(?:\.\s+\p{L}|\s+\p{Lu})/u;
 const CLAUSE = /^\d{1,2}\.\s+\p{L}/u;
 const POINT = /^[a-zđ]\)\s/u;
 const BULLET = /^[-+–•]\s/u;
+const BASIS = /^[-–—]?\s*(Căn cứ|Xét đề nghị|Theo đề nghị)(?=\s|$)/u;
 
 /** Vai trò của một đoạn, chỉ xét chữ của chính đoạn đó (chưa biết đoạn đứng trước). */
 export function detectRole(text: string): ParagraphRole {
@@ -33,6 +34,8 @@ export function detectRole(text: string): ParagraphRole {
   if (SUB_NUMBER.test(t)) return "diem";
   if (CLAUSE.test(t)) return "khoan";
   if (POINT.test(t)) return "diem";
+  // Trước ý gạch đầu dòng: căn cứ của văn bản Đảng mở đầu bằng "- Căn cứ".
+  if (BASIS.test(t)) return "canCu";
   if (BULLET.test(t)) return "y";
   return "noiDung";
 }
@@ -48,7 +51,10 @@ export function assignRoles(texts: readonly string[]): ParagraphRole[] {
   texts.forEach((text, i) => {
     const own = detectRole(text);
     const previous = i > 0 ? roles[i - 1] : undefined;
-    if (own === "noiDung" && isUpperLine(text) && previous === "chuong") roles.push("tenChuong");
+    // Căn cứ: dòng kết thúc ";" (hoặc "." ngay sau một căn cứ); câu thân bài mở đầu bằng "Căn cứ…," vẫn là nội dung.
+    const end = text.trim().slice(-1);
+    if (own === "canCu" && !(end === ";" || (end === "." && previous === "canCu"))) roles.push("noiDung");
+    else if (own === "noiDung" && isUpperLine(text) && previous === "chuong") roles.push("tenChuong");
     else if (own === "noiDung" && isUpperLine(text) && previous === "muc") roles.push("tenMuc");
     else roles.push(own);
   });
@@ -66,6 +72,7 @@ const ELEMENTS: Record<ParagraphRole, readonly string[]> = {
   diem: ["diem"],
   deMuc: [],
   y: [],
+  canCu: ["canCu"],
   noiDung: [],
 };
 
