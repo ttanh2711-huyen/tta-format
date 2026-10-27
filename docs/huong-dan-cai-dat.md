@@ -43,6 +43,10 @@ Mỗi lần chỉ hiện một mục con nên ít phải cuộn; add-in nhớ ta
 
 - **Văn bản mới**: mục **Tạo văn bản mới**, chọn loại văn bản, điền Khối đầu và Khối cuối, bấm tạo. Add-in thiết lập trang, cài style, dựng khối đầu, thân, khối cuối và đánh số trang; sau đó bạn gõ nội dung vào chỗ con trỏ. Dùng **Khôi phục** nếu muốn quay lại bản trước khi tạo.
 - **Người ký có hai chức danh** (ví dụ Trưởng ban kiêm Thủ tướng): ở Khối cuối, nhóm Người ký, ghi chức danh thứ nhất vào ô Chức vụ (TRƯỞNG BAN, nằm trên chữ ký) và chức danh thứ hai vào ô **Chức danh thứ hai, dưới chữ ký** (THỦ TƯỚNG, nằm dưới chữ ký, ngay trên họ tên). Cả hai dòng in hoa theo chuẩn.
+- **Sửa khối đầu cũ** (tab Khối, mục Sửa khối đầu; hoặc ô "Sửa khối đầu cũ" ở tab Nhanh): dùng cho văn bản đã có khối đầu nhưng trình bày sai.
+  1. Add-in đọc tên cơ quan, số ký hiệu, địa danh ngày tháng, tên loại (Báo cáo, Tờ trình, Hướng dẫn…), trích yếu và Kính gửi, rồi chuẩn hoá. Ví dụ: "Số 5 / BC - UBND" thành "Số: 05/BC-UBND", ngày dưới 10 và tháng 1, 2 thêm số 0, trích yếu nhiều dòng gộp lại.
+  2. Bạn xem và sửa các ô nếu cần, rồi bấm **Dựng lại khối đầu đúng quy định**. Khối cũ (kể cả bảng) bị xoá, thay bằng khối đầu mới đúng chuẩn đang chọn: bảng cơ quan và quốc hiệu, đường kẻ, tên loại in hoa, trích yếu, Kính gửi. Phần thân giữ nguyên.
+  3. Có nút **Khôi phục bản gốc**. Nếu đầu văn bản có hộp chữ hoặc đối tượng lồng, add-in dừng lại và không xoá gì.
 - **Văn bản có sẵn**: **Chỉnh toàn bộ** áp dụng các bước (trang, style, thân, bảng, khối đầu và cuối, số trang, lỗi còn lại) có xem trước. Add-in chụp bản trước khi chỉnh để khôi phục.
 - **Biến văn bản này thành mẫu** (tab Soạn, mục Tạo mẫu): thay số, ngày tháng, trích yếu, căn cứ, thân, nơi nhận, người ký bằng ô điền có tiêu đề, giữ bố cục và style; lưu bằng File > Save As > Word Template (*.dotx). Nên làm trên bản sao; có nút Khôi phục bản gốc.
 - **Định dạng nội dung** (tab Định dạng, mục Nội dung) nhận ra đề mục (Chương, Mục, Điều, khoản "1.", điểm "a)", đề mục "I.") và áp style đề mục tương ứng thay vì style thân bài. Có hai nút:

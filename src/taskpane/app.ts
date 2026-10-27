@@ -11,6 +11,7 @@ import { mountTemplateMaker } from "../ui/TemplateMaker";
 import { mountFooterForm } from "../ui/FooterForm";
 import { mountFormatPanel } from "../ui/FormatPanel";
 import { mountHeaderForm } from "../ui/HeaderForm";
+import { mountHeaderRebuild } from "../ui/HeaderRebuild";
 import { mountInsertPanel } from "../ui/InsertPanel";
 import { mountNewDocWizard } from "../ui/NewDocWizard";
 import { mountPageSetupPanel } from "../ui/PageSetupPanel";
@@ -105,6 +106,7 @@ export function mountApp(options: { check?: (profile: StandardProfile) => Promis
   const reportEl = element("div", "report");
   const fixAllEl = element("div", "fix-all");
   const templateEl = element("div", "template-maker");
+  const rebuildEl = element("div", "header-rebuild");
   const settingsEl = element("div", "settings-panel");
   const environmentEl = element("div", "environment");
   const sampleEl = element("div", "sample");
@@ -126,6 +128,7 @@ export function mountApp(options: { check?: (profile: StandardProfile) => Promis
         { id: "page", label: "Thiết lập trang", hint: "Khổ A4, lề theo chuẩn", icon: ICONS.page, runs: true, onClick: () => go("format", "page", "ps-apply") },
         { id: "page-number", label: "Đánh số trang", hint: "Giữa lề trên, ẩn trang 1", icon: ICONS.pageNumber, runs: true, onClick: () => go("format", "page", "ps-page-number") },
         { id: "styles", label: "Cài bộ style", hint: "Style của chuẩn vào văn bản", icon: ICONS.styles, runs: true, onClick: () => go("format", "page", "ps-install-styles") },
+        { id: "fix-header", label: "Sửa khối đầu cũ", hint: "Đọc khối đầu sai, dựng lại đúng quy định", icon: ICONS.blocks, runs: true, onClick: () => go("blocks", "fix", "hr-read") },
       ],
     },
     {
@@ -161,6 +164,7 @@ export function mountApp(options: { check?: (profile: StandardProfile) => Promis
       icon: ICONS.blocks,
       sections: [
         { id: "head", label: "Khối đầu", content: headerEl },
+        { id: "fix", label: "Sửa khối đầu", content: rebuildEl },
         { id: "foot", label: "Khối cuối", content: footerEl },
       ],
     },
@@ -285,6 +289,7 @@ export function mountApp(options: { check?: (profile: StandardProfile) => Promis
   });
   mountFixAllButton(fixAllEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs, behavior: quick.behavior });
   mountTemplateMaker(templateEl, { currentStandard: switcher.currentStandard });
+  const rebuild = mountHeaderRebuild(rebuildEl, { currentStandard: switcher.currentStandard, values: quick.values });
   mountPageSetupPanel(pageEl, { currentStandard: switcher.currentStandard, values: quick.values, styleSpecs: quick.styleSpecs });
   mountFormatPanel(formatEl, { currentStandard: switcher.currentStandard, behavior: quick.behavior, styleSpecs: quick.styleSpecs });
 
@@ -317,6 +322,7 @@ export function mountApp(options: { check?: (profile: StandardProfile) => Promis
   paintStandard();
 
   switcher.onChange(() => {
+    rebuild.refresh();
     report.refresh();
     quick.refresh();
     header.refresh();
