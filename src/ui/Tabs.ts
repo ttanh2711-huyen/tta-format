@@ -64,12 +64,24 @@ export function mountTabs(container: HTMLElement, tabs: readonly TabSpec[], init
     return button;
   });
 
+  // Vạch chỉ báo trượt tới tab đang chọn (CSS lo chuyển động; giảm chuyển động thì nhảy thẳng).
+  const indicator = Object.assign(document.createElement("span"), { className: "tab-indicator" });
+  indicator.setAttribute("aria-hidden", "true");
+
+  function place(): void {
+    const button = buttons[tabs.findIndex((tab) => tab.id === active)];
+    if (!button || button.offsetWidth === 0) return;
+    indicator.style.width = `${button.offsetWidth}px`;
+    indicator.style.transform = `translateX(${button.offsetLeft}px)`;
+  }
+
   function paint(): void {
     buttons.forEach((button, index) => {
       const selected = tabs[index].id === active;
       button.setAttribute("aria-selected", String(selected));
       button.tabIndex = selected ? 0 : -1;
     });
+    place();
   }
 
   buttons.forEach((button, index) => {
@@ -82,9 +94,11 @@ export function mountTabs(container: HTMLElement, tabs: readonly TabSpec[], init
       onSelect(tabs[target].id);
     });
   });
-  list.append(...buttons);
+  list.append(indicator, ...buttons);
   container.replaceChildren(list);
   paint();
+  // Thanh tab nằm trong mục đang ẩn có kích thước 0: đặt lại vạch khi nó hiện ra hoặc khi khung đổi cỡ.
+  if (typeof ResizeObserver !== "undefined") new ResizeObserver(place).observe(list);
 
   return {
     setActive(id) {

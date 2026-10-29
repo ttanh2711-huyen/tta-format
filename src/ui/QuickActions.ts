@@ -6,7 +6,9 @@ export interface QuickAction {
   /** Một dòng mô tả ngắn dưới nhãn. */
   hint: string;
   icon: readonly string[];
-  /** Chạy ngay (ô màu nhấn) hay chỉ mở mục tương ứng. */
+  /** Màu biểu tượng theo nhóm chức năng: định dạng (xanh dương), kiểm tra (xanh lá), trang (tím), khối (xanh ngọc). */
+  tone: "format" | "check" | "page" | "block";
+  /** Chạy ngay (có mũi tên ▸ ở góc) hay chỉ mở mục tương ứng. */
   runs: boolean;
   onClick: () => void;
 }
@@ -23,7 +25,8 @@ export function mountQuickActions(container: HTMLElement, groups: ReadonlyArray<
       const button = document.createElement("button");
       button.type = "button";
       button.id = `qa-${action.id}`;
-      button.className = action.runs ? "qa-tile qa-run" : "qa-tile";
+      button.className = `qa-tile qa-${action.tone}${action.runs ? " qa-run" : ""}`;
+      button.title = action.hint;
       const label = Object.assign(document.createElement("span"), { className: "qa-label", textContent: action.label });
       const hint = Object.assign(document.createElement("span"), { className: "qa-hint", textContent: action.hint });
       button.append(iconElement(action.icon, "qa-icon"), label, hint);

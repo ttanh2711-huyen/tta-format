@@ -74,6 +74,11 @@ describe("tương phản màu của giao diện (WCAG AA 4,5:1 cho chữ thườ
       for (const surface of SURFACES) expect(ratio(pick(palette, name), pick(palette, surface))).toBeGreaterThanOrEqual(4.5);
     });
 
+    it("biểu tượng nhóm chức năng trên ô màu và viền điều khiển đủ tương phản (3:1, thành phần không phải chữ)", () => {
+      for (const tone of ["format", "check", "page", "block"]) expect(ratio(pick(palette, `tone-${tone}`), pick(palette, `tone-${tone}-bg`))).toBeGreaterThanOrEqual(3);
+      for (const surface of ["surface", "bg", "surface-2"]) expect(ratio(pick(palette, "border-strong"), pick(palette, surface))).toBeGreaterThanOrEqual(3);
+    });
+
     it("chữ trên nút nền màu nhấn đủ tương phản", () => {
       expect(ratio(pick(palette, "accent-ink"), pick(palette, "accent"))).toBeGreaterThanOrEqual(4.5);
       expect(ratio(pick(palette, "accent-ink"), pick(palette, "accent-strong"))).toBeGreaterThanOrEqual(4.5);

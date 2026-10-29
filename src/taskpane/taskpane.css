@@ -20,6 +20,18 @@
   /* Dải đầu trang mang màu của chuẩn đang chọn: Chính quyền xanh đậm, Đảng đỏ cờ. Nút, điều khiển vẫn dùng một màu nhấn. */
   --header-bg: #084a9f;
   --header-ink: #ffffff;
+  /* Viền điều khiển (ô nhập, thẻ): đạt 3:1 trên nền trắng */
+  --border-strong: #6b7486;
+  /* Màu biểu tượng theo nhóm chức năng và nền ô biểu tượng */
+  --tone-format: #1d5fd1;
+  --tone-format-bg: #e6efff;
+  --tone-check: #13784a;
+  --tone-check-bg: #e2f4e9;
+  --tone-page: #6a3fcf;
+  --tone-page-bg: #efe9fd;
+  --tone-block: #0d6f7c;
+  --tone-block-bg: #ddf2f4;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
   --radius: 10px;
   --shadow: 0 1px 2px rgba(20, 30, 50, 0.08), 0 1px 3px rgba(20, 30, 50, 0.06);
   --lift: 0 4px 12px rgba(20, 30, 50, 0.12);
@@ -50,6 +62,15 @@
   --err-bg: #3d1a1d;
   --header-bg: #17325c;
   --header-ink: #f2f4f8;
+  --border-strong: #8a93a5;
+  --tone-format: #8ab4ff;
+  --tone-format-bg: #1f3354;
+  --tone-check: #6fd08c;
+  --tone-check-bg: #12301d;
+  --tone-page: #bba5ff;
+  --tone-page-bg: #2b2250;
+  --tone-block: #6fd3df;
+  --tone-block-bg: #10343a;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   --lift: 0 4px 14px rgba(0, 0, 0, 0.45);
   color-scheme: dark;
@@ -235,19 +256,27 @@ a {
 }
 
 .tab[aria-selected="true"] {
-  background: var(--accent-soft);
   color: var(--accent-strong);
 }
 
-.tab[aria-selected="true"]::after {
-  content: "";
+/* Vạch chỉ báo trượt tới tab đang chọn (Tabs.ts đặt vị trí, bề rộng) */
+.tabs {
+  position: relative;
+}
+
+.tab {
+  z-index: 1;
+}
+
+.tab-indicator {
   position: absolute;
-  left: 22%;
-  right: 22%;
+  left: 0;
   bottom: 0;
   height: 3px;
   border-radius: 3px 3px 0 0;
   background: var(--accent);
+  transition: transform 0.24s var(--ease), width 0.24s var(--ease);
+  pointer-events: none;
 }
 
 .tab-icon {
@@ -287,14 +316,22 @@ a {
   font-size: 12.5px;
 }
 
-.subnav .tab[aria-selected="true"] {
-  background: var(--surface);
-  color: var(--accent-strong);
-  box-shadow: 0 1px 2px rgba(20, 30, 50, 0.12), 0 0 0 1px var(--border);
+.subnav {
+  position: relative;
 }
 
-.subnav .tab[aria-selected="true"]::after {
-  display: none;
+.subnav .tab[aria-selected="true"] {
+  color: var(--accent-strong);
+}
+
+/* Mục con: viên thuốc trắng trượt dưới chữ */
+.subnav .tab-indicator {
+  top: 3px;
+  bottom: 3px;
+  height: auto;
+  border-radius: 7px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(20, 30, 50, 0.14), 0 0 0 1px var(--border-strong);
 }
 
 .notice:empty,
@@ -616,7 +653,7 @@ textarea {
   width: 100%;
   margin: 3px 0;
   padding: 6px 8px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: 8px;
   background: var(--surface);
   color: var(--text);
@@ -919,25 +956,6 @@ button.qa-tile:hover:not(:disabled) {
   line-height: 1.25;
 }
 
-button.qa-run {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-
-button.qa-run .qa-icon {
-  stroke: var(--accent-ink);
-}
-
-button.qa-run .qa-hint {
-  color: var(--accent-ink);
-}
-
-button.qa-run:hover:not(:disabled) {
-  border-color: var(--accent-strong);
-  background: var(--accent-strong);
-}
-
 @media (prefers-reduced-motion: reduce) {
   button,
   .tab {
@@ -982,10 +1000,6 @@ button.qa-tile .qa-icon {
   padding: 5px;
   border-radius: 8px;
   background: var(--accent-soft);
-}
-
-button.qa-run .qa-icon {
-  background: rgba(255, 255, 255, 0.18);
 }
 
 /* Thông báo: biểu tượng kèm màu, không chỉ dựa vào màu */
@@ -1033,5 +1047,79 @@ p.error::before {
   button.qa-tile:hover:not(:disabled),
   button.qa-tile:active:not(:disabled) {
     transform: none;
+  }
+}
+
+/* Ô thao tác nhanh: nền sáng, biểu tượng màu theo nhóm chức năng, mô tả một dòng; ô "Chạy ngay" có dấu ▸ ở góc */
+button.qa-tile {
+  position: relative;
+  min-height: 52px;
+  border-color: var(--border);
+}
+
+button.qa-tile:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--surface);
+}
+
+.qa-hint {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qa-format .qa-icon {
+  stroke: var(--tone-format);
+  background: var(--tone-format-bg);
+}
+
+.qa-check .qa-icon {
+  stroke: var(--tone-check);
+  background: var(--tone-check-bg);
+}
+
+.qa-page .qa-icon {
+  stroke: var(--tone-page);
+  background: var(--tone-page-bg);
+}
+
+.qa-block .qa-icon {
+  stroke: var(--tone-block);
+  background: var(--tone-block-bg);
+}
+
+button.qa-run::after {
+  content: "▸";
+  position: absolute;
+  top: 4px;
+  right: 7px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* Biểu tượng tối giản: cùng nét 1,75 */
+.tab-icon,
+.qa-icon {
+  stroke-width: 1.75;
+}
+
+/* Chuyển động mượt: cùng một nhịp giảm tốc */
+button,
+.tab,
+button.qa-tile {
+  transition-timing-function: var(--ease);
+}
+
+/* Người dùng bật tăng tương phản: viền đậm, chữ phụ đậm như chữ chính */
+@media (prefers-contrast: more) {
+  :root {
+    --border: var(--border-strong);
+    --muted: var(--text);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab-indicator {
+    transition: none;
   }
 }
