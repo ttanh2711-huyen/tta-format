@@ -54,6 +54,17 @@ interface RibbonTab {
   sections: Section[];
 }
 
+/**
+ * Giao diện sáng hay tối theo giao diện của Office (màu nền thân Office), không có thì theo Windows; không có công tắc
+ * riêng trong add-in. CSS đọc `data-theme` trên thẻ gốc.
+ */
+function applyTheme(): void {
+  const hex = (globalThis as { Office?: typeof Office }).Office?.context?.officeTheme?.bodyBackgroundColor;
+  const rgb = hex && /^#?[0-9a-f]{6}$/i.test(hex) ? [0, 2, 4].map((i) => parseInt(hex.replace("#", "").slice(i, i + 2), 16) / 255) : null;
+  const dark = rgb ? 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2] < 0.35 : window.matchMedia?.("(prefers-color-scheme: dark)").matches === true;
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+}
+
 export function setStatus(message: string): void {
   const status = document.getElementById("status");
   if (status) status.textContent = message;
@@ -92,6 +103,8 @@ function need(id: string): HTMLElement {
  */
 export function mountApp(options: { check?: (profile: StandardProfile) => Promise<Issue[]> } = {}): void {
   const store = browserStore();
+  applyTheme();
+  window.matchMedia?.("(prefers-color-scheme: dark)").addEventListener?.("change", applyTheme);
   const noticeEl = need("notice");
   need("app-version").textContent = `v${appVersion()}`;
 
@@ -318,7 +331,11 @@ export function mountApp(options: { check?: (profile: StandardProfile) => Promis
     return { id: standard.id, button };
   });
   need("standard-switch").append(...standardButtons.map((item) => item.button));
-  const paintStandard = (): void => standardButtons.forEach(({ id, button }) => button.setAttribute("aria-pressed", String(id === switcher.currentStandard().id)));
+  const paintStandard = (): void => {
+    standardButtons.forEach(({ id, button }) => button.setAttribute("aria-pressed", String(id === switcher.currentStandard().id)));
+    // Dải đầu trang đổi màu theo chuẩn (CSS đọc `data-standard`).
+    document.documentElement.dataset.standard = switcher.currentStandard().id;
+  };
   paintStandard();
 
   switcher.onChange(() => {

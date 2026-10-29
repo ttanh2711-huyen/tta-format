@@ -17,8 +17,46 @@
   --warn-bg: #fff3d1;
   --err: #a1242b;
   --err-bg: #fcebec;
+  /* Dải đầu trang mang màu của chuẩn đang chọn: Chính quyền xanh đậm, Đảng đỏ cờ. Nút, điều khiển vẫn dùng một màu nhấn. */
+  --header-bg: #084a9f;
+  --header-ink: #ffffff;
   --radius: 10px;
   --shadow: 0 1px 2px rgba(20, 30, 50, 0.08), 0 1px 3px rgba(20, 30, 50, 0.06);
+  --lift: 0 4px 12px rgba(20, 30, 50, 0.12);
+  color-scheme: light;
+}
+
+:root[data-standard="hd05"] {
+  --header-bg: #a5201b;
+}
+
+/* Giao diện tối: theo giao diện Office hoặc Windows (app.ts đặt data-theme), không có công tắc riêng. */
+:root[data-theme="dark"] {
+  --bg: #15181e;
+  --surface: #1e222b;
+  --surface-2: #272c37;
+  --border: #3a4150;
+  --text: #e6e9ef;
+  --muted: #aab2c0;
+  --accent: #8ab4ff;
+  --accent-strong: #a9c7ff;
+  --accent-soft: #1f3354;
+  --accent-ink: #0b1424;
+  --ok: #6fd08c;
+  --ok-bg: #12301d;
+  --warn: #f2c46b;
+  --warn-bg: #3a2e12;
+  --err: #ff8a8a;
+  --err-bg: #3d1a1d;
+  --header-bg: #17325c;
+  --header-ink: #f2f4f8;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --lift: 0 4px 14px rgba(0, 0, 0, 0.45);
+  color-scheme: dark;
+}
+
+:root[data-theme="dark"][data-standard="hd05"] {
+  --header-bg: #5c1512;
 }
 
 * {
@@ -54,8 +92,9 @@ a {
   justify-content: space-between;
   gap: 8px;
   padding: 7px 10px;
-  background: var(--accent-strong);
-  color: var(--accent-ink);
+  background: var(--header-bg);
+  color: var(--header-ink);
+  transition: background-color 0.25s;
 }
 
 .brand {
@@ -69,14 +108,16 @@ a {
   display: grid;
   flex: none;
   place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 7px;
-  background: var(--accent-ink);
-  color: var(--accent-strong);
-  font-size: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--header-ink);
+  box-shadow: inset 0 0 0 2px var(--header-bg), inset 0 0 0 3px var(--header-ink);
+  background: transparent;
+  color: var(--header-ink);
+  font-size: 9.5px;
   font-weight: 800;
-  letter-spacing: -0.3px;
+  letter-spacing: 0.2px;
 }
 
 .app-header h1 {
@@ -93,7 +134,7 @@ a {
   padding: 1px 7px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.18);
-  color: var(--accent-ink);
+  color: var(--header-ink);
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
@@ -116,7 +157,7 @@ a {
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: var(--accent-ink);
+  color: var(--header-ink);
   font-size: 12px;
   transition: background-color 0.15s;
   font-weight: 600;
@@ -901,5 +942,96 @@ button.qa-run:hover:not(:disabled) {
   button,
   .tab {
     transition: none;
+  }
+}
+
+/* Sinh động có chừng mực: mục con hiện dần, ô thao tác nhanh nhích nhẹ khi rê chuột, thông báo có biểu tượng */
+.sec:not([hidden]) {
+  animation: tta-in 0.14s ease-out;
+}
+
+@keyframes tta-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+button.qa-tile {
+  grid-template-columns: 32px 1fr;
+  transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+button.qa-tile:hover:not(:disabled) {
+  box-shadow: var(--lift);
+  transform: translateY(-1px);
+}
+
+button.qa-tile:active:not(:disabled) {
+  transform: scale(0.98);
+  box-shadow: none;
+}
+
+/* Biểu tượng trong ô màu nhạt */
+button.qa-tile .qa-icon {
+  box-sizing: content-box;
+  padding: 5px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+}
+
+button.qa-run .qa-icon {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* Thông báo: biểu tượng kèm màu, không chỉ dựa vào màu */
+p.ok::before,
+p.warning::before,
+p.error::before {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  vertical-align: -2px;
+  color: var(--surface);
+}
+
+p.ok::before {
+  content: "✓";
+  background: var(--ok);
+}
+
+p.warning::before {
+  content: "!";
+  background: var(--warn);
+}
+
+p.error::before {
+  content: "×";
+  background: var(--err);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sec:not([hidden]) {
+    animation: none;
+  }
+
+  .app-header,
+  button.qa-tile {
+    transition: none;
+  }
+
+  button.qa-tile:hover:not(:disabled),
+  button.qa-tile:active:not(:disabled) {
+    transform: none;
   }
 }
