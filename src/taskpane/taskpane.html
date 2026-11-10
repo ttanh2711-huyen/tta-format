@@ -13,7 +13,15 @@
     <div id="app">
       <header class="app-header">
         <div class="brand">
-          <span class="logo" aria-hidden="true">TTA</span>
+          <!-- Logo: trang văn bản có góc gấp; dấu tích cho chuẩn Chính quyền, ngôi sao cho chuẩn Đảng (CSS đổi theo data-standard). -->
+          <svg class="logo" viewBox="0 0 28 28" aria-hidden="true">
+            <rect class="logo-bg" width="28" height="28" rx="8" />
+            <path class="logo-page" d="M9 6h7.5L20 9.5V22H9z" />
+            <path class="logo-fold" d="M16.5 6 20 9.5h-3.5z" />
+            <rect class="logo-ink" x="11" y="9.8" width="4.3" height="1.3" rx="0.65" />
+            <path class="logo-check mk-gov" d="m11.6 17.6 2.3 2.3 4.2-4.6" />
+            <path class="logo-star mk-party" d="M14.5 14.3 15.28 16.42 17.54 16.51 15.77 17.91 16.38 20.09 14.5 18.83 12.62 20.09 13.23 17.91 11.46 16.51 13.72 16.42z" />
+          </svg>
           <h1 title="Soạn và chuẩn hoá văn bản hành chính">TTA-Format <span id="app-version" class="chip"></span></h1>
         </div>
         <div id="standard-switch" class="seg" role="group" aria-label="Chuẩn văn bản"></div>

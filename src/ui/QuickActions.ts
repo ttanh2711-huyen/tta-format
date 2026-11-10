@@ -3,36 +3,39 @@ import { iconElement } from "./Tabs";
 export interface QuickAction {
   id: string;
   label: string;
-  /** Một dòng mô tả ngắn dưới nhãn. */
+  /** Mô tả đầy đủ, hiện khi rê chuột (không chiếm chỗ trên giao diện). */
   hint: string;
-  icon: readonly string[];
-  /** Màu biểu tượng theo nhóm chức năng: định dạng (xanh dương), kiểm tra (xanh lá), trang (tím), khối (xanh ngọc). */
-  tone: "format" | "check" | "page" | "block";
-  /** Chạy ngay (có mũi tên ▸ ở góc) hay chỉ mở mục tương ứng. */
-  runs: boolean;
+  /** Biểu tượng nét vẽ; chỉ ô ("tiles") mới có. */
+  icon?: readonly string[];
   onClick: () => void;
 }
 
+export interface QuickGroup {
+  title: string;
+  /** tiles: ô lớn cho việc chạy ngay, hai cột; chips: viên nhỏ xếp hàng để mở mục, tiết kiệm chỗ. */
+  kind: "tiles" | "chips";
+  actions: readonly QuickAction[];
+}
+
 /**
- * Tab "Nhanh": các việc hay làm nhất, mỗi việc một lần bấm. Việc "chạy ngay" mở đúng mục rồi bấm nút ở đó để kết quả
- * hiện tại chỗ; việc "mở nhanh" chỉ đưa tới mục cần điền.
+ * Tab "Nhanh": các việc hay làm nhất, mỗi việc một lần bấm. Ô "chạy ngay" đi tới đúng mục rồi bấm nút ở đó để kết quả
+ * hiện tại chỗ; viên "mở mục" chỉ đưa tới mục cần điền.
  */
-export function mountQuickActions(container: HTMLElement, groups: ReadonlyArray<{ title: string; actions: readonly QuickAction[] }>): void {
+export function mountQuickActions(container: HTMLElement, groups: readonly QuickGroup[]): void {
   for (const group of groups) {
-    const grid = document.createElement("div");
-    grid.className = "qa-grid";
+    const list = document.createElement("div");
+    list.className = group.kind === "tiles" ? "qa-grid" : "qa-chips";
     for (const action of group.actions) {
       const button = document.createElement("button");
       button.type = "button";
       button.id = `qa-${action.id}`;
-      button.className = `qa-tile qa-${action.tone}${action.runs ? " qa-run" : ""}`;
+      button.className = group.kind === "tiles" ? "qa-tile" : "qa-chip";
       button.title = action.hint;
-      const label = Object.assign(document.createElement("span"), { className: "qa-label", textContent: action.label });
-      const hint = Object.assign(document.createElement("span"), { className: "qa-hint", textContent: action.hint });
-      button.append(iconElement(action.icon, "qa-icon"), label, hint);
+      if (group.kind === "tiles" && action.icon) button.append(iconElement(action.icon, "qa-icon"));
+      button.append(Object.assign(document.createElement("span"), { className: "qa-label", textContent: action.label }));
       button.addEventListener("click", action.onClick);
-      grid.append(button);
+      list.append(button);
     }
-    container.append(Object.assign(document.createElement("h3"), { className: "qa-title", textContent: group.title }), grid);
+    container.append(Object.assign(document.createElement("h3"), { className: "qa-title", textContent: group.title }), list);
   }
 }

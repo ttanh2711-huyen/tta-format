@@ -32,14 +32,10 @@ describe("tương phản màu của giao diện (WCAG AA 4,5:1 cho chữ thườ
     const body = css.slice(start, css.indexOf("}", start));
     return new Map([...body.matchAll(/--([a-z0-9-]+):\s*(#[0-9a-fA-F]{6})\s*;/g)].map((m) => [m[1], m[2].toLowerCase()]));
   }
-  // Bảng màu sáng (gốc) và tối (gốc ghi đè bằng khối tối); dải đầu trang thêm biến thể theo chuẩn Đảng.
+  // Bốn bảng màu: (sáng, tối) x (Chính quyền, Đảng). Khối chuẩn Đảng chỉ ghi đè màu nhấn lên bảng nền của nó.
   const light = block(":root");
   const dark = new Map([...light, ...block(':root[data-theme="dark"]')]);
   const palettes = [
-    ["sáng", light],
-    ["tối", dark],
-  ] as const;
-  const headers = [
     ["sáng, Chính quyền", light],
     ["sáng, Đảng", new Map([...light, ...block(':root[data-standard="hd05"]')])],
     ["tối, Chính quyền", dark],
@@ -66,7 +62,7 @@ describe("tương phản màu của giao diện (WCAG AA 4,5:1 cho chữ thườ
   const SURFACES = ["bg", "surface", "surface-2", "accent-soft", "ok-bg", "warn-bg", "err-bg"];
 
   it("có đủ biến màu để kiểm tra", () => {
-    for (const name of [...TEXT, ...SURFACES, "accent-ink", "header-bg", "header-ink"]) expect(tokens.has(name)).toBe(true);
+    for (const name of [...TEXT, ...SURFACES, "accent-ink", "border-strong"]) expect(tokens.has(name)).toBe(true);
   });
 
   describe.each(palettes)("giao diện %s", (_name, palette) => {
@@ -74,19 +70,18 @@ describe("tương phản màu của giao diện (WCAG AA 4,5:1 cho chữ thườ
       for (const surface of SURFACES) expect(ratio(pick(palette, name), pick(palette, surface))).toBeGreaterThanOrEqual(4.5);
     });
 
-    it("biểu tượng nhóm chức năng trên ô màu và viền điều khiển đủ tương phản (3:1, thành phần không phải chữ)", () => {
-      for (const tone of ["format", "check", "page", "block"]) expect(ratio(pick(palette, `tone-${tone}`), pick(palette, `tone-${tone}-bg`))).toBeGreaterThanOrEqual(3);
-      for (const surface of ["surface", "bg", "surface-2"]) expect(ratio(pick(palette, "border-strong"), pick(palette, surface))).toBeGreaterThanOrEqual(3);
+    it("viền ô nhập và nút đủ tương phản (3:1, thành phần không phải chữ)", () => {
+      for (const surface of ["surface", "bg", "surface-2", "accent-soft"]) expect(ratio(pick(palette, "border-strong"), pick(palette, surface))).toBeGreaterThanOrEqual(3);
+    });
+
+    it("màu nhấn dùng làm vạch chỉ báo, biểu tượng, viên thuốc đủ tương phản trên nền (3:1)", () => {
+      for (const surface of ["surface", "bg", "surface-2"]) expect(ratio(pick(palette, "accent"), pick(palette, surface))).toBeGreaterThanOrEqual(3);
     });
 
     it("chữ trên nút nền màu nhấn đủ tương phản", () => {
       expect(ratio(pick(palette, "accent-ink"), pick(palette, "accent"))).toBeGreaterThanOrEqual(4.5);
       expect(ratio(pick(palette, "accent-ink"), pick(palette, "accent-strong"))).toBeGreaterThanOrEqual(4.5);
     });
-  });
-
-  it.each(headers)("chữ trên dải đầu trang (%s) đủ tương phản", (_name, palette) => {
-    expect(ratio(pick(palette, "header-ink"), pick(palette, "header-bg"))).toBeGreaterThanOrEqual(4.5);
   });
 
   it("CSS không có màu chữ viết cứng ngoài biến", () => {

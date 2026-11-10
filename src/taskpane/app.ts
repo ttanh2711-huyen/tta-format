@@ -67,7 +67,10 @@ function applyTheme(): void {
 
 export function setStatus(message: string): void {
   const status = document.getElementById("status");
-  if (status) status.textContent = message;
+  if (!status) return;
+  status.textContent = message;
+  // Không có gì đáng báo ("Sẵn sàng.") thì ẩn cả thanh để nhường chỗ.
+  if (status.parentElement) status.parentElement.hidden = message === "" || message === "Sẵn sàng.";
 }
 
 async function onInsertSample(): Promise<void> {
@@ -97,7 +100,7 @@ function need(id: string): HTMLElement {
 }
 
 /**
- * Dựng toàn bộ giao diện TTA-Format: chuẩn văn bản (Nghị định 30 hay Hướng dẫn 05) chọn bằng nút gạt ở đầu trang; năm
+ * Dựng toàn bộ giao diện TTA-Format: chuẩn văn bản (Nghị định 30 hay Hướng dẫn 05) chọn bằng nút gạt ở đầu trang; sáu
  * tab kiểu ribbon (Nhanh, Soạn, Khối, Định dạng, Kiểm tra, Cơ quan), mỗi tab có các mục con, mỗi lần hiện một mục; tab
  * Nhanh gom các việc hay làm, mỗi việc một lần bấm.
  */
@@ -134,25 +137,27 @@ export function mountApp(options: { check?: (profile: StandardProfile) => Promis
   mountQuickActions(homeEl, [
     {
       title: "Chạy ngay",
+      kind: "tiles",
       actions: [
-        { id: "format-selection", label: "Định dạng phần tô đen", hint: "Bôi đen đoạn cần sửa rồi bấm", icon: ICONS.selection, tone: "format", runs: true, onClick: () => go("format", "body", "fb-selection") },
-        { id: "check", label: "Kiểm tra văn bản", hint: "Liệt kê lỗi theo nhóm", icon: ICONS.check, tone: "check", runs: true, onClick: () => go("check", "report", "rp-check") },
-        { id: "quick-fix", label: "Sửa nhanh", hint: "Chuẩn hoá cả văn bản, hoàn tác được", icon: ICONS.sparkle, tone: "check", runs: true, onClick: () => go("check", "report", "rp-quick") },
-        { id: "page", label: "Thiết lập trang", hint: "Khổ A4, lề theo chuẩn", icon: ICONS.page, tone: "page", runs: true, onClick: () => go("format", "page", "ps-apply") },
-        { id: "page-number", label: "Đánh số trang", hint: "Giữa lề trên, ẩn trang 1", icon: ICONS.pageNumber, tone: "page", runs: true, onClick: () => go("format", "page", "ps-page-number") },
-        { id: "styles", label: "Cài bộ style", hint: "Style của chuẩn vào văn bản", icon: ICONS.styles, tone: "format", runs: true, onClick: () => go("format", "page", "ps-install-styles") },
-        { id: "fix-header", label: "Sửa khối đầu cũ", hint: "Đọc khối đầu sai, dựng lại đúng quy định", icon: ICONS.blocks, tone: "block", runs: true, onClick: () => go("blocks", "fix", "hr-read") },
+        { id: "format-selection", label: "Định dạng phần tô đen", hint: "Bôi đen đoạn cần sửa rồi bấm", icon: ICONS.selection, onClick: () => go("format", "body", "fb-selection") },
+        { id: "check", label: "Kiểm tra văn bản", hint: "Liệt kê lỗi theo nhóm", icon: ICONS.check, onClick: () => go("check", "report", "rp-check") },
+        { id: "quick-fix", label: "Sửa nhanh", hint: "Chuẩn hoá cả văn bản, hoàn tác được", icon: ICONS.sparkle, onClick: () => go("check", "report", "rp-quick") },
+        { id: "page", label: "Thiết lập trang", hint: "Khổ A4, lề theo chuẩn", icon: ICONS.page, onClick: () => go("format", "page", "ps-apply") },
+        { id: "page-number", label: "Đánh số trang", hint: "Giữa lề trên, ẩn trang 1", icon: ICONS.pageNumber, onClick: () => go("format", "page", "ps-page-number") },
+        { id: "styles", label: "Cài bộ style", hint: "Style của chuẩn vào văn bản", icon: ICONS.styles, onClick: () => go("format", "page", "ps-install-styles") },
       ],
     },
     {
-      title: "Mở nhanh",
+      title: "Mở mục",
+      kind: "chips",
       actions: [
-        { id: "new", label: "Tạo văn bản mới", hint: "Chọn loại, điền rồi tạo", icon: ICONS.compose, tone: "format", runs: false, onClick: () => go("compose", "new") },
-        { id: "template", label: "Tạo mẫu", hint: "Biến văn bản thành mẫu", icon: ICONS.template, tone: "format", runs: false, onClick: () => go("compose", "template") },
-        { id: "head", label: "Khối đầu", hint: "Cơ quan, số, ngày tháng", icon: ICONS.blocks, tone: "block", runs: false, onClick: () => go("blocks", "head") },
-        { id: "foot", label: "Khối cuối", hint: "Nơi nhận, người ký", icon: ICONS.blocks, tone: "block", runs: false, onClick: () => go("blocks", "foot") },
-        { id: "fixall", label: "Chỉnh toàn bộ", hint: "Nhiều bước, có xem trước", icon: ICONS.list, tone: "check", runs: false, onClick: () => go("check", "fixall") },
-        { id: "agency", label: "Hồ sơ cơ quan", hint: "Điền sẵn khối đầu, khối cuối", icon: ICONS.agency, tone: "page", runs: false, onClick: () => go("agency", "profiles") },
+        { id: "new", label: "Tạo văn bản mới", hint: "Chọn loại, điền rồi tạo", onClick: () => go("compose", "new") },
+        { id: "template", label: "Tạo mẫu", hint: "Biến văn bản thành mẫu", onClick: () => go("compose", "template") },
+        { id: "head", label: "Khối đầu", hint: "Cơ quan, số, ngày tháng, tên loại, trích yếu", onClick: () => go("blocks", "head") },
+        { id: "fix-header", label: "Sửa khối đầu cũ", hint: "Đọc khối đầu sai, dựng lại đúng quy định", onClick: () => go("blocks", "fix") },
+        { id: "foot", label: "Khối cuối", hint: "Nơi nhận, người ký", onClick: () => go("blocks", "foot") },
+        { id: "fixall", label: "Chỉnh toàn bộ", hint: "Nhiều bước, có xem trước", onClick: () => go("check", "fixall") },
+        { id: "agency", label: "Hồ sơ cơ quan", hint: "Điền sẵn khối đầu, khối cuối", onClick: () => go("agency", "profiles") },
       ],
     },
   ]);
@@ -331,8 +336,21 @@ export function mountApp(options: { check?: (profile: StandardProfile) => Promis
     return { id: standard.id, button };
   });
   need("standard-switch").append(...standardButtons.map((item) => item.button));
+  const standardSwitch = need("standard-switch");
+  const thumb = element("span", "standard-thumb", { className: "seg-thumb" });
+  standardSwitch.prepend(thumb);
+  /** Đặt viên thuốc màu dưới nút của chuẩn đang chọn; lần đầu đặt không hoạt ảnh, các lần sau trượt. */
+  const placeThumb = (): void => {
+    const pressed = standardButtons.find(({ id }) => id === switcher.currentStandard().id)?.button;
+    if (!pressed || pressed.offsetWidth === 0) return;
+    thumb.style.width = `${pressed.offsetWidth}px`;
+    thumb.style.transform = `translateX(${pressed.offsetLeft}px)`;
+  };
+  if (typeof ResizeObserver !== "undefined") new ResizeObserver(placeThumb).observe(standardSwitch);
   const paintStandard = (): void => {
     standardButtons.forEach(({ id, button }) => button.setAttribute("aria-pressed", String(id === switcher.currentStandard().id)));
+    placeThumb();
+    requestAnimationFrame(() => standardSwitch.classList.add("ready"));
     // Dải đầu trang đổi màu theo chuẩn (CSS đọc `data-standard`).
     document.documentElement.dataset.standard = switcher.currentStandard().id;
   };
